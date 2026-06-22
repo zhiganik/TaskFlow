@@ -1,0 +1,93 @@
+# =============================================================================
+# .gitignore — TaskFlow API
+# Place this file at the solution root.
+# =============================================================================
+
+
+# =============================================================================
+# SECRETS — never commit under any circumstances
+# =============================================================================
+.env
+*.env
+!.env.example            # .env.example IS committed — it's the safe template
+
+
+# =============================================================================
+# .NET Build Artifacts
+# =============================================================================
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+.vs/
+.vscode/
+.idea/
+
+# Publish output
+[Pp]ublish/
+publish/
+out/
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+nuget.config.local
+
+# MSBuild / Roslyn caches
+.msbuild/
+*.binlog
+
+# EF Core migration backup snapshots
+*.bak
+
+
+# =============================================================================
+# Test Output
+# =============================================================================
+TestResults/
+coverage/
+*.trx
+*.coverage
+*.coveragexml
+[Cc]overage*/
+
+
+# =============================================================================
+# Docker
+# =============================================================================
+# docker-compose.override.yml is safe to commit in this project (no local paths)
+# If it ever contains machine-specific paths, add it here
+
+
+# =============================================================================
+# Logs
+# =============================================================================
+*.log
+logs/
+Logs/
+
+
+# =============================================================================
+# IDE & OS Metadata
+# =============================================================================
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# Visual Studio
+*.aps
+*.ncb
+*.opendb
+*.opensdf
+*.sdf
+*.cachefile
+*.VC.db
+*.VC.VC.opendb

@@ -1,0 +1,45 @@
+COMPOSE = docker compose --env-file .env -f docker/docker-compose.yml -f docker/docker-compose.override.yml
+
+.PHONY: up down reset build logs api-logs web-logs migrate shell db-shell redis-cli test web-install
+
+up:
+	$(COMPOSE) up --build -d
+
+down:
+	$(COMPOSE) down
+
+reset:
+	$(COMPOSE) down -v
+	$(COMPOSE) up --build -d
+
+build:
+	$(COMPOSE) build --no-cache
+
+logs:
+	$(COMPOSE) logs -f
+
+api-logs:
+	$(COMPOSE) logs -f api
+
+web-logs:
+	$(COMPOSE) logs -f web
+
+migrate:
+	dotnet ef database update \
+		--project TaskFlow.Infrastructure \
+		--startup-project TaskFlow.Api
+
+shell:
+	$(COMPOSE) exec api sh
+
+db-shell:
+	$(COMPOSE) exec postgres psql -U $${POSTGRES_USER} -d $${POSTGRES_DB}
+
+redis-cli:
+	$(COMPOSE) exec redis redis-cli -a $${REDIS_PASSWORD}
+
+test:
+	dotnet test
+
+web-install:
+	cd taskflow-web && npm install
