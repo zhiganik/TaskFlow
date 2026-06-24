@@ -177,7 +177,7 @@ public class TaskAttachmentsController(ITaskAttachmentService attachmentService)
 {
     /// <summary>Upload a file to a task. Queued for background processing.</summary>
     [HttpPost]
-    [Authorize(Policy = "WorkspaceMember")]
+    [Authorize(Policy = WorkspacePolicies.Member)]
     [Consumes("multipart/form-data")]
     [ProducesResponseType(typeof(AttachmentDto), StatusCodes.Status202Accepted)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -196,7 +196,7 @@ public class TaskAttachmentsController(ITaskAttachmentService attachmentService)
 
     /// <summary>Download attachment file. Only available when status is Ready.</summary>
     [HttpGet("{id}/download")]
-    [Authorize(Policy = "WorkspaceMember")]
+    [Authorize(Policy = WorkspacePolicies.Member)]
     [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

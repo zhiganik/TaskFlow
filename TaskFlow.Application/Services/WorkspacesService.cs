@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using TaskFlow.Application.Domain.Entities;
+using TaskFlow.Application.Domain.Enums;
 using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Exceptions;
 using TaskFlow.Application.Interfaces.Repositories;
@@ -10,6 +11,7 @@ namespace TaskFlow.Application.Services;
 
 public class WorkspacesService(
     IWorkspacesRepository repository,
+    IWorkspaceMembersRepository membersRepository,
     ILogger<WorkspacesService> logger) : IWorkspacesService
 {
     public async Task<WorkspaceDto> CreateAsync(string ownerId, CreateWorkspaceRequest request, CancellationToken ct)
@@ -20,53 +22,59 @@ public class WorkspacesService(
             OwnerId = ownerId
         };
 
+        workspace.Members.Add(new WorkspaceMember
+        {
+            UserId = ownerId,
+            Role = WorkspaceRole.Owner,
+            JoinedAt = DateTime.UtcNow
+        });
+
         await repository.AddAsync(workspace, ct);
 
         logger.LogInformation("Workspace {WorkspaceId} created by {OwnerId}", workspace.Id, ownerId);
 
-        return workspace.ToDto();
+        return workspace.ToDto(WorkspaceRole.Owner);
     }
 
     public async Task<IReadOnlyList<WorkspaceDto>> GetForUserAsync(string userId, CancellationToken ct)
     {
-        var workspaces = await repository.GetByOwnerIdAsync(userId, ct);
-        return workspaces.Select(w => w.ToDto()).ToList();
+        var memberships = await membersRepository.GetMembershipsForUserAsync(userId, ct);
+        return memberships.Select(m => m.Workspace.ToDto(m.Role)).ToList();
     }
 
     public async Task<WorkspaceDto> GetByIdAsync(Guid id, string userId, CancellationToken ct)
     {
-        var workspace = await GetOwnedWorkspaceAsync(id, userId, ct);
-        return workspace.ToDto();
+        var workspace = await repository.GetByIdAsync(id, ct)
+            ?? throw new NotFoundException($"Workspace {id} was not found.");
+
+        // The WorkspaceMember policy already guarantees a membership row exists at this point.
+        var member = await membersRepository.GetMemberAsync(id, userId, ct)
+            ?? throw new ForbiddenException("You do not have access to this workspace.");
+
+        return workspace.ToDto(member.Role);
     }
 
-    public async Task<WorkspaceDto> UpdateAsync(Guid id, string userId, UpdateWorkspaceRequest request, CancellationToken ct)
-    {
-        var workspace = await GetOwnedWorkspaceAsync(id, userId, ct);
-        workspace.Name = request.Name;
-
-        await repository.UpdateAsync(workspace, ct);
-
-        logger.LogInformation("Workspace {WorkspaceId} updated by {OwnerId}", workspace.Id, userId);
-
-        return workspace.ToDto();
-    }
-
-    public async Task DeleteAsync(Guid id, string userId, CancellationToken ct)
-    {
-        await GetOwnedWorkspaceAsync(id, userId, ct);
-        await repository.DeleteAsync(id, ct);
-
-        logger.LogInformation("Workspace {WorkspaceId} deleted by {OwnerId}", id, userId);
-    }
-
-    private async Task<Workspace> GetOwnedWorkspaceAsync(Guid id, string userId, CancellationToken ct)
+    public async Task<WorkspaceDto> UpdateAsync(Guid id, UpdateWorkspaceRequest request, CancellationToken ct)
     {
         var workspace = await repository.GetByIdAsync(id, ct)
             ?? throw new NotFoundException($"Workspace {id} was not found.");
 
-        if (workspace.OwnerId != userId)
-            throw new ForbiddenException("You do not have access to this workspace.");
+        workspace.Name = request.Name;
+        await repository.UpdateAsync(workspace, ct);
 
-        return workspace;
+        logger.LogInformation("Workspace {WorkspaceId} updated by {OwnerId}", workspace.Id, workspace.OwnerId);
+
+        // Only the Owner can reach this action (WorkspaceOwner policy).
+        return workspace.ToDto(WorkspaceRole.Owner);
+    }
+
+    public async Task DeleteAsync(Guid id, CancellationToken ct)
+    {
+        var workspace = await repository.GetByIdAsync(id, ct)
+            ?? throw new NotFoundException($"Workspace {id} was not found.");
+
+        await repository.DeleteAsync(id, ct);
+
+        logger.LogInformation("Workspace {WorkspaceId} deleted by {OwnerId}", id, workspace.OwnerId);
     }
 }

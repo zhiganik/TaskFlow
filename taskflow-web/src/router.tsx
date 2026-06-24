@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { DashboardPage } from './pages/DashboardPage'
 import { HealthCheckPage } from './pages/HealthCheckPage'
 import { LoginPage } from './pages/LoginPage'
+import { MembersPage } from './pages/MembersPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { WorkspaceRedirectPage } from './pages/WorkspaceRedirectPage'
 import { useAuthStore } from './store/authStore'
@@ -51,6 +52,14 @@ export function AppRouter() {
           element={
             <ProtectedRoute>
               <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/workspaces/:workspaceId/members"
+          element={
+            <ProtectedRoute>
+              <MembersPage />
             </ProtectedRoute>
           }
         />

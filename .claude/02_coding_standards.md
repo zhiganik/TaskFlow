@@ -44,7 +44,7 @@ public class TasksController(ITaskService taskService) : ControllerBase
 {
     /// <summary>Get paginated tasks for a project.</summary>
     [HttpGet]
-    [Authorize(Policy = "WorkspaceMember")]
+    [Authorize(Policy = WorkspacePolicies.Member)]
     [ProducesResponseType(typeof(PagedResult<TaskDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

@@ -12,13 +12,6 @@ public class WorkspacesRepository(AppDbContext db) : IWorkspacesRepository
             .AsNoTracking()
             .FirstOrDefaultAsync(w => w.Id == id, ct);
 
-    public async Task<IReadOnlyList<Workspace>> GetByOwnerIdAsync(string ownerId, CancellationToken ct = default)
-        => await db.Workspaces
-            .AsNoTracking()
-            .Where(w => w.OwnerId == ownerId)
-            .OrderByDescending(w => w.CreatedAt)
-            .ToListAsync(ct);
-
     public async Task<Workspace> AddAsync(Workspace workspace, CancellationToken ct = default)
     {
         db.Workspaces.Add(workspace);

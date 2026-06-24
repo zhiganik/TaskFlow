@@ -7,8 +7,4 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.*" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Domain\Constants\" />
-  </ItemGroup>
-
 </Project>

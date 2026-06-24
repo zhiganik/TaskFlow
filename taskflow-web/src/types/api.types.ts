@@ -46,11 +46,14 @@ export interface ValidationProblemDetails extends ProblemDetails {
   errors: Record<string, string[]>
 }
 
+export type WorkspaceRole = 'Owner' | 'Admin' | 'Member'
+
 export interface WorkspaceDto {
   id: string
   name: string
   ownerId: string
   createdAt: string
+  myRole: WorkspaceRole
 }
 
 export interface CreateWorkspaceRequest {
@@ -59,4 +62,21 @@ export interface CreateWorkspaceRequest {
 
 export interface UpdateWorkspaceRequest {
   name: string
+}
+
+export interface MemberDto {
+  userId: string
+  displayName: string
+  email: string
+  role: WorkspaceRole
+  joinedAt: string
+}
+
+export interface InviteMemberRequest {
+  email: string
+  role: WorkspaceRole
+}
+
+export interface UpdateMemberRoleRequest {
+  role: WorkspaceRole
 }

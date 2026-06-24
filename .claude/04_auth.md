@@ -118,16 +118,29 @@ public string GenerateToken(AppUser user)
 
 ## RBAC — Policy-Based Authorization
 
+### Policy Names
+
+Policy name strings live in one place — `TaskFlow.Api/Authorization/WorkspacePolicies.cs` — never inlined
+as magic strings at call sites:
+```csharp
+public static class WorkspacePolicies
+{
+    public const string Member = "WorkspaceMember";
+    public const string Admin = "WorkspaceAdmin";
+    public const string Owner = "WorkspaceOwner";
+}
+```
+
 ### Policy Registration
 ```csharp
-// In DependencyConfig.AddJwtAuth()
+// In DependencyConfig.AddJwtAuthentication()
 services.AddAuthorization(opts =>
 {
-    opts.AddPolicy("WorkspaceMember",
+    opts.AddPolicy(WorkspacePolicies.Member,
         p => p.AddRequirements(new WorkspaceRoleRequirement(WorkspaceRole.Member)));
-    opts.AddPolicy("WorkspaceAdmin",
+    opts.AddPolicy(WorkspacePolicies.Admin,
         p => p.AddRequirements(new WorkspaceRoleRequirement(WorkspaceRole.Admin)));
-    opts.AddPolicy("WorkspaceOwner",
+    opts.AddPolicy(WorkspacePolicies.Owner,
         p => p.AddRequirements(new WorkspaceRoleRequirement(WorkspaceRole.Owner)));
 });
 
@@ -145,7 +158,7 @@ public class WorkspaceRoleRequirement(WorkspaceRole minimumRole)
 
 ### Handler
 ```csharp
-public class WorkspaceRoleHandler(IWorkspaceRepository workspaceRepo)
+public class WorkspaceRoleHandler(IWorkspaceMembersRepository membersRepository)
     : AuthorizationHandler<WorkspaceRoleRequirement>
 {
     protected override async Task HandleRequirementAsync(
@@ -166,7 +179,7 @@ public class WorkspaceRoleHandler(IWorkspaceRepository workspaceRepo)
         if (userId is null) return;
 
         // Uses composite (WorkspaceId, UserId) index — O(1) lookup
-        var member = await workspaceRepo.GetMemberAsync(workspaceId, userId);
+        var member = await membersRepository.GetMemberAsync(workspaceId, userId);
         if (member is null) return;
 
         // Role hierarchy: Owner > Admin > Member
@@ -179,11 +192,11 @@ public class WorkspaceRoleHandler(IWorkspaceRepository workspaceRepo)
 ### Usage in Controllers
 ```csharp
 [HttpPost]
-[Authorize(Policy = "WorkspaceAdmin")]  // Admin or Owner can create
+[Authorize(Policy = WorkspacePolicies.Admin)]  // Admin or Owner can create
 public async Task<IActionResult> CreateProject(...) { }
 
 [HttpGet]
-[Authorize(Policy = "WorkspaceMember")]  // Any member can read
+[Authorize(Policy = WorkspacePolicies.Member)]  // Any member can read
 public async Task<IActionResult> GetProjects(...) { }
 ```
 

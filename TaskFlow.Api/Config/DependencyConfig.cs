@@ -1,16 +1,21 @@
 using System.IO;
 using System.Reflection;
 using System.Text;
+using System.Text.Json.Serialization;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using StackExchange.Redis;
+using TaskFlow.Api.Authorization;
 using TaskFlow.Api.Swagger;
+using TaskFlow.Application.Domain.Constants;
 using TaskFlow.Application.Domain.Entities;
+using TaskFlow.Application.Domain.Enums;
 using TaskFlow.Application.Interfaces.Repositories;
 using TaskFlow.Application.Interfaces.Services;
 using TaskFlow.Application.Options;
@@ -36,8 +41,11 @@ public static class DependencyConfig
             .AddRepositories()
             .AddApplicationServices()
             .AddFluentValidationServices()
-            .AddSwaggerDocumentation()
-            .AddControllers();
+            .AddSwaggerDocumentation();
+
+        services.AddControllers()
+            .AddJsonOptions(opts => opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
         return services;
     }
 
@@ -121,7 +129,17 @@ public static class DependencyConfig
             };
         });
 
-        services.AddAuthorization();
+        services.AddAuthorization(opts =>
+        {
+            opts.AddPolicy(WorkspacePolicies.Member,
+                p => p.AddRequirements(new WorkspaceRoleRequirement(WorkspaceRole.Member)));
+            opts.AddPolicy(WorkspacePolicies.Admin,
+                p => p.AddRequirements(new WorkspaceRoleRequirement(WorkspaceRole.Admin)));
+            opts.AddPolicy(WorkspacePolicies.Owner,
+                p => p.AddRequirements(new WorkspaceRoleRequirement(WorkspaceRole.Owner)));
+        });
+
+        services.AddScoped<IAuthorizationHandler, WorkspaceRoleHandler>();
 
         return services;
     }
@@ -129,6 +147,7 @@ public static class DependencyConfig
     private static IServiceCollection AddRepositories(this IServiceCollection services)
     {
         services.AddScoped<IWorkspacesRepository, WorkspacesRepository>();
+        services.AddScoped<IWorkspaceMembersRepository, WorkspaceMembersRepository>();
         return services;
     }
 
@@ -138,6 +157,7 @@ public static class DependencyConfig
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IWorkspacesService, WorkspacesService>();
+        services.AddScoped<IWorkspaceMembersService, WorkspaceMembersService>();
         return services;
     }
 

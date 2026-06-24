@@ -1,7 +1,14 @@
+import { NavLink, useParams } from 'react-router-dom'
 import { useLogout } from '../../hooks/useAuth'
 import { useAuthStore } from '../../store/authStore'
 import { WorkspaceSwitcher } from '../workspaces/WorkspaceSwitcher'
 import { Button } from '../ui/Button'
+
+function navLinkClassName({ isActive }: { isActive: boolean }) {
+  return `block rounded-md px-2.5 py-1.5 text-xs font-medium ${
+    isActive ? 'bg-brand-50 text-brand-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+  }`
+}
 
 function initials(displayName: string) {
   return displayName
@@ -16,6 +23,7 @@ function initials(displayName: string) {
 export function Sidebar() {
   const user = useAuthStore((s) => s.user)
   const logoutMutation = useLogout()
+  const { workspaceId } = useParams<{ workspaceId: string }>()
 
   return (
     <aside className="flex w-56 shrink-0 flex-col border-r border-gray-200 bg-white py-4">
@@ -29,6 +37,17 @@ export function Sidebar() {
       </div>
 
       <WorkspaceSwitcher />
+
+      {workspaceId && (
+        <nav className="mt-3 flex flex-col gap-0.5 px-2">
+          <NavLink to={`/workspaces/${workspaceId}`} end className={navLinkClassName}>
+            Board
+          </NavLink>
+          <NavLink to={`/workspaces/${workspaceId}/members`} className={navLinkClassName}>
+            Members
+          </NavLink>
+        </nav>
+      )}
 
       <div className="mt-auto flex items-center gap-2 border-t border-gray-100 px-4 pt-3">
         {user && (

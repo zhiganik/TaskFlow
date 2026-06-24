@@ -49,7 +49,7 @@ export function WorkspaceSwitcher() {
               <div className="truncate text-xs font-medium text-gray-900">
                 {selected?.name ?? 'No workspace'}
               </div>
-              {selected && <div className="text-[11px] text-gray-400">Owner</div>}
+              {selected && <div className="text-[11px] text-gray-400">{selected.myRole}</div>}
             </>
           )}
         </div>
@@ -83,28 +83,32 @@ export function WorkspaceSwitcher() {
                 >
                   {workspace.name}
                 </button>
-                <button
-                  type="button"
-                  aria-label={`Rename ${workspace.name}`}
-                  onClick={() => {
-                    setOpen(false)
-                    setDialog({ type: 'edit', workspace })
-                  }}
-                  className="rounded p-1 text-gray-400 opacity-0 hover:bg-gray-200 hover:text-gray-700 group-hover:opacity-100"
-                >
-                  <PencilIcon className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  type="button"
-                  aria-label={`Delete ${workspace.name}`}
-                  onClick={() => {
-                    setOpen(false)
-                    setDialog({ type: 'delete', workspace })
-                  }}
-                  className="rounded p-1 text-gray-400 opacity-0 hover:bg-red-50 hover:text-red-600 group-hover:opacity-100"
-                >
-                  <TrashIcon className="h-3.5 w-3.5" />
-                </button>
+                {workspace.myRole === 'Owner' && (
+                  <>
+                    <button
+                      type="button"
+                      aria-label={`Rename ${workspace.name}`}
+                      onClick={() => {
+                        setOpen(false)
+                        setDialog({ type: 'edit', workspace })
+                      }}
+                      className="rounded p-1 text-gray-400 opacity-0 hover:bg-gray-200 hover:text-gray-700 group-hover:opacity-100"
+                    >
+                      <PencilIcon className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Delete ${workspace.name}`}
+                      onClick={() => {
+                        setOpen(false)
+                        setDialog({ type: 'delete', workspace })
+                      }}
+                      className="rounded p-1 text-gray-400 opacity-0 hover:bg-red-50 hover:text-red-600 group-hover:opacity-100"
+                    >
+                      <TrashIcon className="h-3.5 w-3.5" />
+                    </button>
+                  </>
+                )}
               </div>
             ))}
           </div>
