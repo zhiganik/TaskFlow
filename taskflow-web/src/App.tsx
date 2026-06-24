@@ -1,7 +1,7 @@
-import { HealthCheckPage } from './pages/HealthCheckPage'
+import { AppRouter } from './router'
 
 function App() {
-  return <HealthCheckPage />
+  return <AppRouter />
 }
 
 export default App

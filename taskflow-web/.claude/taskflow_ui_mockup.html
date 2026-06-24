@@ -1,0 +1,294 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); font-size: 14px; color: var(--color-text-primary); }
+
+.app { display: flex; height: 580px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; background: var(--color-background-tertiary); }
+
+.sidebar { width: 200px; min-width: 200px; background: var(--color-background-primary); border-right: 0.5px solid var(--color-border-tertiary); display: flex; flex-direction: column; padding: 16px 0; }
+.logo { padding: 0 16px 20px; font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+.logo-icon { width: 26px; height: 26px; background: #7F77DD; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+.logo-icon svg { width: 14px; height: 14px; fill: white; }
+
+.nav-section { padding: 0 8px; margin-bottom: 4px; }
+.nav-label { font-size: 11px; color: var(--color-text-tertiary); padding: 0 8px; margin-bottom: 4px; letter-spacing: 0.04em; text-transform: uppercase; }
+.nav-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: var(--border-radius-md); cursor: pointer; font-size: 13px; color: var(--color-text-secondary); }
+.nav-item:hover { background: var(--color-background-secondary); color: var(--color-text-primary); }
+.nav-item.active { background: #EEEDFE; color: #534AB7; font-weight: 500; }
+.nav-item i { font-size: 15px; }
+
+.workspace-pill { margin: 0 8px 16px; padding: 8px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary); }
+.workspace-name { font-size: 12px; font-weight: 500; }
+.workspace-role { font-size: 11px; color: var(--color-text-tertiary); }
+
+.sidebar-bottom { margin-top: auto; padding: 12px 16px 0; border-top: 0.5px solid var(--color-border-tertiary); display: flex; align-items: center; gap: 8px; }
+.avatar { width: 28px; height: 28px; border-radius: 50%; background: #EEEDFE; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; color: #534AB7; flex-shrink: 0; }
+.user-name { font-size: 12px; font-weight: 500; }
+.user-email { font-size: 11px; color: var(--color-text-tertiary); }
+
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+.topbar { background: var(--color-background-primary); border-bottom: 0.5px solid var(--color-border-tertiary); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; }
+.breadcrumb { font-size: 13px; color: var(--color-text-secondary); display: flex; align-items: center; gap: 6px; }
+.breadcrumb span { color: var(--color-text-primary); font-weight: 500; }
+.topbar-actions { display: flex; align-items: center; gap: 8px; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--border-radius-md); font-size: 13px; cursor: pointer; border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); }
+.btn-primary { background: #7F77DD; color: white; border-color: #7F77DD; }
+.btn i { font-size: 14px; }
+
+.content { flex: 1; overflow-y: auto; padding: 20px; display: flex; gap: 16px; }
+
+.task-col { flex: 1; min-width: 0; }
+.col-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.col-title { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; display: flex; align-items: center; gap: 6px; }
+.col-count { background: var(--color-background-secondary); color: var(--color-text-secondary); font-size: 11px; padding: 1px 6px; border-radius: 10px; }
+
+.task-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 10px 12px; margin-bottom: 8px; cursor: pointer; }
+.task-card:hover { border-color: var(--color-border-secondary); }
+.task-title { font-size: 13px; font-weight: 500; margin-bottom: 6px; line-height: 1.3; }
+.task-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+.badge { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; padding: 2px 7px; border-radius: 10px; font-weight: 500; }
+.badge-high { background: #FAECE7; color: #993C1D; }
+.badge-medium { background: #FAEEDA; color: #854F0B; }
+.badge-low { background: #EAF3DE; color: #3B6D11; }
+.badge-critical { background: #FCEBEB; color: #A32D2D; }
+
+.task-assignee { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+.mini-avatar { width: 18px; height: 18px; border-radius: 50%; background: #EEEDFE; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 500; color: #534AB7; }
+.mini-avatar.green { background: #EAF3DE; color: #3B6D11; }
+.mini-avatar.coral { background: #FAECE7; color: #993C1D; }
+
+.due-date { font-size: 11px; color: var(--color-text-tertiary); display: flex; align-items: center; gap: 3px; }
+.due-date.overdue { color: #993C1D; }
+.due-date i { font-size: 12px; }
+
+.attachment-indicator { font-size: 11px; color: var(--color-text-tertiary); display: flex; align-items: center; gap: 3px; }
+.attachment-indicator i { font-size: 12px; }
+
+.col-todo .col-title { color: var(--color-text-secondary); }
+.col-inprogress .col-title { color: #185FA5; }
+.col-done .col-title { color: #3B6D11; }
+
+.dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.dot-todo { background: var(--color-border-secondary); }
+.dot-progress { background: #378ADD; }
+.dot-done { background: #639922; }
+
+.detail-panel { width: 280px; min-width: 280px; background: var(--color-background-primary); border-left: 0.5px solid var(--color-border-tertiary); display: flex; flex-direction: column; overflow: hidden; }
+.detail-header { padding: 14px 16px 12px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.detail-title { font-size: 14px; font-weight: 500; line-height: 1.3; margin-bottom: 10px; }
+.detail-section { padding: 12px 16px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.detail-label { font-size: 11px; color: var(--color-text-tertiary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+.detail-value { font-size: 13px; display: flex; align-items: center; gap: 6px; }
+
+.status-select { display: flex; gap: 4px; flex-wrap: wrap; }
+.status-chip { font-size: 11px; padding: 3px 8px; border-radius: 10px; border: 0.5px solid var(--color-border-tertiary); cursor: pointer; }
+.status-chip.active { background: #EEEDFE; color: #534AB7; border-color: #AFA9EC; }
+
+.attachment-list { padding: 12px 16px; flex: 1; overflow-y: auto; }
+.attachment-item { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary); margin-bottom: 6px; background: var(--color-background-secondary); }
+.file-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.file-icon.pdf { background: #FCEBEB; color: #A32D2D; }
+.file-icon.img { background: #EAF3DE; color: #3B6D11; }
+.file-icon.doc { background: #E6F1FB; color: #185FA5; }
+.file-name { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.file-meta { font-size: 11px; color: var(--color-text-tertiary); }
+.file-status { margin-left: auto; flex-shrink: 0; }
+.status-dot { width: 7px; height: 7px; border-radius: 50%; }
+.status-dot.ready { background: #639922; }
+.status-dot.pending { background: #EF9F27; }
+
+.upload-area { margin: 0 16px 14px; border: 0.5px dashed var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 10px; text-align: center; cursor: pointer; }
+.upload-area:hover { background: var(--color-background-secondary); }
+.upload-text { font-size: 12px; color: var(--color-text-secondary); }
+.upload-sub { font-size: 11px; color: var(--color-text-tertiary); margin-top: 2px; }
+</style>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 16 16"><path d="M2 3h12v2H2zM2 7h8v2H2zM2 11h10v2H2z"/></svg>
+      </div>
+      TaskFlow
+    </div>
+
+    <div class="workspace-pill">
+      <div class="workspace-name">Acme Team</div>
+      <div class="workspace-role">Owner</div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Workspace</div>
+      <div class="nav-item"><i class="ti ti-layout-grid" aria-hidden="true"></i> Projects</div>
+      <div class="nav-item active"><i class="ti ti-checklist" aria-hidden="true"></i> Tasks</div>
+      <div class="nav-item"><i class="ti ti-users" aria-hidden="true"></i> Members</div>
+    </div>
+
+    <div class="nav-section" style="margin-top:12px">
+      <div class="nav-label">My work</div>
+      <div class="nav-item"><i class="ti ti-user-check" aria-hidden="true"></i> Assigned to me</div>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="avatar">JS</div>
+      <div>
+        <div class="user-name">Jane Smith</div>
+        <div class="user-email">jane@acme.com</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="breadcrumb">
+        <i class="ti ti-layout-grid" style="font-size:14px" aria-hidden="true"></i>
+        Acme Team
+        <i class="ti ti-chevron-right" style="font-size:12px" aria-hidden="true"></i>
+        <span>Website Redesign</span>
+      </div>
+      <div class="topbar-actions">
+        <div class="btn"><i class="ti ti-filter" aria-hidden="true"></i> Filter</div>
+        <div class="btn btn-primary"><i class="ti ti-plus" aria-hidden="true"></i> New task</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="task-col col-todo">
+        <div class="col-header">
+          <div class="col-title"><div class="dot dot-todo"></div> To do <span class="col-count">4</span></div>
+        </div>
+        <div class="task-card">
+          <div class="task-title">Write API documentation for auth endpoints</div>
+          <div class="task-meta">
+            <span class="badge badge-medium">Medium</span>
+            <span class="due-date"><i class="ti ti-calendar" aria-hidden="true"></i> Jun 28</span>
+            <div class="task-assignee"><div class="mini-avatar green">BK</div></div>
+          </div>
+        </div>
+        <div class="task-card">
+          <div class="task-title">Set up Redis caching for project list</div>
+          <div class="task-meta">
+            <span class="badge badge-high">High</span>
+            <span class="due-date overdue"><i class="ti ti-calendar" aria-hidden="true"></i> Jun 20</span>
+            <span class="attachment-indicator"><i class="ti ti-paperclip" aria-hidden="true"></i> 2</span>
+            <div class="task-assignee"><div class="mini-avatar">JS</div></div>
+          </div>
+        </div>
+        <div class="task-card">
+          <div class="task-title">Add NUnit tests for WorkspaceService</div>
+          <div class="task-meta">
+            <span class="badge badge-low">Low</span>
+            <div class="task-assignee"><div class="mini-avatar coral">MR</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="task-col col-inprogress">
+        <div class="col-header">
+          <div class="col-title"><div class="dot dot-progress"></div> In progress <span class="col-count">3</span></div>
+        </div>
+        <div class="task-card" style="border-color: #AFA9EC;">
+          <div class="task-title">Design new landing page hero section</div>
+          <div class="task-meta">
+            <span class="badge badge-critical">Critical</span>
+            <span class="due-date"><i class="ti ti-calendar" aria-hidden="true"></i> Jun 30</span>
+            <span class="attachment-indicator"><i class="ti ti-paperclip" aria-hidden="true"></i> 1</span>
+            <div class="task-assignee"><div class="mini-avatar">JS</div></div>
+          </div>
+        </div>
+        <div class="task-card">
+          <div class="task-title">Implement file upload background processing</div>
+          <div class="task-meta">
+            <span class="badge badge-high">High</span>
+            <span class="due-date"><i class="ti ti-calendar" aria-hidden="true"></i> Jul 2</span>
+            <div class="task-assignee"><div class="mini-avatar green">BK</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="task-col col-done">
+        <div class="col-header">
+          <div class="col-title"><div class="dot dot-done"></div> Done <span class="col-count">5</span></div>
+        </div>
+        <div class="task-card" style="opacity:0.7">
+          <div class="task-title">Set up Docker infrastructure with health checks</div>
+          <div class="task-meta">
+            <span class="badge badge-high">High</span>
+            <span class="due-date"><i class="ti ti-calendar" aria-hidden="true"></i> Jun 15</span>
+            <div class="task-assignee"><div class="mini-avatar">JS</div></div>
+          </div>
+        </div>
+        <div class="task-card" style="opacity:0.7">
+          <div class="task-title">Configure JWT auth and RBAC policies</div>
+          <div class="task-meta">
+            <span class="badge badge-critical">Critical</span>
+            <div class="task-assignee"><div class="mini-avatar coral">MR</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-panel">
+    <div class="detail-header">
+      <div class="detail-title">Design new landing page hero section</div>
+      <div class="task-meta">
+        <span class="badge badge-critical">Critical</span>
+        <span class="due-date"><i class="ti ti-calendar" aria-hidden="true"></i> Jun 30</span>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-label">Status</div>
+      <div class="status-select">
+        <div class="status-chip">To do</div>
+        <div class="status-chip active">In progress</div>
+        <div class="status-chip">Done</div>
+        <div class="status-chip">Cancelled</div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-label">Assignee</div>
+      <div class="detail-value">
+        <div class="avatar" style="width:22px;height:22px;font-size:9px">JS</div>
+        Jane Smith
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-label">Priority</div>
+      <div class="detail-value"><span class="badge badge-critical">Critical</span></div>
+    </div>
+
+    <div class="attachment-list">
+      <div class="detail-label" style="margin-bottom:8px">Attachments</div>
+
+      <div class="attachment-item">
+        <div class="file-icon pdf"><i class="ti ti-file-type-pdf" aria-hidden="true"></i></div>
+        <div style="min-width:0;flex:1">
+          <div class="file-name">brief.pdf</div>
+          <div class="file-meta">204 KB</div>
+        </div>
+        <div class="file-status"><div class="status-dot ready" title="Ready"></div></div>
+      </div>
+
+      <div class="attachment-item">
+        <div class="file-icon img"><i class="ti ti-photo" aria-hidden="true"></i></div>
+        <div style="min-width:0;flex:1">
+          <div class="file-name">mockup-v2.png</div>
+          <div class="file-meta">1.2 MB</div>
+        </div>
+        <div class="file-status"><div class="status-dot pending" title="Processing"></div></div>
+      </div>
+    </div>
+
+    <div class="upload-area">
+      <div><i class="ti ti-upload" style="font-size:16px;color:var(--color-text-tertiary)" aria-hidden="true"></i></div>
+      <div class="upload-text">Upload file</div>
+      <div class="upload-sub">PDF, PNG, JPG, DOCX — max 20 MB</div>
+    </div>
+  </div>
+</div>

@@ -24,7 +24,7 @@ public static class DependencyConfig
     {
         services
             .AddOptions(config)
-            .AddDatabase(config)
+            .AddDatabase()
             .AddRedisCache()
             .AddIdentityServices()
             .AddJwtAuthentication(config)
@@ -47,7 +47,7 @@ public static class DependencyConfig
         return services;
     }
 
-    private static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration config)
+    private static IServiceCollection AddDatabase(this IServiceCollection services)
     {
         var connectionString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION")
             ?? throw new InvalidOperationException("POSTGRES_CONNECTION env var is required");
