@@ -234,7 +234,10 @@ public class CreateTaskRequestValidator : AbstractValidator<CreateTaskRequest>
 }
 ```
 
-Validation errors return `400 Bad Request` with `ValidationProblemDetails` via `ValidationFilter` — never manually.
+Validation is explicit, not a filter: controllers inject `IValidator<TRequest>` and call
+`await validator.ValidateAndThrowAsync(request, ct)` as the first line of the action. FluentValidation's
+own `ValidationException` propagates to `GlobalExceptionMiddleware`, which converts it to a `400 Bad Request`
+`ValidationProblemDetails` with per-field errors. Never check `ModelState` manually in a controller.
 
 ---
 

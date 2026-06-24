@@ -1,4 +1,5 @@
 using Serilog;
+using TaskFlow.Api.Middleware;
 
 namespace TaskFlow.Api.Config;
 
@@ -6,6 +7,7 @@ public static class ApplicationConfig
 {
     public static WebApplication UseApplicationPipeline(this WebApplication app)
     {
+        app.UseMiddleware<GlobalExceptionMiddleware>();
         app.UseSerilogRequestLogging();
 
         if (app.Environment.IsDevelopment())
@@ -19,6 +21,10 @@ public static class ApplicationConfig
         }
 
         app.UseHttpsRedirection();
+
+        app.UseAuthentication();
+        app.UseAuthorization();
+
         app.MapControllers();
         return app;
     }

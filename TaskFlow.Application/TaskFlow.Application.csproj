@@ -3,6 +3,13 @@
   <ItemGroup>
     <PackageReference Include="FluentValidation" Version="11.*" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="10.*" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="10.*" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Domain\Constants\" />
+    <Folder Include="Domain\Enums\" />
   </ItemGroup>
 
 </Project>

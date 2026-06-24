@@ -79,7 +79,7 @@ public static class DependencyConfig
             .AddJwtAuth(config)
             .AddFluentValidationServices()
             .AddSwaggerDocumentation()
-            .AddControllers(opts => opts.Filters.Add<ValidationFilter>());
+            .AddControllers();
         return services;
     }
 }
@@ -128,8 +128,7 @@ public static WebApplication UseApplicationPipeline(this WebApplication app)
 ## Layer Responsibilities
 
 ### Api layer
-- Controllers (thin — delegate immediately to service)
-- Filters (`ValidationFilter`)
+- Controllers (thin — delegate immediately to service; validate via injected `IValidator<TRequest>` first)
 - Middleware (`GlobalExceptionMiddleware`, `RequestLoggingMiddleware`)
 - BackgroundServices (`DeadlineNotifierService`)
 - Config (`DependencyConfig`, `ApplicationConfig`)

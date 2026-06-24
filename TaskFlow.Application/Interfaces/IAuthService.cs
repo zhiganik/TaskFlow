@@ -1,0 +1,11 @@
+using TaskFlow.Application.DTOs;
+
+namespace TaskFlow.Application.Interfaces;
+
+public interface IAuthService
+{
+    Task<UserDto> RegisterAsync(RegisterRequest request, CancellationToken ct = default);
+    Task<AuthResponseDto> LoginAsync(LoginRequest request, CancellationToken ct = default);
+    Task<AuthResponseDto> RefreshAsync(RefreshTokenRequest request, CancellationToken ct = default);
+    Task LogoutAsync(RefreshTokenRequest request, CancellationToken ct = default);
+}

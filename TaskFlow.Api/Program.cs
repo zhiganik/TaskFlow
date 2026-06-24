@@ -9,7 +9,8 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     Log.Information("Starting TaskFlow API");
-
+    DotNetEnv.Env.TraversePath().Load();
+    
     var builder = WebApplication.CreateBuilder(args);
 
     builder.Services.AddDependencies(builder.Configuration);
