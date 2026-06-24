@@ -45,3 +45,18 @@ export interface ProblemDetails {
 export interface ValidationProblemDetails extends ProblemDetails {
   errors: Record<string, string[]>
 }
+
+export interface WorkspaceDto {
+  id: string
+  name: string
+  ownerId: string
+  createdAt: string
+}
+
+export interface CreateWorkspaceRequest {
+  name: string
+}
+
+export interface UpdateWorkspaceRequest {
+  name: string
+}
