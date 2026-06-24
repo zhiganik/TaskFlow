@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Swashbuckle.AspNetCore.Annotations;
 using TaskFlow.Application.DTOs;
-using TaskFlow.Application.Interfaces;
+using TaskFlow.Application.Interfaces.Services;
 
 namespace TaskFlow.Api.Controllers;
 
@@ -11,7 +10,6 @@ public class HealthController(IHealthService healthService) : ControllerBase
 {
     /// <summary>Check whether the API is up and responding.</summary>
     [HttpGet]
-    [SwaggerOperation(Summary = "Health check", Tags = new[] { "Health" })]
     [ProducesResponseType(typeof(HealthDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetHealth(CancellationToken ct)
     {

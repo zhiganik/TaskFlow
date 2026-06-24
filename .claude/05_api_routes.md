@@ -22,13 +22,16 @@ Every action MUST have:
 /// <summary>One line — appears as the route title in Swagger UI.</summary>
 [HttpVerb("route")]
 [Authorize(Policy = "PolicyName")]
-[SwaggerOperation(Summary = "Short title", Tags = new[] { "GroupTag" })]
 [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
 [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
 [ProducesResponseType(StatusCodes.Status401Unauthorized)]
 [ProducesResponseType(StatusCodes.Status403Forbidden)]
 [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
 ```
+
+No `[SwaggerOperation]` — the `/// <summary>` XML doc comment is enough. `DependencyConfig.AddSwaggerDocumentation`
+calls `opts.IncludeXmlComments(...)`, so Swashbuckle reads the summary directly, and it tags operations by
+controller name automatically. The `Swashbuckle.AspNetCore.Annotations` package is not referenced.
 
 File upload endpoints use `[Consumes("multipart/form-data")]`.
 
@@ -176,7 +179,6 @@ public class TaskAttachmentsController(ITaskAttachmentService attachmentService)
     [HttpPost]
     [Authorize(Policy = "WorkspaceMember")]
     [Consumes("multipart/form-data")]
-    [SwaggerOperation(Summary = "Upload attachment", Tags = new[] { "Attachments" })]
     [ProducesResponseType(typeof(AttachmentDto), StatusCodes.Status202Accepted)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -188,15 +190,13 @@ public class TaskAttachmentsController(ITaskAttachmentService attachmentService)
         IFormFile file,
         CancellationToken ct)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        var dto = await attachmentService.UploadAsync(taskId, file, userId, ct);
+        var dto = await attachmentService.UploadAsync(taskId, file, User.GetUserId(), ct);
         return AcceptedAtAction(nameof(GetById), new { taskId, id = dto.Id }, dto);
     }
 
     /// <summary>Download attachment file. Only available when status is Ready.</summary>
     [HttpGet("{id}/download")]
     [Authorize(Policy = "WorkspaceMember")]
-    [SwaggerOperation(Summary = "Download attachment", Tags = new[] { "Attachments" })]
     [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

@@ -191,15 +191,23 @@ public async Task<IActionResult> GetProjects(...) { }
 
 ## Reading User Identity in Services
 
-Never pass the full `ClaimsPrincipal` into services. Extract the user ID in the controller and pass it as a parameter:
+Never pass the full `ClaimsPrincipal` into services. Extract the user ID in the controller via the
+`ClaimsPrincipal.GetUserId()` extension and pass it as a parameter:
 
 ```csharp
+// TaskFlow.Api/Extensions/ClaimsPrincipalExtensions.cs
+public static class ClaimsPrincipalExtensions
+{
+    public static string GetUserId(this ClaimsPrincipal principal) =>
+        principal.FindFirstValue(ClaimTypes.NameIdentifier)!;
+}
+
 // In controller
-var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-var result = await taskService.CreateTaskAsync(request, userId, ct);
+var result = await taskService.CreateTaskAsync(request, User.GetUserId(), ct);
 ```
 
-Services receive `string userId`, not `ClaimsPrincipal`. This keeps services testable without mocking HTTP context.
+Services receive `string userId`, not `ClaimsPrincipal`. This keeps services testable without mocking HTTP
+context, and the extension method avoids repeating the claim lookup in every action.
 
 ---
 

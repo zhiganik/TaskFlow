@@ -45,7 +45,6 @@ public class TasksController(ITaskService taskService) : ControllerBase
     /// <summary>Get paginated tasks for a project.</summary>
     [HttpGet]
     [Authorize(Policy = "WorkspaceMember")]
-    [SwaggerOperation(Summary = "List tasks", Tags = new[] { "Tasks" })]
     [ProducesResponseType(typeof(PagedResult<TaskDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -65,8 +64,10 @@ public class TasksController(ITaskService taskService) : ControllerBase
 - [ ] `[ApiController]` attribute
 - [ ] `[Route("api/v1/...")]` — versioned
 - [ ] `[Authorize]` at class level, specific policy at method level
-- [ ] `[SwaggerOperation(Summary = "...")]` on every action
+- [ ] `/// <summary>` XML doc comment on every action — no `[SwaggerOperation]`. `DependencyConfig.AddSwaggerDocumentation` calls `opts.IncludeXmlComments(...)`, so the doc comment alone drives the Swagger UI title/description, and Swashbuckle tags by controller name automatically.
 - [ ] `[ProducesResponseType]` for every possible status code
+- [ ] No `IValidator<TRequest>` injected and no manual `ValidateAndThrowAsync` call — `AddFluentValidationAutoValidation()` (registered in `DependencyConfig`) validates the bound request automatically and short-circuits with `400` on failure
+- [ ] User id read via `User.GetUserId()` (`TaskFlow.Api/Extensions/ClaimsPrincipalExtensions.cs`) — never inline `User.FindFirstValue(ClaimTypes.NameIdentifier)`
 - [ ] `CancellationToken ct` on every async action
 - [ ] Returns `IActionResult` (not typed `ActionResult<T>`) for consistency
 - [ ] Zero try/catch blocks — GlobalExceptionMiddleware handles everything
@@ -234,10 +235,16 @@ public class CreateTaskRequestValidator : AbstractValidator<CreateTaskRequest>
 }
 ```
 
-Validation is explicit, not a filter: controllers inject `IValidator<TRequest>` and call
-`await validator.ValidateAndThrowAsync(request, ct)` as the first line of the action. FluentValidation's
-own `ValidationException` propagates to `GlobalExceptionMiddleware`, which converts it to a `400 Bad Request`
-`ValidationProblemDetails` with per-field errors. Never check `ModelState` manually in a controller.
+Validation runs automatically as a filter, not explicitly in the controller: `AddFluentValidationAutoValidation()`
+(registered in `DependencyConfig.AddFluentValidationServices`) finds the registered `IValidator<TRequest>` for
+the action's bound parameter and runs it before the action executes, short-circuiting with `400 Bad Request`
+and per-field errors when invalid. Controllers never inject `IValidator<TRequest>` and never call
+`ValidateAndThrowAsync` — just declare the `AbstractValidator<T>` class and `AddValidatorsFromAssemblyContaining`
+picks it up via assembly scanning. Never check `ModelState` manually in a controller.
+
+`GlobalExceptionMiddleware` still maps `FluentValidation.ValidationException` to `400` — that path is for
+validators invoked explicitly inside services for business-rule checks (e.g. file type/size), not for
+request-DTO validation.
 
 ---
 

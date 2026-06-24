@@ -1,5 +1,8 @@
+using System.IO;
+using System.Reflection;
 using System.Text;
 using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -8,12 +11,14 @@ using Microsoft.OpenApi.Models;
 using StackExchange.Redis;
 using TaskFlow.Api.Swagger;
 using TaskFlow.Application.Domain.Entities;
-using TaskFlow.Application.Interfaces;
+using TaskFlow.Application.Interfaces.Repositories;
+using TaskFlow.Application.Interfaces.Services;
 using TaskFlow.Application.Options;
 using TaskFlow.Application.Services;
 using TaskFlow.Application.Validators;
 using TaskFlow.Infrastructure.Caching;
 using TaskFlow.Infrastructure.Persistence;
+using TaskFlow.Infrastructure.Repositories;
 
 namespace TaskFlow.Api.Config;
 
@@ -28,6 +33,7 @@ public static class DependencyConfig
             .AddRedisCache()
             .AddIdentityServices()
             .AddJwtAuthentication(config)
+            .AddRepositories()
             .AddApplicationServices()
             .AddFluentValidationServices()
             .AddSwaggerDocumentation()
@@ -120,16 +126,24 @@ public static class DependencyConfig
         return services;
     }
 
+    private static IServiceCollection AddRepositories(this IServiceCollection services)
+    {
+        services.AddScoped<IWorkspacesRepository, WorkspacesRepository>();
+        return services;
+    }
+
     private static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         services.AddScoped<IHealthService, HealthService>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IWorkspacesService, WorkspacesService>();
         return services;
     }
 
     private static IServiceCollection AddFluentValidationServices(this IServiceCollection services)
     {
+        services.AddFluentValidationAutoValidation();
         services.AddValidatorsFromAssemblyContaining<RegisterRequestValidator>();
         return services;
     }
@@ -145,8 +159,8 @@ public static class DependencyConfig
                 Version = "v1",
                 Description = "Task & Project Management REST API"
             });
-            opts.EnableAnnotations();
-            
+            opts.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml"));
+
             opts.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 Name = "Authorization",

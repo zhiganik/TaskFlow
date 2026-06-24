@@ -5,7 +5,7 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using TaskFlow.Application.Domain.Entities;
-using TaskFlow.Application.Interfaces;
+using TaskFlow.Application.Interfaces.Services;
 using TaskFlow.Application.Options;
 
 namespace TaskFlow.Application.Services;

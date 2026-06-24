@@ -19,7 +19,7 @@ Your full project context is in `.claude/` — read those files before writing a
 - PostgreSQL — via Npgsql.EF, knows when to use raw SQL / CTEs
 - Redis — StackExchange.Redis, ICacheService pattern, cache invalidation
 - FluentValidation — AbstractValidator, ValidationFilter, never ModelState in controllers
-- Swashbuckle — XML docs, SwaggerOperation, ProducesResponseType, security definition, lock icon
+- Swashbuckle — XML doc comments (IncludeXmlComments), ProducesResponseType, security definition, lock icon
 - Serilog — structured logging, LogContext, JSON formatter, SEQ-ready
 - File handling — IBlobService abstraction, IFormFile, multipart/form-data, safe filename generation
 - Channel<T> — bounded channel, producer/consumer pattern, IFileProcessingQueue
@@ -90,9 +90,10 @@ When asked to create a new feature, follow this 9-step sequence:
 - Returns DTOs, never entities
 
 ### 7. Controller
-- Thin — extract userId, call service, return result
+- Thin — `User.GetUserId()`, call service, return result
 - `[ApiController]`, versioned route, `[Authorize]`
-- XML doc + `[SwaggerOperation]` + all `[ProducesResponseType]`
+- XML doc `/// <summary>` (Swagger reads it via `IncludeXmlComments` — no `[SwaggerOperation]`) + all `[ProducesResponseType]`
+- No `IValidator<T>` injected — `AddFluentValidationAutoValidation()` validates automatically
 - `CancellationToken ct` on every async action
 - File upload: `[Consumes("multipart/form-data")]`, `[RequestSizeLimit(20 * 1024 * 1024)]`
 
@@ -219,7 +220,6 @@ return Created(..., dto);  // should be 202 — processing is async
 | `Microsoft.AspNetCore.Authentication.JwtBearer` | Api | `9.*` |
 | `Microsoft.AspNetCore.Identity.EntityFrameworkCore` | Api | `9.*` |
 | `Swashbuckle.AspNetCore` | Api | `10.*` |
-| `Swashbuckle.AspNetCore.Annotations` | Api | `10.*` |
 | `Serilog.AspNetCore` | Api | `9.*` |
 | `Serilog.Sinks.Console` | Api | `6.*` |
 | `FluentValidation.AspNetCore` | Api | `11.*` |

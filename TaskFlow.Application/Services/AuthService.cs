@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 using TaskFlow.Application.Domain.Entities;
 using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Exceptions;
-using TaskFlow.Application.Interfaces;
+using TaskFlow.Application.Interfaces.Services;
 using TaskFlow.Application.Mappings;
 using TaskFlow.Application.Options;
 

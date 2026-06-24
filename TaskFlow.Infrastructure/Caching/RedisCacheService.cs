@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
-using TaskFlow.Application.Interfaces;
+using TaskFlow.Application.Interfaces.Services;
 using TaskFlow.Application.Options;
 
 namespace TaskFlow.Infrastructure.Caching;

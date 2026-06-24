@@ -1,4 +1,4 @@
-namespace TaskFlow.Application.Interfaces;
+namespace TaskFlow.Application.Interfaces.Services;
 
 public interface ICacheService
 {

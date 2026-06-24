@@ -1,5 +1,5 @@
 using TaskFlow.Application.DTOs;
-using TaskFlow.Application.Interfaces;
+using TaskFlow.Application.Interfaces.Services;
 
 namespace TaskFlow.Application.Services;
 

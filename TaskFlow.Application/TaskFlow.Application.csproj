@@ -9,7 +9,6 @@
 
   <ItemGroup>
     <Folder Include="Domain\Constants\" />
-    <Folder Include="Domain\Enums\" />
   </ItemGroup>
 
 </Project>
