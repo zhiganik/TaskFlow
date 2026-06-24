@@ -4,6 +4,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { HealthCheckPage } from './pages/HealthCheckPage'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
+import { WorkspaceRedirectPage } from './pages/WorkspaceRedirectPage'
 import { useAuthStore } from './store/authStore'
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -39,6 +40,14 @@ export function AppRouter() {
         <Route path="/health" element={<HealthCheckPage />} />
         <Route
           path="/"
+          element={
+            <ProtectedRoute>
+              <WorkspaceRedirectPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/workspaces/:workspaceId"
           element={
             <ProtectedRoute>
               <DashboardPage />

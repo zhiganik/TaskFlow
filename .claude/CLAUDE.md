@@ -32,7 +32,7 @@ ASP.NET Core 9 REST API + React 19 frontend. Task & project management with file
 
 ## Frontend Hard Rules (Never Break)
 1. **All API calls go through `src/api/`** — never `fetch` or `axios` directly in components
-2. **JWT stored in memory only** — never `localStorage` (XSS risk)
+2. **JWT persisted via the `authStore` zustand `persist` middleware (`localStorage`)** — deliberate choice over in-memory-only so a page reload doesn't force a re-login; mitigated by a short-lived access token and a refresh token that rotates (single-use) on every refresh
 3. **No business logic in components** — components call hooks, hooks call API client
 4. **TypeScript strict mode** — no `any`, no unchecked nulls
 5. **`.env.local` never committed** — `VITE_*` secrets use `.env.local.example` as template

@@ -1,7 +1,7 @@
 import { useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { getErrorMessage } from '../../api/errors'
 import { useDeleteWorkspace } from '../../hooks/useWorkspaces'
-import { useWorkspaceStore } from '../../store/workspaceStore'
 import type { WorkspaceDto } from '../../types/api.types'
 import { Alert } from '../ui/Alert'
 import { Button } from '../ui/Button'
@@ -14,15 +14,15 @@ interface DeleteWorkspaceDialogProps {
 
 export function DeleteWorkspaceDialog({ workspace, onClose }: DeleteWorkspaceDialogProps) {
   const deleteMutation = useDeleteWorkspace()
-  const selectedWorkspaceId = useWorkspaceStore((s) => s.selectedWorkspaceId)
-  const selectWorkspace = useWorkspaceStore((s) => s.selectWorkspace)
+  const { workspaceId } = useParams<{ workspaceId: string }>()
+  const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
 
   const onConfirm = () => {
     setError(null)
     deleteMutation.mutate(workspace.id, {
       onSuccess: () => {
-        if (selectedWorkspaceId === workspace.id) selectWorkspace(null)
+        if (workspaceId === workspace.id) navigate('/', { replace: true })
         onClose()
       },
       onError: (err) => setError(getErrorMessage(err)),

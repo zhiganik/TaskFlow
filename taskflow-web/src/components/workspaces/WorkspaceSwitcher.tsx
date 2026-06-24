@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useWorkspaces } from '../../hooks/useWorkspaces'
-import { useWorkspaceStore } from '../../store/workspaceStore'
 import type { WorkspaceDto } from '../../types/api.types'
 import { ChevronDownIcon, PencilIcon, PlusIcon, TrashIcon } from '../ui/Icons'
 import { Spinner } from '../ui/Spinner'
@@ -15,19 +15,11 @@ type DialogState =
 
 export function WorkspaceSwitcher() {
   const { data: workspaces, isLoading } = useWorkspaces()
-  const selectedWorkspaceId = useWorkspaceStore((s) => s.selectedWorkspaceId)
-  const selectWorkspace = useWorkspaceStore((s) => s.selectWorkspace)
+  const { workspaceId } = useParams<{ workspaceId: string }>()
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [dialog, setDialog] = useState<DialogState>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-
-  // Keep the selection valid: auto-pick a workspace once the list loads, and
-  // fall back to another one if the selected workspace gets deleted elsewhere.
-  useEffect(() => {
-    if (!workspaces) return
-    const stillExists = workspaces.some((w) => w.id === selectedWorkspaceId)
-    if (!stillExists) selectWorkspace(workspaces[0]?.id ?? null)
-  }, [workspaces, selectedWorkspaceId, selectWorkspace])
 
   useEffect(() => {
     if (!open) return
@@ -40,7 +32,7 @@ export function WorkspaceSwitcher() {
     return () => document.removeEventListener('mousedown', onClickOutside)
   }, [open])
 
-  const selected = workspaces?.find((w) => w.id === selectedWorkspaceId) ?? null
+  const selected = workspaces?.find((w) => w.id === workspaceId) ?? null
 
   return (
     <div ref={containerRef} className="relative px-2">
@@ -76,17 +68,17 @@ export function WorkspaceSwitcher() {
               <div
                 key={workspace.id}
                 className={`group flex items-center gap-1 rounded-md px-2 py-1.5 ${
-                  workspace.id === selectedWorkspaceId ? 'bg-brand-50' : 'hover:bg-gray-50'
+                  workspace.id === workspaceId ? 'bg-brand-50' : 'hover:bg-gray-50'
                 }`}
               >
                 <button
                   type="button"
                   onClick={() => {
-                    selectWorkspace(workspace.id)
+                    navigate(`/workspaces/${workspace.id}`)
                     setOpen(false)
                   }}
                   className={`min-w-0 flex-1 truncate text-left text-xs font-medium ${
-                    workspace.id === selectedWorkspaceId ? 'text-brand-700' : 'text-gray-700'
+                    workspace.id === workspaceId ? 'text-brand-700' : 'text-gray-700'
                   }`}
                 >
                   {workspace.name}
@@ -137,7 +129,7 @@ export function WorkspaceSwitcher() {
           workspace={dialog.type === 'edit' ? dialog.workspace : undefined}
           onClose={() => setDialog(null)}
           onSaved={(workspace) => {
-            selectWorkspace(workspace.id)
+            navigate(`/workspaces/${workspace.id}`)
             setDialog(null)
           }}
         />

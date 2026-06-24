@@ -42,20 +42,29 @@ taskflow-web/
 │   │   └── useAttachments.ts
 │   │
 │   ├── components/             ← Reusable UI components (no API calls)
-│   │   ├── ui/                 ← Generic: Button, Input, Badge, Modal, Spinner
+│   │   ├── ui/                 ← Generic: Button, TextField, Alert, Spinner, Modal, Icons
+│   │   ├── workspaces/         ← WorkspaceSwitcher, WorkspaceFormModal, DeleteWorkspaceDialog
 │   │   ├── tasks/              ← TaskCard, TaskStatusBadge, AttachmentList
 │   │   └── layout/             ← Sidebar, Header, PageWrapper
 │   │
 │   ├── pages/                  ← Route-level components (one per route)
 │   │   ├── LoginPage.tsx
 │   │   ├── RegisterPage.tsx
-│   │   ├── WorkspacesPage.tsx
+│   │   ├── WorkspaceRedirectPage.tsx  ← "/" → redirects into /workspaces/:workspaceId
+│   │   ├── DashboardPage.tsx          ← Sidebar + workspace-scoped content
 │   │   ├── ProjectsPage.tsx
 │   │   ├── TasksPage.tsx
 │   │   └── TaskDetailPage.tsx  ← includes file upload + status polling
 │   │
-│   ├── store/                  ← Auth state only (token in memory)
-│   │   └── authStore.ts        ← Zustand or simple Context — no localStorage
+│   ├── store/                  ← Auth state, persisted to localStorage via zustand persist
+│   │   └── authStore.ts
+│   │
+│   ├── validation/              ← Zod schemas mirroring FluentValidation rules
+│   │   ├── auth.schema.ts
+│   │   └── workspace.schema.ts
+│   │
+│   ├── lib/                    ← Small framework-free helpers (no API calls, no React)
+│   │   └── lastWorkspace.ts    ← last-visited workspace id, for the "/" redirect only
 │   │
 │   ├── types/                  ← TypeScript types mirroring backend DTOs
 │   │   └── api.types.ts
@@ -157,34 +166,51 @@ export const useCreateTask = (projectId: string) => {
 
 ---
 
-## Auth — JWT in Memory
+## Auth — Persisted via zustand `persist`
 
-**Never store JWT in `localStorage`** — XSS can steal it. Store in a module-level variable or Zustand store (in-memory):
+Tokens are persisted to `localStorage` through zustand's `persist` middleware, so a page reload
+doesn't force a re-login. This is a deliberate tradeoff for this app (not the in-memory-only
+default): the access token is short-lived and the refresh token rotates — single-use, invalidated
+server-side on every refresh — which bounds how long a value pulled out of storage stays useful.
 
 ```typescript
 // src/store/authStore.ts
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 interface AuthState {
-  token: string | null
+  accessToken: string | null
+  refreshToken: string | null
+  expiresAt: string | null
   user: UserDto | null
-  setAuth: (token: string, user: UserDto) => void
+  setAuth: (tokens: AuthTokens, user: UserDto) => void
   clearAuth: () => void
 }
 
-export const useAuthStore = create<AuthState>(set => ({
-  token: null,
-  user: null,
-  setAuth: (token, user) => set({ token, user }),
-  clearAuth: () => set({ token: null, user: null }),
-}))
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      accessToken: null,
+      refreshToken: null,
+      expiresAt: null,
+      user: null,
+      setAuth: (tokens, user) => set({ ...tokens, user }),
+      clearAuth: () => set({ accessToken: null, refreshToken: null, expiresAt: null, user: null }),
+    }),
+    { name: 'taskflow.auth' },
+  ),
+)
 
-// Token accessor for the Axios interceptor
-export const getTokenFromMemory = () =>
-  useAuthStore.getState().token
+// Plain accessors for use outside React (e.g. the Axios interceptor in api/client.ts)
+export const getAccessToken = () => useAuthStore.getState().accessToken
+export const getRefreshToken = () => useAuthStore.getState().refreshToken
 ```
 
-Consequence: **refresh on page reload = user must log in again**. This is acceptable for a testing/demo UI. Note it in the README.
+On app boot (`App.tsx`), if the persisted access token has already expired, the app silently calls
+`POST /auth/refresh` with the persisted refresh token before rendering the router — no login-page
+flash, no backend changes (the API stays token-based, no cookies/sessions). If the token is still
+valid, nothing is fetched. Mid-session 401s are handled the same way by the existing Axios
+response interceptor in `api/client.ts`, which retries the failed request once after refreshing.
 
 ---
 
@@ -311,7 +337,7 @@ VITE_API_URL=http://localhost:5000
 ## Frontend Hard Rules
 
 1. **All API calls in `src/api/`** — zero `fetch`/`axios` in components or hooks
-2. **JWT in memory only** — Zustand store, never `localStorage` or `sessionStorage`
+2. **JWT persisted via the `authStore` zustand `persist` middleware** — see "Auth" above for the rotation/expiry tradeoffs that make this acceptable
 3. **TypeScript strict** — no `any`, enable `strictNullChecks`, `noUncheckedIndexedAccess`
 4. **No business logic in components** — components render, hooks fetch, `api/` calls the server
 5. **Zod for form validation** — mirrors FluentValidation rules on the backend (same constraints)
@@ -326,7 +352,8 @@ VITE_API_URL=http://localhost:5000
 |------|-------|---------------|
 | `LoginPage` | `/login` | POST /auth/login, token storage |
 | `RegisterPage` | `/register` | POST /auth/register |
-| `WorkspacesPage` | `/workspaces` | GET/POST workspaces |
+| `WorkspaceRedirectPage` | `/` | Redirects to the last-visited (or first) workspace; empty state when none exist |
+| `DashboardPage` | `/workspaces/:workspaceId` | Workspace switcher in the `Sidebar` (create/select/rename/delete) — covers GET/POST/PUT/DELETE workspaces |
 | `ProjectsPage` | `/workspaces/:id/projects` | GET/POST projects, task summary |
 | `TasksPage` | `/projects/:id/tasks` | GET tasks, filter, pagination, status patch |
 | `TaskDetailPage` | `/tasks/:id` | Full task detail, file upload, status polling, download |

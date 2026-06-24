@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import type { UserDto } from '../types/api.types'
 
 interface AuthTokens {
@@ -16,21 +17,28 @@ interface AuthState {
   clearAuth: () => void
 }
 
-// Never persisted to localStorage/sessionStorage — XSS risk. Lost on page reload by design.
-export const useAuthStore = create<AuthState>((set) => ({
-  accessToken: null,
-  refreshToken: null,
-  expiresAt: null,
-  user: null,
-  setAuth: (tokens, user) =>
-    set({
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-      expiresAt: tokens.expiresAt,
-      user,
+// Persisted to localStorage so a page reload doesn't force a re-login. The access token
+// is short-lived and the refresh token rotates on every use (the backend invalidates the
+// old one), which bounds how long a token pulled out of storage stays useful.
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      accessToken: null,
+      refreshToken: null,
+      expiresAt: null,
+      user: null,
+      setAuth: (tokens, user) =>
+        set({
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+          expiresAt: tokens.expiresAt,
+          user,
+        }),
+      clearAuth: () => set({ accessToken: null, refreshToken: null, expiresAt: null, user: null }),
     }),
-  clearAuth: () => set({ accessToken: null, refreshToken: null, expiresAt: null, user: null }),
-}))
+    { name: 'taskflow.auth' },
+  ),
+)
 
 // Plain accessors for use outside React (e.g. the Axios interceptor in api/client.ts).
 export const getAccessToken = () => useAuthStore.getState().accessToken
