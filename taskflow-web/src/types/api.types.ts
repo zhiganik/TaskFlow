@@ -80,3 +80,23 @@ export interface InviteMemberRequest {
 export interface UpdateMemberRoleRequest {
   role: WorkspaceRole
 }
+
+export interface WorkspaceColumnDto {
+  id: string
+  workspaceId: string
+  name: string
+  order: number
+  createdAt: string
+}
+
+export interface CreateColumnRequest {
+  name: string
+}
+
+export interface RenameColumnRequest {
+  name: string
+}
+
+export interface ReorderColumnsRequest {
+  columnIds: string[]
+}
