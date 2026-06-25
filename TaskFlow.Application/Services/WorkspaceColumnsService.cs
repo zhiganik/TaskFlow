@@ -15,6 +15,15 @@ public class WorkspaceColumnsService(
 {
     private const int MaxColumns = 7;
 
+    private static readonly string[] ColorPalette =
+    [
+        "#6366F1", "#F59E0B", "#10B981", "#EF4444",
+        "#3B82F6", "#8B5CF6", "#F97316", "#06B6D4",
+        "#84CC16", "#EC4899"
+    ];
+
+    private static string RandomColor() => ColorPalette[Random.Shared.Next(ColorPalette.Length)];
+
     public async Task<IReadOnlyList<WorkspaceColumnDto>> GetByWorkspaceAsync(Guid workspaceId, CancellationToken ct)
     {
         var columns = await repository.GetByWorkspaceIdAsync(workspaceId, ct);
@@ -31,6 +40,7 @@ public class WorkspaceColumnsService(
         {
             WorkspaceId = workspaceId,
             Name        = request.Name,
+            Color       = request.Color ?? RandomColor(),
             Order       = count
         };
 
@@ -46,6 +56,8 @@ public class WorkspaceColumnsService(
         var column = await GetOwnedColumnAsync(workspaceId, columnId, ct);
 
         column.Name = request.Name;
+        if (request.Color is not null)
+            column.Color = request.Color;
         await repository.UpdateAsync(column, ct);
 
         logger.LogInformation("Column {ColumnId} renamed in workspace {WorkspaceId}", columnId, workspaceId);

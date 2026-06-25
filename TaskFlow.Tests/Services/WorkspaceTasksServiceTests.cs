@@ -136,6 +136,9 @@ public class WorkspaceTasksServiceTests
         _repositoryMock
             .Setup(r => r.CountByColumnIdAsync(column.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(2);
+        _repositoryMock
+            .Setup(r => r.GetNextNumberAsync(workspaceId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
         WorkspaceTask? addedTask = null;
         _repositoryMock
             .Setup(r => r.AddAsync(It.IsAny<WorkspaceTask>(), It.IsAny<CancellationToken>()))
@@ -151,6 +154,7 @@ public class WorkspaceTasksServiceTests
 
         var result = await _sut.CreateAsync(workspaceId, "user-1", request, CancellationToken.None);
 
+        result.Number.Should().Be(1);
         result.Order.Should().Be(2);
         result.Title.Should().Be("New task");
         result.Priority.Should().Be(TaskPriority.High);
@@ -252,10 +256,11 @@ public class WorkspaceTasksServiceTests
             .Setup(r => r.GetByColumnIdAsync(targetColumn.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync([existing0, existing1]);
 
-        await _sut.MoveAsync(workspaceId, task.Id, new MoveTaskRequest(targetColumn.Id, 0), CancellationToken.None);
+        var result = await _sut.MoveAsync(workspaceId, task.Id, new MoveTaskRequest(targetColumn.Id, 0), CancellationToken.None);
 
-        task.ColumnId.Should().Be(targetColumn.Id);
-        task.Order.Should().Be(0);
+        result.ColumnId.Should().Be(targetColumn.Id);
+        result.ColumnName.Should().Be("In Progress");
+        result.Order.Should().Be(0);
         existing0.Order.Should().Be(1);
         existing1.Order.Should().Be(2);
 

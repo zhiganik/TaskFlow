@@ -12,6 +12,7 @@ public class WorkspaceTasksRepository(AppDbContext db) : IWorkspaceTasksReposito
             .AsNoTracking()
             .Include(t => t.Column)
             .Include(t => t.Assignee)
+            .Include(t => t.CreatedBy)
             .Where(t => t.WorkspaceId == workspaceId)
             .OrderBy(t => t.ColumnId)
             .ThenBy(t => t.Order)
@@ -22,6 +23,7 @@ public class WorkspaceTasksRepository(AppDbContext db) : IWorkspaceTasksReposito
             .AsNoTracking()
             .Include(t => t.Column)
             .Include(t => t.Assignee)
+            .Include(t => t.CreatedBy)
             .Where(t => t.ColumnId == columnId)
             .OrderBy(t => t.Order)
             .ToListAsync(ct);
@@ -31,10 +33,16 @@ public class WorkspaceTasksRepository(AppDbContext db) : IWorkspaceTasksReposito
             .AsNoTracking()
             .Include(t => t.Column)
             .Include(t => t.Assignee)
+            .Include(t => t.CreatedBy)
             .FirstOrDefaultAsync(t => t.Id == id, ct);
 
     public async Task<int> CountByColumnIdAsync(Guid columnId, CancellationToken ct = default) =>
         await db.WorkspaceTasks.CountAsync(t => t.ColumnId == columnId, ct);
+
+    public async Task<int> GetNextNumberAsync(Guid workspaceId, CancellationToken ct = default) =>
+        (await db.WorkspaceTasks
+            .Where(t => t.WorkspaceId == workspaceId)
+            .MaxAsync(t => (int?)t.Number, ct) ?? 0) + 1;
 
     public async Task<WorkspaceTask> AddAsync(WorkspaceTask task, CancellationToken ct = default)
     {

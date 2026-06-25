@@ -31,10 +31,12 @@ public class WorkspaceTasksService(
         if (column is null || column.WorkspaceId != workspaceId)
             throw new NotFoundException($"Column {request.ColumnId} was not found in this workspace.");
 
-        var order = await repository.CountByColumnIdAsync(request.ColumnId, ct);
+        var order  = await repository.CountByColumnIdAsync(request.ColumnId, ct);
+        var number = await repository.GetNextNumberAsync(workspaceId, ct);
 
         var task = new WorkspaceTask
         {
+            Number      = number,
             WorkspaceId = workspaceId,
             ColumnId    = request.ColumnId,
             Title       = request.Title,
@@ -43,7 +45,8 @@ public class WorkspaceTasksService(
             AssigneeId  = request.AssigneeId,
             DueDate     = request.DueDate,
             CreatedById = createdById,
-            Order       = order
+            Order       = order,
+            UpdatedAt   = DateTime.UtcNow
         };
 
         await repository.AddAsync(task, ct);
@@ -64,6 +67,7 @@ public class WorkspaceTasksService(
         task.Priority    = request.Priority;
         task.AssigneeId  = request.AssigneeId;
         task.DueDate     = request.DueDate;
+        task.UpdatedAt   = DateTime.UtcNow;
 
         await repository.UpdateAsync(task, ct);
 
@@ -73,7 +77,7 @@ public class WorkspaceTasksService(
         return updated.ToDto();
     }
 
-    public async Task MoveAsync(Guid workspaceId, Guid taskId, MoveTaskRequest request, CancellationToken ct)
+    public async Task<WorkspaceTaskDto> MoveAsync(Guid workspaceId, Guid taskId, MoveTaskRequest request, CancellationToken ct)
     {
         var task = await GetOwnedTaskAsync(workspaceId, taskId, ct);
 
@@ -83,19 +87,23 @@ public class WorkspaceTasksService(
 
         var tasksInTarget = await repository.GetByColumnIdAsync(request.ColumnId, ct);
 
-        var clampedOrder = Math.Clamp(request.Order, 0, tasksInTarget.Count);
+        var clampedOrder   = Math.Clamp(request.Order, 0, tasksInTarget.Count);
         var othersInTarget = tasksInTarget.Where(t => t.Id != taskId).ToList();
 
         foreach (var t in othersInTarget.Where(t => t.Order >= clampedOrder))
             t.Order++;
 
-        task.ColumnId = request.ColumnId;
-        task.Order    = clampedOrder;
+        task.ColumnId  = request.ColumnId;
+        task.Column    = targetColumn;
+        task.Order     = clampedOrder;
+        task.UpdatedAt = DateTime.UtcNow;
 
         var toUpdate = othersInTarget.Where(t => t.Order > clampedOrder - 1).Append(task).ToList();
         await repository.UpdateRangeAsync(toUpdate, ct);
 
         logger.LogInformation("Task {TaskId} moved to column {ColumnId} at order {Order}", taskId, request.ColumnId, clampedOrder);
+
+        return task.ToDto();
     }
 
     public async Task DeleteAsync(Guid workspaceId, Guid taskId, CancellationToken ct)

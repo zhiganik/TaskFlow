@@ -68,15 +68,15 @@ public class WorkspaceTasksController(IWorkspaceTasksService tasksService) : Con
     /// <summary>Move a task to a different column or position within the same column.</summary>
     [HttpPut("{taskId:guid}/move")]
     [Authorize(Policy = WorkspacePolicies.Member)]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(WorkspaceTaskDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Move(Guid workspaceId, Guid taskId, MoveTaskRequest request, CancellationToken ct)
     {
-        await tasksService.MoveAsync(workspaceId, taskId, request, ct);
-        return NoContent();
+        var result = await tasksService.MoveAsync(workspaceId, taskId, request, ct);
+        return Ok(result);
     }
 
     /// <summary>Delete a task.</summary>

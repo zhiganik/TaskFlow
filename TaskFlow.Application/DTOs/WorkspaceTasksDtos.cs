@@ -4,6 +4,7 @@ namespace TaskFlow.Application.DTOs;
 
 public record WorkspaceTaskDto(
     Guid         Id,
+    int          Number,
     Guid         WorkspaceId,
     Guid         ColumnId,
     string       ColumnName,
@@ -14,8 +15,11 @@ public record WorkspaceTaskDto(
     string?      AssigneeId,
     string?      AssigneeName,
     DateTime?    DueDate,
+    bool         IsOverdue,
     string       CreatedById,
-    DateTime     CreatedAt
+    string       CreatedByName,
+    DateTime     CreatedAt,
+    DateTime     UpdatedAt
 );
 
 public record CreateTaskRequest(

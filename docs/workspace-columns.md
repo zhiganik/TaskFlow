@@ -13,6 +13,7 @@ supports up to seven total.
 | `id`          | `guid`     | Primary key                                      |
 | `workspaceId` | `guid`     | FK → `Workspaces.Id` (cascade delete)            |
 | `name`        | `string`   | Column label, max 50 characters                  |
+| `color`       | `string`   | Hex color string, exactly 7 chars e.g. `#FF5733`. Random from palette on creation. |
 | `order`       | `int`      | 0-based position; lower = further left on board  |
 | `createdAt`   | `datetime` | UTC timestamp                                    |
 
@@ -20,11 +21,11 @@ supports up to seven total.
 
 Every new workspace is created with three columns in this order:
 
-| Order | Name          |
-|-------|---------------|
-| 0     | Todo          |
-| 1     | In Progress   |
-| 2     | Done          |
+| Order | Name          | Default Color          |
+|-------|---------------|------------------------|
+| 0     | Todo          | `#6366F1` (indigo)     |
+| 1     | In Progress   | `#F59E0B` (amber)      |
+| 2     | Done          | `#10B981` (emerald)    |
 
 ---
 
@@ -62,9 +63,9 @@ Returns all columns for the workspace sorted by `order` ascending.
 **Example response**
 ```json
 [
-  { "id": "...", "workspaceId": "...", "name": "Todo",        "order": 0, "createdAt": "..." },
-  { "id": "...", "workspaceId": "...", "name": "In Progress", "order": 1, "createdAt": "..." },
-  { "id": "...", "workspaceId": "...", "name": "Done",        "order": 2, "createdAt": "..." }
+  { "id": "...", "workspaceId": "...", "name": "Todo",        "color": "#6366F1", "order": 0, "createdAt": "..." },
+  { "id": "...", "workspaceId": "...", "name": "In Progress", "color": "#F59E0B", "order": 1, "createdAt": "..." },
+  { "id": "...", "workspaceId": "...", "name": "Done",        "color": "#10B981", "order": 2, "createdAt": "..." }
 ]
 ```
 
@@ -80,12 +81,13 @@ Appends a new column at the end. Fails with 409 if the workspace already has 7 c
 
 **Request body**
 ```json
-{ "name": "Review" }
+{ "name": "Review", "color": "#3B82F6" }
 ```
 
-| Field  | Required | Rules               |
-|--------|----------|---------------------|
-| `name` | yes      | non-empty, max 50   |
+| Field   | Required | Rules                                              |
+|---------|----------|----------------------------------------------------|
+| `name`  | yes      | non-empty, max 50                                  |
+| `color` | no       | hex string matching `^#[0-9A-Fa-f]{6}$`; random if omitted |
 
 **Responses**
 
@@ -105,16 +107,17 @@ Appends a new column at the end. Fails with 409 if the workspace already has 7 c
 PUT /api/v1/workspaces/{workspaceId}/columns/{columnId}
 ```
 
-Updates only the column name. Order is unchanged.
+Updates the column name and optionally the color. Order is unchanged.
 
 **Request body**
 ```json
-{ "name": "QA" }
+{ "name": "QA", "color": "#EF4444" }
 ```
 
-| Field  | Required | Rules               |
-|--------|----------|---------------------|
-| `name` | yes      | non-empty, max 50   |
+| Field   | Required | Rules                                         |
+|---------|----------|-----------------------------------------------|
+| `name`  | yes      | non-empty, max 50                             |
+| `color` | no       | hex string matching `^#[0-9A-Fa-f]{6}$`; existing color kept if omitted |
 
 **Responses**
 
@@ -198,6 +201,7 @@ to be handled at that point — no cascade behaviour is defined yet.
   id:          string   // guid
   workspaceId: string   // guid
   name:        string
+  color:       string   // hex, e.g. "#6366F1"
   order:       number   // 0-based
   createdAt:   string   // ISO 8601 UTC
 }

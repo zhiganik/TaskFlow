@@ -14,6 +14,10 @@ public class WorkspaceColumnConfiguration : IEntityTypeConfiguration<WorkspaceCo
             .IsRequired()
             .HasMaxLength(50);
 
+        builder.Property(c => c.Color)
+            .IsRequired()
+            .HasMaxLength(7);
+
         builder.Property(c => c.WorkspaceId)
             .IsRequired();
 

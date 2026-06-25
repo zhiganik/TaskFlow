@@ -29,9 +29,9 @@ public class WorkspacesService(
             JoinedAt = DateTime.UtcNow
         });
 
-        workspace.Columns.Add(new WorkspaceColumn { Name = "Todo",        Order = 0 });
-        workspace.Columns.Add(new WorkspaceColumn { Name = "In Progress", Order = 1 });
-        workspace.Columns.Add(new WorkspaceColumn { Name = "Done",        Order = 2 });
+        workspace.Columns.Add(new WorkspaceColumn { Name = "Todo",        Color = "#6366F1", Order = 0 });
+        workspace.Columns.Add(new WorkspaceColumn { Name = "In Progress", Color = "#F59E0B", Order = 1 });
+        workspace.Columns.Add(new WorkspaceColumn { Name = "Done",        Color = "#10B981", Order = 2 });
 
         await repository.AddAsync(workspace, ct);
 

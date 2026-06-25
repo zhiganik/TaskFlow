@@ -5,6 +5,7 @@ namespace TaskFlow.Application.Domain.Entities;
 public class WorkspaceTask
 {
     public Guid         Id          { get; set; } = Guid.NewGuid();
+    public int          Number      { get; set; }
     public Guid         WorkspaceId { get; set; }
     public Guid         ColumnId    { get; set; }
     public string       Title       { get; set; } = string.Empty;
@@ -15,6 +16,7 @@ public class WorkspaceTask
     public DateTime?    DueDate     { get; set; }
     public string       CreatedById { get; set; } = string.Empty;
     public DateTime     CreatedAt   { get; set; } = DateTime.UtcNow;
+    public DateTime     UpdatedAt   { get; set; } = DateTime.UtcNow;
 
     public Workspace       Workspace { get; set; } = null!;
     public WorkspaceColumn Column    { get; set; } = null!;

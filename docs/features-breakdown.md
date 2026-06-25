@@ -21,10 +21,8 @@ Update this file whenever a new feature is added or an existing one changes scop
 
 | Feature        | Notes                                                                 |
 |----------------|-----------------------------------------------------------------------|
-| File Attachments | Upload to blob storage per task; server-generated filenames           |
 | File Attachments | Upload to blob storage per task; server-generated filenames         |
-| Task Comments  | Threaded comments per task                                            |
-| Task Assignments | Assign a task to one or more workspace members                      |
+| Task Comments    | Threaded comments per task                                          |
 
 ---
 

@@ -11,6 +11,7 @@ The column the task belongs to is surfaced as a `columnName` ("status") field on
 | Field         | Type           | Description                                              |
 |---------------|----------------|----------------------------------------------------------|
 | `id`          | `guid`         | Primary key                                              |
+| `number`      | `int`          | Workspace-scoped sequential number (like GitHub `#42`). Unique per workspace. |
 | `workspaceId` | `guid`         | FK → `Workspaces.Id` (cascade delete)                   |
 | `columnId`    | `guid`         | FK → `WorkspaceColumns.Id` (restrict — guard in service) |
 | `title`       | `string`       | Required, max 200 characters                             |
@@ -21,6 +22,7 @@ The column the task belongs to is surfaced as a `columnName` ("status") field on
 | `dueDate`     | `datetime?`    | Optional UTC deadline                                    |
 | `createdById` | `string`       | FK → `AspNetUsers.Id` (restrict)                         |
 | `createdAt`   | `datetime`     | UTC creation timestamp                                   |
+| `updatedAt`   | `datetime`     | UTC timestamp of last modification (create / update / move) |
 
 ### Column-delete guard
 
@@ -68,7 +70,9 @@ sorted by position within each column).
     "order": 0, "priority": "High",
     "assigneeId": null, "assigneeName": null,
     "dueDate": "2026-07-01T00:00:00Z",
-    "createdById": "...", "createdAt": "2026-06-25T19:00:00Z"
+    "isOverdue": false,
+    "createdById": "...", "createdByName": "Jane Smith",
+    "createdAt": "2026-06-25T19:00:00Z", "updatedAt": "2026-06-25T20:00:00Z"
   }
 ]
 ```
@@ -184,6 +188,8 @@ Moves the task to a column at a specific position. Works for both inter-column m
 (drag to another column) and intra-column reorders (drag within same column). Tasks
 at or after the target `order` are shifted down by one.
 
+Returns the updated task so the frontend can update its local state without a second GET.
+
 **Request body**
 ```json
 { "columnId": "<in-progress-id>", "order": 0 }
@@ -196,12 +202,12 @@ at or after the target `order` are shifted down by one.
 
 **Responses**
 
-| Status | Body             |
-|--------|------------------|
-| 204    | —                |
+| Status | Body                      |
+|--------|---------------------------|
+| 200    | `WorkspaceTaskDto`        |
 | 400    | `ValidationProblemDetails` |
-| 401    | —                |
-| 403    | `ProblemDetails` |
+| 401    | —                         |
+| 403    | `ProblemDetails`          |
 | 404    | `ProblemDetails` — task or column not found |
 
 ---
@@ -238,18 +244,22 @@ DELETE /api/v1/workspaces/{workspaceId}/tasks/{taskId}
 ```typescript
 // WorkspaceTaskDto
 {
-  id:           string         // guid
-  workspaceId:  string         // guid
-  columnId:     string         // guid
-  columnName:   string         // e.g. "In Progress" — the status label
-  title:        string
-  description:  string | null
-  order:        number         // 0-based within column
-  priority:     "Low" | "Medium" | "High"
-  assigneeId:   string | null
-  assigneeName: string | null  // AppUser.DisplayName
-  dueDate:      string | null  // ISO 8601 UTC
-  createdById:  string
-  createdAt:    string         // ISO 8601 UTC
+  id:            string          // guid
+  number:        number          // workspace-scoped sequential int (like GitHub #42)
+  workspaceId:   string          // guid
+  columnId:      string          // guid
+  columnName:    string          // e.g. "In Progress" — the status label
+  title:         string
+  description:   string | null
+  order:         number          // 0-based within column
+  priority:      "Low" | "Medium" | "High"
+  assigneeId:    string | null
+  assigneeName:  string | null   // AppUser.DisplayName
+  dueDate:       string | null   // ISO 8601 UTC
+  isOverdue:     boolean         // true when dueDate is set and in the past
+  createdById:   string
+  createdByName: string          // AppUser.DisplayName, falls back to createdById
+  createdAt:     string          // ISO 8601 UTC
+  updatedAt:     string          // ISO 8601 UTC — refreshed on every write
 }
 ```

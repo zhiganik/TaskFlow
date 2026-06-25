@@ -10,6 +10,13 @@ public class WorkspaceTaskConfiguration : IEntityTypeConfiguration<WorkspaceTask
     {
         builder.HasKey(t => t.Id);
 
+        builder.Property(t => t.Number).IsRequired();
+        builder.Property(t => t.UpdatedAt).IsRequired();
+
+        builder.HasIndex(t => new { t.WorkspaceId, t.Number })
+            .IsUnique()
+            .HasDatabaseName("IX_WorkspaceTasks_WorkspaceId_Number");
+
         builder.Property(t => t.Title)
             .IsRequired()
             .HasMaxLength(200);
