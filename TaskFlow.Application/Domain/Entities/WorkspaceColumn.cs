@@ -8,5 +8,6 @@ public class WorkspaceColumn
     public int      Order       { get; set; }
     public DateTime CreatedAt   { get; set; } = DateTime.UtcNow;
 
-    public Workspace Workspace { get; set; } = null!;
+    public Workspace                    Workspace { get; set; } = null!;
+    public ICollection<WorkspaceTask>   Tasks     { get; set; } = [];
 }

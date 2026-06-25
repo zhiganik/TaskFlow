@@ -10,6 +10,7 @@ namespace TaskFlow.Application.Services;
 
 public class WorkspaceColumnsService(
     IWorkspaceColumnsRepository repository,
+    IWorkspaceTasksRepository tasksRepository,
     ILogger<WorkspaceColumnsService> logger) : IWorkspaceColumnsService
 {
     private const int MaxColumns = 7;
@@ -79,6 +80,10 @@ public class WorkspaceColumnsService(
     public async Task DeleteAsync(Guid workspaceId, Guid columnId, CancellationToken ct)
     {
         await GetOwnedColumnAsync(workspaceId, columnId, ct);
+
+        var taskCount = await tasksRepository.CountByColumnIdAsync(columnId, ct);
+        if (taskCount > 0)
+            throw new ConflictException($"Column still has {taskCount} task(s). Move or delete them first.");
 
         await repository.DeleteAsync(columnId, ct);
 

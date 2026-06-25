@@ -1,0 +1,38 @@
+using TaskFlow.Application.Domain.Enums;
+
+namespace TaskFlow.Application.DTOs;
+
+public record WorkspaceTaskDto(
+    Guid         Id,
+    Guid         WorkspaceId,
+    Guid         ColumnId,
+    string       ColumnName,
+    string       Title,
+    string?      Description,
+    int          Order,
+    TaskPriority Priority,
+    string?      AssigneeId,
+    string?      AssigneeName,
+    DateTime?    DueDate,
+    string       CreatedById,
+    DateTime     CreatedAt
+);
+
+public record CreateTaskRequest(
+    string       Title,
+    Guid         ColumnId,
+    string?      Description  = null,
+    TaskPriority Priority     = TaskPriority.Medium,
+    string?      AssigneeId   = null,
+    DateTime?    DueDate      = null
+);
+
+public record UpdateTaskRequest(
+    string       Title,
+    string?      Description,
+    TaskPriority Priority,
+    string?      AssigneeId,
+    DateTime?    DueDate
+);
+
+public record MoveTaskRequest(Guid ColumnId, int Order);

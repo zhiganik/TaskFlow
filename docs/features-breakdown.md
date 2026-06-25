@@ -13,6 +13,7 @@ Update this file whenever a new feature is added or an existing one changes scop
 | Workspaces           | Complete    | [workspaces.md](workspaces.md)                   | `/api/v1/workspaces`                          |
 | Workspace Members    | Complete    | [workspace-members.md](workspace-members.md)     | `/api/v1/workspaces/{id}/members`             |
 | Workspace Columns    | Complete    | [workspace-columns.md](workspace-columns.md)     | `/api/v1/workspaces/{id}/columns`             |
+| Workspace Tasks      | Complete    | [workspace-tasks.md](workspace-tasks.md)         | `/api/v1/workspaces/{id}/tasks`               |
 
 ---
 
@@ -20,8 +21,8 @@ Update this file whenever a new feature is added or an existing one changes scop
 
 | Feature        | Notes                                                                 |
 |----------------|-----------------------------------------------------------------------|
-| Tasks          | Created inside a workspace, assigned to a column; CRUD + file attach  |
-| File Attachments | Upload to blob storage; server-generated filenames                  |
+| File Attachments | Upload to blob storage per task; server-generated filenames           |
+| File Attachments | Upload to blob storage per task; server-generated filenames         |
 | Task Comments  | Threaded comments per task                                            |
 | Task Assignments | Assign a task to one or more workspace members                      |
 
@@ -43,6 +44,8 @@ Summarises who can do what across all implemented features.
 | Add / remove / change member  | ✓     | ✓     | ✗      |
 | List columns                  | ✓     | ✓     | ✓      |
 | Create / rename / reorder / delete column | ✓ | ✓ | ✗   |
+| List / get tasks              | ✓     | ✓     | ✓      |
+| Create / update / move / delete task | ✓ | ✓  | ✓      |
 
 ---
 

@@ -1,0 +1,120 @@
+using Microsoft.Extensions.Logging;
+using TaskFlow.Application.Domain.Entities;
+using TaskFlow.Application.DTOs;
+using TaskFlow.Application.Exceptions;
+using TaskFlow.Application.Interfaces.Repositories;
+using TaskFlow.Application.Interfaces.Services;
+using TaskFlow.Application.Mappings;
+
+namespace TaskFlow.Application.Services;
+
+public class WorkspaceTasksService(
+    IWorkspaceTasksRepository repository,
+    IWorkspaceColumnsRepository columnsRepository,
+    ILogger<WorkspaceTasksService> logger) : IWorkspaceTasksService
+{
+    public async Task<IReadOnlyList<WorkspaceTaskDto>> GetByWorkspaceAsync(Guid workspaceId, CancellationToken ct)
+    {
+        var tasks = await repository.GetByWorkspaceIdAsync(workspaceId, ct);
+        return tasks.Select(t => t.ToDto()).ToList();
+    }
+
+    public async Task<WorkspaceTaskDto> GetByIdAsync(Guid workspaceId, Guid taskId, CancellationToken ct)
+    {
+        var task = await GetOwnedTaskAsync(workspaceId, taskId, ct);
+        return task.ToDto();
+    }
+
+    public async Task<WorkspaceTaskDto> CreateAsync(Guid workspaceId, string createdById, CreateTaskRequest request, CancellationToken ct)
+    {
+        var column = await columnsRepository.GetByIdAsync(request.ColumnId, ct);
+        if (column is null || column.WorkspaceId != workspaceId)
+            throw new NotFoundException($"Column {request.ColumnId} was not found in this workspace.");
+
+        var order = await repository.CountByColumnIdAsync(request.ColumnId, ct);
+
+        var task = new WorkspaceTask
+        {
+            WorkspaceId = workspaceId,
+            ColumnId    = request.ColumnId,
+            Title       = request.Title,
+            Description = request.Description,
+            Priority    = request.Priority,
+            AssigneeId  = request.AssigneeId,
+            DueDate     = request.DueDate,
+            CreatedById = createdById,
+            Order       = order
+        };
+
+        await repository.AddAsync(task, ct);
+
+        var created = await repository.GetByIdAsync(task.Id, ct) ?? task;
+
+        logger.LogInformation("Task {TaskId} created in column {ColumnId} by {UserId}", task.Id, request.ColumnId, createdById);
+
+        return created.ToDto();
+    }
+
+    public async Task<WorkspaceTaskDto> UpdateAsync(Guid workspaceId, Guid taskId, UpdateTaskRequest request, CancellationToken ct)
+    {
+        var task = await GetOwnedTaskAsync(workspaceId, taskId, ct);
+
+        task.Title       = request.Title;
+        task.Description = request.Description;
+        task.Priority    = request.Priority;
+        task.AssigneeId  = request.AssigneeId;
+        task.DueDate     = request.DueDate;
+
+        await repository.UpdateAsync(task, ct);
+
+        logger.LogInformation("Task {TaskId} updated in workspace {WorkspaceId}", taskId, workspaceId);
+
+        var updated = await repository.GetByIdAsync(taskId, ct) ?? task;
+        return updated.ToDto();
+    }
+
+    public async Task MoveAsync(Guid workspaceId, Guid taskId, MoveTaskRequest request, CancellationToken ct)
+    {
+        var task = await GetOwnedTaskAsync(workspaceId, taskId, ct);
+
+        var targetColumn = await columnsRepository.GetByIdAsync(request.ColumnId, ct);
+        if (targetColumn is null || targetColumn.WorkspaceId != workspaceId)
+            throw new NotFoundException($"Column {request.ColumnId} was not found in this workspace.");
+
+        var tasksInTarget = await repository.GetByColumnIdAsync(request.ColumnId, ct);
+
+        var clampedOrder = Math.Clamp(request.Order, 0, tasksInTarget.Count);
+        var othersInTarget = tasksInTarget.Where(t => t.Id != taskId).ToList();
+
+        foreach (var t in othersInTarget.Where(t => t.Order >= clampedOrder))
+            t.Order++;
+
+        task.ColumnId = request.ColumnId;
+        task.Order    = clampedOrder;
+
+        var toUpdate = othersInTarget.Where(t => t.Order > clampedOrder - 1).Append(task).ToList();
+        await repository.UpdateRangeAsync(toUpdate, ct);
+
+        logger.LogInformation("Task {TaskId} moved to column {ColumnId} at order {Order}", taskId, request.ColumnId, clampedOrder);
+    }
+
+    public async Task DeleteAsync(Guid workspaceId, Guid taskId, CancellationToken ct)
+    {
+        await GetOwnedTaskAsync(workspaceId, taskId, ct);
+
+        await repository.DeleteAsync(taskId, ct);
+
+        logger.LogInformation("Task {TaskId} deleted from workspace {WorkspaceId}", taskId, workspaceId);
+    }
+
+    private async Task<WorkspaceTask> GetOwnedTaskAsync(Guid workspaceId, Guid taskId, CancellationToken ct)
+    {
+        var task = await repository.GetByIdAsync(taskId, ct)
+            ?? throw new NotFoundException($"Task {taskId} was not found.");
+
+        if (task.WorkspaceId != workspaceId)
+            throw new NotFoundException($"Task {taskId} was not found.");
+
+        return task;
+    }
+}
