@@ -1,0 +1,54 @@
+using Microsoft.EntityFrameworkCore;
+using TaskFlow.Application.Domain.Entities;
+using TaskFlow.Application.Interfaces.Repositories;
+using TaskFlow.Infrastructure.Persistence;
+
+namespace TaskFlow.Infrastructure.Repositories;
+
+public class WorkspaceColumnsRepository(AppDbContext db) : IWorkspaceColumnsRepository
+{
+    public async Task<IReadOnlyList<WorkspaceColumn>> GetByWorkspaceIdAsync(Guid workspaceId, CancellationToken ct = default) =>
+        await db.WorkspaceColumns
+            .AsNoTracking()
+            .Where(c => c.WorkspaceId == workspaceId)
+            .OrderBy(c => c.Order)
+            .ToListAsync(ct);
+
+    public async Task<WorkspaceColumn?> GetByIdAsync(Guid id, CancellationToken ct = default) =>
+        await db.WorkspaceColumns
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == id, ct);
+
+    public async Task<int> CountByWorkspaceIdAsync(Guid workspaceId, CancellationToken ct = default) =>
+        await db.WorkspaceColumns
+            .CountAsync(c => c.WorkspaceId == workspaceId, ct);
+
+    public async Task<WorkspaceColumn> AddAsync(WorkspaceColumn column, CancellationToken ct = default)
+    {
+        db.WorkspaceColumns.Add(column);
+        await db.SaveChangesAsync(ct);
+        return column;
+    }
+
+    public async Task UpdateAsync(WorkspaceColumn column, CancellationToken ct = default)
+    {
+        db.WorkspaceColumns.Update(column);
+        await db.SaveChangesAsync(ct);
+    }
+
+    public async Task UpdateRangeAsync(IEnumerable<WorkspaceColumn> columns, CancellationToken ct = default)
+    {
+        db.WorkspaceColumns.UpdateRange(columns);
+        await db.SaveChangesAsync(ct);
+    }
+
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken ct = default)
+    {
+        var column = await db.WorkspaceColumns.FindAsync([id], ct);
+        if (column is null) return false;
+
+        db.WorkspaceColumns.Remove(column);
+        await db.SaveChangesAsync(ct);
+        return true;
+    }
+}

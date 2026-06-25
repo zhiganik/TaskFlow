@@ -16,6 +16,14 @@ ASP.NET Core 9 REST API + React 19 frontend. Task & project management with file
 - `.claude/07_testing.md` — NUnit 4, Moq, FluentAssertions patterns
 - `.claude/08_docker.md` — full Docker stack including React frontend, Makefile, env vars
 - `.claude/09_frontend.md` — React project structure, API client, auth flow, conventions
+- `docs/features-breakdown.md` — implemented features, planned features, full role matrix
+
+## Documentation Rules (Never Skip)
+After implementing any new backend feature:
+1. Create `docs/<feature-name>.md` following the structure of existing docs (data model →
+   authorization → endpoints with request/response tables → business rules → DTO reference).
+2. Add a row to the **Implemented** table in `docs/features-breakdown.md`.
+3. Remove the feature from the **Planned** table if it was listed there.
 
 ## Backend Hard Rules (Never Break)
 1. **No secrets in `appsettings.json`** — env vars only, `.env` never committed

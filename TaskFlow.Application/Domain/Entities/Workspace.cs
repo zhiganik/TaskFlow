@@ -8,5 +8,6 @@ public class Workspace
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public AppUser Owner { get; set; } = null!;
-    public ICollection<WorkspaceMember> Members { get; set; } = [];
+    public ICollection<WorkspaceMember>  Members { get; set; } = [];
+    public ICollection<WorkspaceColumn>  Columns { get; set; } = [];
 }

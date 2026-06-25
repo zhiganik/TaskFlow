@@ -8,6 +8,7 @@ public sealed class AppDbContext : IdentityDbContext<AppUser>
 {
     public DbSet<Workspace>       Workspaces       => Set<Workspace>();
     public DbSet<WorkspaceMember> WorkspaceMembers => Set<WorkspaceMember>();
+    public DbSet<WorkspaceColumn> WorkspaceColumns => Set<WorkspaceColumn>();
     
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {

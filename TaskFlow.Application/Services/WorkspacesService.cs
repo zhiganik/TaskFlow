@@ -29,6 +29,10 @@ public class WorkspacesService(
             JoinedAt = DateTime.UtcNow
         });
 
+        workspace.Columns.Add(new WorkspaceColumn { Name = "Todo",        Order = 0 });
+        workspace.Columns.Add(new WorkspaceColumn { Name = "In Progress", Order = 1 });
+        workspace.Columns.Add(new WorkspaceColumn { Name = "Done",        Order = 2 });
+
         await repository.AddAsync(workspace, ct);
 
         logger.LogInformation("Workspace {WorkspaceId} created by {OwnerId}", workspace.Id, ownerId);
