@@ -2,9 +2,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { getErrorMessage, getFieldErrors } from '../../api/errors'
-import { useRenameColumn } from '../../hooks/useColumns'
+import { useUpdateColumn } from '../../hooks/useColumns'
 import type { WorkspaceColumnDto } from '../../types/api.types'
 import { columnSchema, type ColumnFormValues } from '../../validation/column.schema'
+import { COLOR_PALETTE } from '../../lib/priority'
 import { Alert } from '../ui/Alert'
 import { Button } from '../ui/Button'
 import { Modal } from '../ui/Modal'
@@ -17,8 +18,9 @@ interface RenameColumnModalProps {
 }
 
 export function RenameColumnModal({ workspaceId, column, onClose }: RenameColumnModalProps) {
-  const renameMutation = useRenameColumn(workspaceId)
+  const updateMutation = useUpdateColumn(workspaceId)
   const [serverError, setServerError] = useState<string | null>(null)
+  const [selectedColor, setSelectedColor] = useState<string | undefined>(column.color)
 
   const {
     register,
@@ -32,8 +34,8 @@ export function RenameColumnModal({ workspaceId, column, onClose }: RenameColumn
 
   const onSubmit = (values: ColumnFormValues) => {
     setServerError(null)
-    renameMutation
-      .mutateAsync({ columnId: column.id, data: values })
+    updateMutation
+      .mutateAsync({ columnId: column.id, data: { name: values.name, color: selectedColor } })
       .then(onClose)
       .catch((error: unknown) => {
         const fieldErrors = getFieldErrors(error)
@@ -48,7 +50,7 @@ export function RenameColumnModal({ workspaceId, column, onClose }: RenameColumn
   }
 
   return (
-    <Modal title="Rename column" onClose={onClose}>
+    <Modal title="Edit column" onClose={onClose}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         {serverError && <Alert variant="error">{serverError}</Alert>}
 
@@ -60,11 +62,30 @@ export function RenameColumnModal({ workspaceId, column, onClose }: RenameColumn
           {...register('name')}
         />
 
+        <div>
+          <p className="mb-2 text-sm font-medium text-gray-700">Color</p>
+          <div className="flex flex-wrap gap-2">
+            {COLOR_PALETTE.map((color) => (
+              <button
+                key={color}
+                type="button"
+                onClick={() => setSelectedColor(color)}
+                style={{ backgroundColor: color }}
+                className={[
+                  'h-6 w-6 rounded-full transition-transform hover:scale-110',
+                  selectedColor === color ? 'ring-2 ring-offset-2 ring-gray-600 scale-110' : '',
+                ].join(' ')}
+                aria-label={color}
+              />
+            ))}
+          </div>
+        </div>
+
         <div className="flex justify-end gap-2">
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" loading={renameMutation.isPending}>
+          <Button type="submit" loading={updateMutation.isPending}>
             Save
           </Button>
         </div>

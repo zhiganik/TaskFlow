@@ -1,7 +1,7 @@
 import { apiClient } from './client'
 import type {
   CreateColumnRequest,
-  RenameColumnRequest,
+  UpdateColumnRequest,
   ReorderColumnsRequest,
   WorkspaceColumnDto,
 } from '../types/api.types'
@@ -17,7 +17,7 @@ export const columnsApi = {
       .post<WorkspaceColumnDto>(`/workspaces/${workspaceId}/columns`, data)
       .then((r) => r.data),
 
-  rename: (workspaceId: string, columnId: string, data: RenameColumnRequest) =>
+  update: (workspaceId: string, columnId: string, data: UpdateColumnRequest) =>
     apiClient
       .put<WorkspaceColumnDto>(`/workspaces/${workspaceId}/columns/${columnId}`, data)
       .then((r) => r.data),

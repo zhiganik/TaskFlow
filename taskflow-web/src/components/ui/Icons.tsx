@@ -85,6 +85,58 @@ export function ChevronRightIcon({ className = 'h-4 w-4' }: IconProps) {
   )
 }
 
+export function XIcon({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      className={className}
+    >
+      <line x1="5" y1="5" x2="15" y2="15" />
+      <line x1="15" y1="5" x2="5" y2="15" />
+    </svg>
+  )
+}
+
+export function CalendarIcon({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <rect x="3" y="4" width="14" height="13" rx="2" />
+      <line x1="3" y1="8" x2="17" y2="8" />
+      <line x1="7" y1="2" x2="7" y2="6" />
+      <line x1="13" y1="2" x2="13" y2="6" />
+    </svg>
+  )
+}
+
+export function UserIcon({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <circle cx="10" cy="7" r="3.5" />
+      <path d="M3 17c0-3.314 3.134-6 7-6s7 2.686 7 6" />
+    </svg>
+  )
+}
+
 export function TrashIcon({ className = 'h-4 w-4' }: IconProps) {
   return (
     <svg

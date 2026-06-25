@@ -85,18 +85,65 @@ export interface WorkspaceColumnDto {
   id: string
   workspaceId: string
   name: string
+  color: string
   order: number
   createdAt: string
 }
 
 export interface CreateColumnRequest {
   name: string
+  color?: string
 }
 
-export interface RenameColumnRequest {
+export interface UpdateColumnRequest {
   name: string
+  color?: string
 }
 
 export interface ReorderColumnsRequest {
   columnIds: string[]
+}
+
+export type TaskPriority = 'Low' | 'Medium' | 'High'
+
+export interface WorkspaceTaskDto {
+  id: string
+  number: number
+  workspaceId: string
+  columnId: string
+  columnName: string
+  title: string
+  description: string | null
+  order: number
+  priority: TaskPriority
+  assigneeId: string | null
+  assigneeName: string | null
+  dueDate: string | null
+  isOverdue: boolean
+  createdById: string
+  createdByName: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateTaskRequest {
+  title: string
+  columnId: string
+  description?: string | null
+  priority?: TaskPriority
+  assigneeId?: string | null
+  dueDate?: string | null
+}
+
+export interface UpdateTaskRequest {
+  title: string
+  description: string | null
+  priority: TaskPriority
+  assigneeId: string | null
+  dueDate: string | null
+}
+
+export interface MoveTaskRequest {
+  columnId: string
+  order: number
 }

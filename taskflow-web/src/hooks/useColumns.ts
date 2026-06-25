@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { columnsApi } from '../api/columns.api'
-import type { CreateColumnRequest, RenameColumnRequest, ReorderColumnsRequest } from '../types/api.types'
+import type { CreateColumnRequest, UpdateColumnRequest, ReorderColumnsRequest } from '../types/api.types'
 
 const columnsKey = (workspaceId: string) => ['columns', workspaceId]
 
@@ -19,11 +19,11 @@ export const useCreateColumn = (workspaceId: string) => {
   })
 }
 
-export const useRenameColumn = (workspaceId: string) => {
+export const useUpdateColumn = (workspaceId: string) => {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ columnId, data }: { columnId: string; data: RenameColumnRequest }) =>
-      columnsApi.rename(workspaceId, columnId, data),
+    mutationFn: ({ columnId, data }: { columnId: string; data: UpdateColumnRequest }) =>
+      columnsApi.update(workspaceId, columnId, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: columnsKey(workspaceId) }),
   })
 }

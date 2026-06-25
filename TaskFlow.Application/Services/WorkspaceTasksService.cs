@@ -66,6 +66,7 @@ public class WorkspaceTasksService(
         task.Description = request.Description;
         task.Priority    = request.Priority;
         task.AssigneeId  = request.AssigneeId;
+        task.Assignee    = null;
         task.DueDate     = request.DueDate;
         task.UpdatedAt   = DateTime.UtcNow;
 
