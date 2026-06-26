@@ -14,6 +14,7 @@ Update this file whenever a new feature is added or an existing one changes scop
 | Workspace Members    | Complete    | [workspace-members.md](workspace-members.md)     | `/api/v1/workspaces/{id}/members`             |
 | Workspace Columns    | Complete    | [workspace-columns.md](workspace-columns.md)     | `/api/v1/workspaces/{id}/columns`             |
 | Workspace Tasks      | Complete    | [workspace-tasks.md](workspace-tasks.md)         | `/api/v1/workspaces/{id}/tasks`               |
+| Task Comments        | Complete    | [task-comments.md](task-comments.md)             | `/api/v1/workspaces/{id}/tasks/{id}/comments` |
 
 ---
 
@@ -22,7 +23,6 @@ Update this file whenever a new feature is added or an existing one changes scop
 | Feature        | Notes                                                                 |
 |----------------|-----------------------------------------------------------------------|
 | File Attachments | Upload to blob storage per task; server-generated filenames         |
-| Task Comments    | Threaded comments per task                                          |
 
 ---
 

@@ -151,6 +151,7 @@ public static class DependencyConfig
         services.AddScoped<IWorkspaceMembersRepository, WorkspaceMembersRepository>();
         services.AddScoped<IWorkspaceColumnsRepository, WorkspaceColumnsRepository>();
         services.AddScoped<IWorkspaceTasksRepository, WorkspaceTasksRepository>();
+        services.AddScoped<ITaskCommentsRepository, TaskCommentsRepository>();
         return services;
     }
 
@@ -163,6 +164,7 @@ public static class DependencyConfig
         services.AddScoped<IWorkspaceMembersService, WorkspaceMembersService>();
         services.AddScoped<IWorkspaceColumnsService, WorkspaceColumnsService>();
         services.AddScoped<IWorkspaceTasksService, WorkspaceTasksService>();
+        services.AddScoped<ITaskCommentsService, TaskCommentsService>();
         return services;
     }
 

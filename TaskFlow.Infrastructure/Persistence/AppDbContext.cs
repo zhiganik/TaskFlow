@@ -6,10 +6,12 @@ namespace TaskFlow.Infrastructure.Persistence;
 
 public sealed class AppDbContext : IdentityDbContext<AppUser>
 {
-    public DbSet<Workspace>       Workspaces       => Set<Workspace>();
-    public DbSet<WorkspaceMember> WorkspaceMembers => Set<WorkspaceMember>();
-    public DbSet<WorkspaceColumn> WorkspaceColumns => Set<WorkspaceColumn>();
-    public DbSet<WorkspaceTask>   WorkspaceTasks   => Set<WorkspaceTask>();
+    public DbSet<Workspace>            Workspaces            => Set<Workspace>();
+    public DbSet<WorkspaceMember>      WorkspaceMembers      => Set<WorkspaceMember>();
+    public DbSet<WorkspaceColumn>      WorkspaceColumns      => Set<WorkspaceColumn>();
+    public DbSet<WorkspaceTask>        WorkspaceTasks        => Set<WorkspaceTask>();
+    public DbSet<TaskComment>          TaskComments          => Set<TaskComment>();
+    public DbSet<TaskCommentMention>   TaskCommentMentions   => Set<TaskCommentMention>();
     
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
