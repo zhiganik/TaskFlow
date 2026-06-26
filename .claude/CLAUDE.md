@@ -16,6 +16,7 @@ ASP.NET Core 9 REST API + React 19 frontend. Task & project management with file
 - `.claude/07_testing.md` — NUnit 4, Moq, FluentAssertions patterns
 - `.claude/08_docker.md` — full Docker stack including React frontend, Makefile, env vars
 - `.claude/09_frontend.md` — React project structure, API client, auth flow, conventions
+- `.claude/10_automapper.md` — AutoMapper profiles, ConstructUsing pattern, ctx.Items for runtime values, test setup
 - `docs/features-breakdown.md` — implemented features, planned features, full role matrix
 
 ## Documentation Rules (Never Skip)
@@ -37,6 +38,7 @@ After implementing any new backend feature:
 9. **FluentValidation for all DTOs** — no manual ModelState checks in controllers
 10. **ProblemDetails for all errors** — GlobalExceptionMiddleware handles everything
 11. **Server-generated filenames for uploads** — never use original filename as a path
+12. **AutoMapper Profiles for all mappings** — no extension methods; see `.claude/10_automapper.md`
 
 ## Frontend Hard Rules (Never Break)
 1. **All API calls go through `src/api/`** — never `fetch` or `axios` directly in components

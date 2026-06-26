@@ -1,3 +1,4 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -5,7 +6,6 @@ using TaskFlow.Application.Domain.Entities;
 using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Exceptions;
 using TaskFlow.Application.Interfaces.Services;
-using TaskFlow.Application.Mappings;
 using TaskFlow.Application.Options;
 
 namespace TaskFlow.Application.Services;
@@ -15,6 +15,7 @@ public class AuthService(
     IJwtService jwtService,
     ICacheService cache,
     IOptions<JwtOptions> jwtOptions,
+    IMapper mapper,
     ILogger<AuthService> logger) : IAuthService
 {
     private readonly JwtOptions _jwt = jwtOptions.Value;
@@ -35,7 +36,7 @@ public class AuthService(
 
         logger.LogInformation("User {UserId} registered with email {Email}", user.Id, user.Email);
 
-        return user.ToDto();
+        return mapper.Map<UserDto>(user);
     }
 
     public async Task<AuthResponseDto> LoginAsync(LoginRequest request, CancellationToken ct = default)
@@ -90,7 +91,7 @@ public class AuthService(
             accessToken,
             DateTime.UtcNow.AddMinutes(_jwt.AccessTokenExpiryMinutes),
             refreshToken,
-            user.ToDto());
+            mapper.Map<UserDto>(user));
     }
 
     private static string RefreshKey(string token) => $"refresh-token:{token}";

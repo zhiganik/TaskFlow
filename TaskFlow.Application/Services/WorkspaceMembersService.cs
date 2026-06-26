@@ -1,3 +1,4 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using TaskFlow.Application.Domain.Entities;
@@ -6,7 +7,6 @@ using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Exceptions;
 using TaskFlow.Application.Interfaces.Repositories;
 using TaskFlow.Application.Interfaces.Services;
-using TaskFlow.Application.Mappings;
 
 namespace TaskFlow.Application.Services;
 
@@ -14,12 +14,13 @@ public class WorkspaceMembersService(
     IWorkspaceMembersRepository membersRepository,
     IWorkspacesRepository workspacesRepository,
     UserManager<AppUser> userManager,
+    IMapper mapper,
     ILogger<WorkspaceMembersService> logger) : IWorkspaceMembersService
 {
     public async Task<IReadOnlyList<MemberDto>> GetMembersAsync(Guid workspaceId, CancellationToken ct)
     {
         var members = await membersRepository.GetMembersAsync(workspaceId, ct);
-        return members.Select(m => m.ToDto(m.User)).ToList();
+        return mapper.Map<IReadOnlyList<MemberDto>>(members);
     }
 
     public async Task<MemberDto> AddAsync(Guid workspaceId, InviteMemberRequest request, CancellationToken ct)
@@ -38,7 +39,8 @@ public class WorkspaceMembersService(
             WorkspaceId = workspaceId,
             UserId = user.Id,
             Role = request.Role,
-            JoinedAt = DateTime.UtcNow
+            JoinedAt = DateTime.UtcNow,
+            User = user
         };
 
         await membersRepository.AddAsync(member, ct);
@@ -46,7 +48,7 @@ public class WorkspaceMembersService(
         logger.LogInformation("User {UserId} added to workspace {WorkspaceId} with role {Role}",
             user.Id, workspaceId, request.Role);
 
-        return member.ToDto(user);
+        return mapper.Map<MemberDto>(member);
     }
 
     public async Task<MemberDto> UpdateRoleAsync(Guid workspaceId, string userId, UpdateMemberRoleRequest request, CancellationToken ct)
@@ -63,10 +65,12 @@ public class WorkspaceMembersService(
         var user = await userManager.FindByIdAsync(userId)
             ?? throw new NotFoundException($"User {userId} was not found.");
 
+        member.User = user;
+
         logger.LogInformation("Role for user {UserId} in workspace {WorkspaceId} changed to {Role}",
             userId, workspaceId, request.Role);
 
-        return member.ToDto(user);
+        return mapper.Map<MemberDto>(member);
     }
 
     public async Task RemoveAsync(Guid workspaceId, string userId, CancellationToken ct)

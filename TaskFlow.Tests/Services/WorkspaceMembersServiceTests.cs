@@ -1,4 +1,6 @@
+using AutoMapper;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -7,6 +9,7 @@ using TaskFlow.Application.Domain.Enums;
 using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Exceptions;
 using TaskFlow.Application.Interfaces.Repositories;
+using TaskFlow.Application.Mappings;
 using TaskFlow.Application.Services;
 
 namespace TaskFlow.Tests.Services;
@@ -18,6 +21,7 @@ public class WorkspaceMembersServiceTests
     private Mock<IWorkspacesRepository> _workspacesRepositoryMock = null!;
     private Mock<UserManager<AppUser>> _userManagerMock = null!;
     private Mock<ILogger<WorkspaceMembersService>> _loggerMock = null!;
+    private IMapper _mapper = null!;
 
     private WorkspaceMembersService _sut = null!;
 
@@ -34,11 +38,17 @@ public class WorkspaceMembersServiceTests
             userStoreMock.Object, null!, null!, null!, null!, null!, null!, null!, null!);
 
         _loggerMock = new Mock<ILogger<WorkspaceMembersService>>();
+        _mapper = new ServiceCollection()
+            .AddLogging()
+            .AddAutoMapper(cfg => cfg.AddProfile<WorkspaceMemberProfile>())
+            .BuildServiceProvider()
+            .GetRequiredService<IMapper>();
 
         _sut = new WorkspaceMembersService(
             _membersRepositoryMock.Object,
             _workspacesRepositoryMock.Object,
             _userManagerMock.Object,
+            _mapper,
             _loggerMock.Object);
 
         _workspacesRepositoryMock

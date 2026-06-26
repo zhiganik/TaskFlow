@@ -1,3 +1,4 @@
+using AutoMapper;
 using Microsoft.Extensions.Logging;
 using TaskFlow.Application.Domain.Entities;
 using TaskFlow.Application.Domain.Enums;
@@ -5,13 +6,13 @@ using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Exceptions;
 using TaskFlow.Application.Interfaces.Repositories;
 using TaskFlow.Application.Interfaces.Services;
-using TaskFlow.Application.Mappings;
 
 namespace TaskFlow.Application.Services;
 
 public class WorkspacesService(
     IWorkspacesRepository repository,
     IWorkspaceMembersRepository membersRepository,
+    IMapper mapper,
     ILogger<WorkspacesService> logger) : IWorkspacesService
 {
     public async Task<WorkspaceDto> CreateAsync(string ownerId, CreateWorkspaceRequest request, CancellationToken ct)
@@ -37,13 +38,15 @@ public class WorkspacesService(
 
         logger.LogInformation("Workspace {WorkspaceId} created by {OwnerId}", workspace.Id, ownerId);
 
-        return workspace.ToDto(WorkspaceRole.Owner);
+        return mapper.Map<WorkspaceDto>(workspace, opts => opts.Items["myRole"] = WorkspaceRole.Owner);
     }
 
     public async Task<IReadOnlyList<WorkspaceDto>> GetForUserAsync(string userId, CancellationToken ct)
     {
         var memberships = await membersRepository.GetMembershipsForUserAsync(userId, ct);
-        return memberships.Select(m => m.Workspace.ToDto(m.Role)).ToList();
+        return memberships
+            .Select(m => mapper.Map<WorkspaceDto>(m.Workspace, opts => opts.Items["myRole"] = m.Role))
+            .ToList();
     }
 
     public async Task<WorkspaceDto> GetByIdAsync(Guid id, string userId, CancellationToken ct)
@@ -51,11 +54,10 @@ public class WorkspacesService(
         var workspace = await repository.GetByIdAsync(id, ct)
             ?? throw new NotFoundException($"Workspace {id} was not found.");
 
-        // The WorkspaceMember policy already guarantees a membership row exists at this point.
         var member = await membersRepository.GetMemberAsync(id, userId, ct)
             ?? throw new ForbiddenException("You do not have access to this workspace.");
 
-        return workspace.ToDto(member.Role);
+        return mapper.Map<WorkspaceDto>(workspace, opts => opts.Items["myRole"] = member.Role);
     }
 
     public async Task<WorkspaceDto> UpdateAsync(Guid id, UpdateWorkspaceRequest request, CancellationToken ct)
@@ -68,8 +70,7 @@ public class WorkspacesService(
 
         logger.LogInformation("Workspace {WorkspaceId} updated by {OwnerId}", workspace.Id, workspace.OwnerId);
 
-        // Only the Owner can reach this action (WorkspaceOwner policy).
-        return workspace.ToDto(WorkspaceRole.Owner);
+        return mapper.Map<WorkspaceDto>(workspace, opts => opts.Items["myRole"] = WorkspaceRole.Owner);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct)

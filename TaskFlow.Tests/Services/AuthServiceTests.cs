@@ -1,4 +1,6 @@
+using AutoMapper;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -7,6 +9,7 @@ using TaskFlow.Application.Domain.Entities;
 using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Exceptions;
 using TaskFlow.Application.Interfaces.Services;
+using TaskFlow.Application.Mappings;
 using TaskFlow.Application.Options;
 using TaskFlow.Application.Services;
 
@@ -19,6 +22,7 @@ public class AuthServiceTests
     private Mock<IJwtService> _jwtServiceMock = null!;
     private Mock<ICacheService> _cacheMock = null!;
     private Mock<ILogger<AuthService>> _loggerMock = null!;
+    private IMapper _mapper = null!;
     private JwtOptions _jwtOptions = null!;
 
     private AuthService _sut = null!;
@@ -34,6 +38,12 @@ public class AuthServiceTests
         _cacheMock = new Mock<ICacheService>();
         _loggerMock = new Mock<ILogger<AuthService>>();
 
+        _mapper = new ServiceCollection()
+            .AddLogging()
+            .AddAutoMapper(cfg => cfg.AddProfile<UserProfile>())
+            .BuildServiceProvider()
+            .GetRequiredService<IMapper>();
+
         _jwtOptions = new JwtOptions
         {
             Issuer = "taskflow-api",
@@ -48,6 +58,7 @@ public class AuthServiceTests
             _jwtServiceMock.Object,
             _cacheMock.Object,
             Options.Create(_jwtOptions),
+            _mapper,
             _loggerMock.Object);
     }
 
@@ -59,7 +70,6 @@ public class AuthServiceTests
         DisplayName = "Jane Doe"
     };
 
-    // Mirrors AuthService's private RefreshKey so tests assert behavior, not a hardcoded string.
     private static string RefreshKey(string token) => $"refresh-token:{token}";
 
     [Test]
@@ -152,7 +162,6 @@ public class AuthServiceTests
 
         var act = async () => await _sut.LoginAsync(request);
 
-        // Lockout must look identical to a wrong password — no account-state leakage.
         await act.Should().ThrowAsync<UnauthorizedException>()
             .WithMessage("Invalid email or password.");
 

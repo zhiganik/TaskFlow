@@ -1,28 +1,29 @@
+using AutoMapper;
 using Microsoft.Extensions.Logging;
 using TaskFlow.Application.Domain.Entities;
 using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Exceptions;
 using TaskFlow.Application.Interfaces.Repositories;
 using TaskFlow.Application.Interfaces.Services;
-using TaskFlow.Application.Mappings;
 
 namespace TaskFlow.Application.Services;
 
 public class WorkspaceTasksService(
     IWorkspaceTasksRepository repository,
     IWorkspaceColumnsRepository columnsRepository,
+    IMapper mapper,
     ILogger<WorkspaceTasksService> logger) : IWorkspaceTasksService
 {
     public async Task<IReadOnlyList<WorkspaceTaskDto>> GetByWorkspaceAsync(Guid workspaceId, CancellationToken ct)
     {
         var tasks = await repository.GetByWorkspaceIdAsync(workspaceId, ct);
-        return tasks.Select(t => t.ToDto()).ToList();
+        return mapper.Map<IReadOnlyList<WorkspaceTaskDto>>(tasks);
     }
 
     public async Task<WorkspaceTaskDto> GetByIdAsync(Guid workspaceId, Guid taskId, CancellationToken ct)
     {
         var task = await GetOwnedTaskAsync(workspaceId, taskId, ct);
-        return task.ToDto();
+        return mapper.Map<WorkspaceTaskDto>(task);
     }
 
     public async Task<WorkspaceTaskDto> CreateAsync(Guid workspaceId, string createdById, CreateTaskRequest request, CancellationToken ct)
@@ -55,7 +56,7 @@ public class WorkspaceTasksService(
 
         logger.LogInformation("Task {TaskId} created in column {ColumnId} by {UserId}", task.Id, request.ColumnId, createdById);
 
-        return created.ToDto();
+        return mapper.Map<WorkspaceTaskDto>(created);
     }
 
     public async Task<WorkspaceTaskDto> UpdateAsync(Guid workspaceId, Guid taskId, UpdateTaskRequest request, CancellationToken ct)
@@ -75,7 +76,7 @@ public class WorkspaceTasksService(
         logger.LogInformation("Task {TaskId} updated in workspace {WorkspaceId}", taskId, workspaceId);
 
         var updated = await repository.GetByIdAsync(taskId, ct) ?? task;
-        return updated.ToDto();
+        return mapper.Map<WorkspaceTaskDto>(updated);
     }
 
     public async Task<WorkspaceTaskDto> MoveAsync(Guid workspaceId, Guid taskId, MoveTaskRequest request, CancellationToken ct)
@@ -104,7 +105,7 @@ public class WorkspaceTasksService(
 
         logger.LogInformation("Task {TaskId} moved to column {ColumnId} at order {Order}", taskId, request.ColumnId, clampedOrder);
 
-        return task.ToDto();
+        return mapper.Map<WorkspaceTaskDto>(task);
     }
 
     public async Task DeleteAsync(Guid workspaceId, Guid taskId, CancellationToken ct)

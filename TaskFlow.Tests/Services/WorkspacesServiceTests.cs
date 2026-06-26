@@ -1,4 +1,6 @@
+using AutoMapper;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using TaskFlow.Application.Domain.Entities;
@@ -6,6 +8,7 @@ using TaskFlow.Application.Domain.Enums;
 using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Exceptions;
 using TaskFlow.Application.Interfaces.Repositories;
+using TaskFlow.Application.Mappings;
 using TaskFlow.Application.Services;
 
 namespace TaskFlow.Tests.Services;
@@ -16,6 +19,7 @@ public class WorkspacesServiceTests
     private Mock<IWorkspacesRepository> _repositoryMock = null!;
     private Mock<IWorkspaceMembersRepository> _membersRepositoryMock = null!;
     private Mock<ILogger<WorkspacesService>> _loggerMock = null!;
+    private IMapper _mapper = null!;
 
     private WorkspacesService _sut = null!;
 
@@ -25,8 +29,13 @@ public class WorkspacesServiceTests
         _repositoryMock = new Mock<IWorkspacesRepository>();
         _membersRepositoryMock = new Mock<IWorkspaceMembersRepository>();
         _loggerMock = new Mock<ILogger<WorkspacesService>>();
+        _mapper = new ServiceCollection()
+            .AddLogging()
+            .AddAutoMapper(cfg => cfg.AddProfile<WorkspaceProfile>())
+            .BuildServiceProvider()
+            .GetRequiredService<IMapper>();
 
-        _sut = new WorkspacesService(_repositoryMock.Object, _membersRepositoryMock.Object, _loggerMock.Object);
+        _sut = new WorkspacesService(_repositoryMock.Object, _membersRepositoryMock.Object, _mapper, _loggerMock.Object);
     }
 
     private static Workspace CreateWorkspace(string ownerId = "owner-1") => new()

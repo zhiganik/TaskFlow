@@ -1,10 +1,13 @@
+using AutoMapper;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using TaskFlow.Application.Domain.Entities;
 using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Exceptions;
 using TaskFlow.Application.Interfaces.Repositories;
+using TaskFlow.Application.Mappings;
 using TaskFlow.Application.Services;
 
 namespace TaskFlow.Tests.Services;
@@ -15,6 +18,7 @@ public class WorkspaceColumnsServiceTests
     private Mock<IWorkspaceColumnsRepository> _repositoryMock = null!;
     private Mock<IWorkspaceTasksRepository>   _tasksRepositoryMock = null!;
     private Mock<ILogger<WorkspaceColumnsService>> _loggerMock = null!;
+    private IMapper _mapper = null!;
 
     private WorkspaceColumnsService _sut = null!;
 
@@ -24,10 +28,16 @@ public class WorkspaceColumnsServiceTests
         _repositoryMock      = new Mock<IWorkspaceColumnsRepository>();
         _tasksRepositoryMock = new Mock<IWorkspaceTasksRepository>();
         _loggerMock          = new Mock<ILogger<WorkspaceColumnsService>>();
+        _mapper = new ServiceCollection()
+            .AddLogging()
+            .AddAutoMapper(cfg => cfg.AddProfile<WorkspaceColumnProfile>())
+            .BuildServiceProvider()
+            .GetRequiredService<IMapper>();
 
         _sut = new WorkspaceColumnsService(
             _repositoryMock.Object,
             _tasksRepositoryMock.Object,
+            _mapper,
             _loggerMock.Object);
     }
 

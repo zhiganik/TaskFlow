@@ -1,16 +1,17 @@
+using AutoMapper;
 using Microsoft.Extensions.Logging;
 using TaskFlow.Application.Domain.Entities;
 using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Exceptions;
 using TaskFlow.Application.Interfaces.Repositories;
 using TaskFlow.Application.Interfaces.Services;
-using TaskFlow.Application.Mappings;
 
 namespace TaskFlow.Application.Services;
 
 public class WorkspaceColumnsService(
     IWorkspaceColumnsRepository repository,
     IWorkspaceTasksRepository tasksRepository,
+    IMapper mapper,
     ILogger<WorkspaceColumnsService> logger) : IWorkspaceColumnsService
 {
     private const int MaxColumns = 7;
@@ -27,7 +28,7 @@ public class WorkspaceColumnsService(
     public async Task<IReadOnlyList<WorkspaceColumnDto>> GetByWorkspaceAsync(Guid workspaceId, CancellationToken ct)
     {
         var columns = await repository.GetByWorkspaceIdAsync(workspaceId, ct);
-        return columns.Select(c => c.ToDto()).ToList();
+        return mapper.Map<IReadOnlyList<WorkspaceColumnDto>>(columns);
     }
 
     public async Task<WorkspaceColumnDto> CreateAsync(Guid workspaceId, CreateColumnRequest request, CancellationToken ct)
@@ -48,7 +49,7 @@ public class WorkspaceColumnsService(
 
         logger.LogInformation("Column {ColumnId} created in workspace {WorkspaceId}", column.Id, workspaceId);
 
-        return column.ToDto();
+        return mapper.Map<WorkspaceColumnDto>(column);
     }
 
     public async Task<WorkspaceColumnDto> RenameAsync(Guid workspaceId, Guid columnId, UpdateColumnRequest request, CancellationToken ct)
@@ -62,7 +63,7 @@ public class WorkspaceColumnsService(
 
         logger.LogInformation("Column {ColumnId} renamed in workspace {WorkspaceId}", columnId, workspaceId);
 
-        return column.ToDto();
+        return mapper.Map<WorkspaceColumnDto>(column);
     }
 
     public async Task ReorderAsync(Guid workspaceId, ReorderColumnsRequest request, CancellationToken ct)

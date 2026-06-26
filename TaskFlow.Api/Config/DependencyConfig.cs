@@ -40,6 +40,7 @@ public static class DependencyConfig
             .AddJwtAuthentication(config)
             .AddRepositories()
             .AddApplicationServices()
+            .AddMappings()
             .AddFluentValidationServices()
             .AddSwaggerDocumentation();
 
@@ -162,6 +163,13 @@ public static class DependencyConfig
         services.AddScoped<IWorkspaceMembersService, WorkspaceMembersService>();
         services.AddScoped<IWorkspaceColumnsService, WorkspaceColumnsService>();
         services.AddScoped<IWorkspaceTasksService, WorkspaceTasksService>();
+        return services;
+    }
+
+    private static IServiceCollection AddMappings(this IServiceCollection services)
+    {
+        services.AddAutoMapper(cfg =>
+            cfg.AddMaps(typeof(TaskFlow.Application.Mappings.UserProfile).Assembly));
         return services;
     }
 
