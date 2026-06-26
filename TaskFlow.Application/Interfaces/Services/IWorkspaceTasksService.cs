@@ -5,6 +5,7 @@ namespace TaskFlow.Application.Interfaces.Services;
 public interface IWorkspaceTasksService
 {
     Task<IReadOnlyList<WorkspaceTaskDto>> GetByWorkspaceAsync(Guid workspaceId, TaskFilterQuery filter, CancellationToken ct);
+    Task<PagedResult<WorkspaceTaskDto>>   GetPagedByColumnAsync(Guid workspaceId, Guid columnId, TaskFilterQuery filter, string? cursor, int limit, CancellationToken ct);
     Task<WorkspaceTaskDto>                GetByIdAsync(Guid workspaceId, Guid taskId, CancellationToken ct);
     Task<WorkspaceTaskDto>                CreateAsync(Guid workspaceId, string createdById, CreateTaskRequest request, CancellationToken ct);
     Task<WorkspaceTaskDto>                UpdateAsync(Guid workspaceId, Guid taskId, UpdateTaskRequest request, CancellationToken ct);

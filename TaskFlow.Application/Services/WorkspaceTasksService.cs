@@ -20,6 +20,14 @@ public class WorkspaceTasksService(
         return mapper.Map<IReadOnlyList<WorkspaceTaskDto>>(tasks);
     }
 
+    public async Task<PagedResult<WorkspaceTaskDto>> GetPagedByColumnAsync(
+        Guid workspaceId, Guid columnId, TaskFilterQuery filter, string? cursor, int limit, CancellationToken ct)
+    {
+        var result = await repository.GetPagedByColumnAsync(workspaceId, columnId, filter, cursor, limit, ct);
+        var dtos = mapper.Map<IReadOnlyList<WorkspaceTaskDto>>(result.Items);
+        return new PagedResult<WorkspaceTaskDto>(dtos, result.NextCursor, result.HasMore);
+    }
+
     public async Task<WorkspaceTaskDto> GetByIdAsync(Guid workspaceId, Guid taskId, CancellationToken ct)
     {
         var task = await GetOwnedTaskAsync(workspaceId, taskId, ct);

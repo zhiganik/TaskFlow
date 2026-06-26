@@ -37,6 +37,9 @@ public class WorkspaceTaskConfiguration : IEntityTypeConfiguration<WorkspaceTask
         builder.HasIndex(t => t.ColumnId)
             .HasDatabaseName("IX_WorkspaceTasks_ColumnId");
 
+        builder.HasIndex(t => new { t.ColumnId, t.Order })
+            .HasDatabaseName("IX_WorkspaceTasks_ColumnId_Order");
+
         builder.HasOne(t => t.Workspace)
             .WithMany(w => w.Tasks)
             .HasForeignKey(t => t.WorkspaceId)

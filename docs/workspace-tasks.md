@@ -50,8 +50,18 @@ All workspace roles (Owner, Admin, Member) can perform every task operation.
 GET /api/v1/workspaces/{workspaceId}/tasks
 ```
 
-Returns all tasks in the workspace ordered by `columnId, order ASC` (i.e. grouped by column,
-sorted by position within each column).
+The endpoint has two modes determined by whether `columnId` is supplied.
+
+#### Mode 1 — flat filtered list (no `columnId`)
+
+Returns all tasks in the workspace ordered by `columnId, order ASC`. Supports optional
+server-side filtering; all params are AND-ed together.
+
+| Query param  | Type              | Description |
+|--------------|-------------------|-------------|
+| `search`     | `string`          | Case-insensitive substring match on `title`. If the value is a plain integer it also matches `number`. |
+| `assigneeId` | `string`          | Filter by assignee user ID. Pass the special value `"unassigned"` to return tasks with no assignee. |
+| `priorities` | `TaskPriority[]`  | Repeat the param to filter by multiple values: `?priorities=High&priorities=Low` |
 
 **Responses**
 
@@ -76,6 +86,41 @@ sorted by position within each column).
   }
 ]
 ```
+
+#### Mode 2 — paginated column view (`columnId` required)
+
+Returns a cursor-paginated page of tasks for a single column. Used by the Kanban board to
+load tasks on demand — each column fetches its own pages independently.
+
+All filter params (`search`, `assigneeId`, `priorities`) are also supported in this mode.
+
+| Query param | Type     | Default | Description |
+|-------------|----------|---------|-------------|
+| `columnId`  | `guid`   | —       | **Required** to activate this mode |
+| `cursor`    | `string` | —       | Opaque base64 cursor from the previous page's `nextCursor`. Omit for the first page. |
+| `limit`     | `int`    | `20`    | Tasks per page. |
+
+**Cursor encoding:** base64 of `"{order}_{id}"`. Keyset condition:
+`(Order > cursorOrder) OR (Order = cursorOrder AND Id > cursorId)` — stable across concurrent reorders.
+
+**Responses**
+
+| Status | Body                            |
+|--------|---------------------------------|
+| 200    | `PagedResult<WorkspaceTaskDto>` |
+| 401    | —                               |
+| 403    | `ProblemDetails`                |
+
+**Example response**
+```json
+{
+  "items": [ { "id": "...", "title": "Fix login bug", ... } ],
+  "nextCursor": "MF8zNTBl...",
+  "hasMore": true
+}
+```
+
+**Indexes:** `(ColumnId, Order)` supports the keyset range scan without a sort step.
 
 ---
 
@@ -236,6 +281,9 @@ DELETE /api/v1/workspaces/{workspaceId}/tasks/{taskId}
 - The `columnId` on create and move must belong to the given `workspaceId`; mismatches return 404.
 - A task's `workspaceId` is validated on every mutation — a task ID from another workspace returns 404.
 - Deleting a column that still has tasks returns **409**. Tasks must be removed or moved first.
+- Filter params are AND-ed: `search=fix&priorities=High` returns only high-priority tasks whose title contains "fix".
+- `assigneeId=unassigned` is a sentinel value that maps to `WHERE AssigneeId IS NULL` — it is not a real user ID.
+- Paginated mode (`columnId` present) always returns results in `(order, id)` order within the column; the cursor encodes this position so pages remain stable even if other tasks are reordered concurrently.
 
 ---
 

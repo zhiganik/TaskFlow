@@ -13,20 +13,33 @@ namespace TaskFlow.Api.Controllers;
 [Route("api/v1/workspaces/{workspaceId:guid}/tasks")]
 public class WorkspaceTasksController(IWorkspaceTasksService tasksService) : ControllerBase
 {
-    /// <summary>List tasks in the workspace. Supports optional filtering by search term, assignee, and priority.</summary>
+    /// <summary>
+    /// List tasks. When columnId is supplied returns a paginated page (PagedResult) for that column.
+    /// Otherwise returns the full flat list filtered by search/assignee/priority.
+    /// </summary>
     [HttpGet]
     [Authorize(Policy = WorkspacePolicies.Member)]
-    [ProducesResponseType(typeof(IReadOnlyList<WorkspaceTaskDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<WorkspaceTaskDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetAll(
         Guid workspaceId,
-        [FromQuery] string? search,
-        [FromQuery] string? assigneeId,
-        [FromQuery] TaskPriority[]? priorities,
-        CancellationToken ct)
+        [FromQuery] Guid?           columnId,
+        [FromQuery] string?         cursor,
+        [FromQuery] int             limit      = 20,
+        [FromQuery] string?         search     = null,
+        [FromQuery] string?         assigneeId = null,
+        [FromQuery] TaskPriority[]? priorities = null,
+        CancellationToken ct = default)
     {
         var filter = new TaskFilterQuery(search, assigneeId, priorities);
+
+        if (columnId.HasValue)
+        {
+            var page = await tasksService.GetPagedByColumnAsync(workspaceId, columnId.Value, filter, cursor, limit, ct);
+            return Ok(page);
+        }
+
         var result = await tasksService.GetByWorkspaceAsync(workspaceId, filter, ct);
         return Ok(result);
     }
