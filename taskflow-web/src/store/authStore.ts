@@ -15,6 +15,7 @@ interface AuthState {
   user: UserDto | null
   setAuth: (tokens: AuthTokens, user: UserDto) => void
   clearAuth: () => void
+  updateUser: (user: UserDto) => void
 }
 
 // Persisted to localStorage so a page reload doesn't force a re-login. The access token
@@ -35,6 +36,7 @@ export const useAuthStore = create<AuthState>()(
           user,
         }),
       clearAuth: () => set({ accessToken: null, refreshToken: null, expiresAt: null, user: null }),
+      updateUser: (user) => set({ user }),
     }),
     { name: 'taskflow.auth' },
   ),

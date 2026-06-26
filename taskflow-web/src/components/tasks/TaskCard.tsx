@@ -63,7 +63,8 @@ export function TaskCard({ task, isSelected, onClick, onDragStart, onDragEnd }: 
         {task.assigneeName && (
           <span
             title={task.assigneeName}
-            className="ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-50 text-[9px] font-semibold text-brand-700"
+            className="ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold text-white"
+            style={{ backgroundColor: task.assigneeAvatarColor || '#818cf8' }}
           >
             {initials(task.assigneeName)}
           </span>

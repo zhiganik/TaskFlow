@@ -49,7 +49,10 @@ export function CommentItem({ comment, currentUserId, members, onUpdate, onDelet
 
   return (
     <div className="group flex gap-2.5 py-3">
-      <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-100 text-[10px] font-semibold text-brand-700">
+      <span
+        className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white"
+        style={{ backgroundColor: comment.createdByAvatarColor }}
+      >
         {comment.createdByName.slice(0, 2).toUpperCase()}
       </span>
 

@@ -14,7 +14,7 @@ export const tasksApi = {
       .get<WorkspaceTaskDto[]>(`/workspaces/${workspaceId}/tasks`, {
         params: {
           search: filter?.search || undefined,
-          assigneeId: filter?.assigneeId || undefined,
+          assigneeIds: filter?.assigneeIds?.length ? filter.assigneeIds : undefined,
           priorities: filter?.priorities?.length ? filter.priorities : undefined,
         },
         paramsSerializer: { indexes: null },
@@ -29,7 +29,7 @@ export const tasksApi = {
           cursor: cursor ?? undefined,
           limit: 20,
           search: filter.search || undefined,
-          assigneeId: filter.assigneeId || undefined,
+          assigneeIds: filter.assigneeIds?.length ? filter.assigneeIds : undefined,
           priorities: filter.priorities?.length ? filter.priorities : undefined,
         },
         paramsSerializer: { indexes: null },

@@ -57,7 +57,7 @@ export function DashboardPage() {
   const { data: members } = useMembers(wsId)
   const {
     searchInput, setSearchInput,
-    assigneeId, setAssigneeId,
+    assigneeIds, toggleAssigneeId,
     priorities, setPriorities,
     filter, hasActiveFilters, clearAll,
   } = useTaskFilter()
@@ -335,8 +335,8 @@ export function DashboardPage() {
                 <TaskFilterBar
                   searchInput={searchInput}
                   onSearchChange={setSearchInput}
-                  assigneeId={assigneeId}
-                  onAssigneeChange={setAssigneeId}
+                  assigneeIds={assigneeIds}
+                  onToggleAssignee={toggleAssigneeId}
                   priorities={priorities}
                   onPriorityChange={setPriorities}
                   members={members ?? []}

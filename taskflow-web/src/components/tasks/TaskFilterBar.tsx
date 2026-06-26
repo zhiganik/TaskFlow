@@ -7,8 +7,8 @@ const PRIORITIES: TaskPriority[] = ['High', 'Medium', 'Low']
 interface Props {
   searchInput: string
   onSearchChange: (v: string) => void
-  assigneeId: string | undefined
-  onAssigneeChange: (id: string | undefined) => void
+  assigneeIds: string[]
+  onToggleAssignee: (id: string) => void
   priorities: TaskPriority[]
   onPriorityChange: (p: TaskPriority[]) => void
   members: MemberDto[]
@@ -28,7 +28,7 @@ function initials(name: string) {
 
 export function TaskFilterBar({
   searchInput, onSearchChange,
-  assigneeId, onAssigneeChange,
+  assigneeIds, onToggleAssignee,
   priorities, onPriorityChange,
   members, hasActiveFilters, onClear,
 }: Props) {
@@ -38,9 +38,6 @@ export function TaskFilterBar({
     onPriorityChange(
       priorities.includes(p) ? priorities.filter((x) => x !== p) : [...priorities, p],
     )
-
-  const toggleAssignee = (id: string) =>
-    onAssigneeChange(assigneeId === id ? undefined : id)
 
   return (
     <div className="flex flex-wrap items-center gap-3 border-b border-gray-100 bg-white px-4 py-2">
@@ -73,10 +70,10 @@ export function TaskFilterBar({
           <button
             type="button"
             title="Unassigned"
-            onClick={() => toggleAssignee('unassigned')}
+            onClick={() => onToggleAssignee('unassigned')}
             className={[
               'flex h-7 w-7 items-center justify-center rounded-full border-2 transition-all',
-              assigneeId === 'unassigned'
+              assigneeIds.includes('unassigned')
                 ? 'border-brand-500 bg-brand-50 text-brand-600'
                 : 'border-gray-200 bg-gray-100 text-gray-400 hover:border-gray-300',
             ].join(' ')}
@@ -85,19 +82,18 @@ export function TaskFilterBar({
           </button>
 
           {sorted.map((m) => {
-            const selected = assigneeId === m.userId
+            const selected = assigneeIds.includes(m.userId)
             return (
               <button
                 key={m.userId}
                 type="button"
                 title={m.displayName}
-                onClick={() => toggleAssignee(m.userId)}
+                onClick={() => onToggleAssignee(m.userId)}
                 className={[
-                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-[10px] font-semibold transition-all',
-                  selected
-                    ? 'border-brand-500 bg-brand-500 text-white'
-                    : 'border-transparent bg-brand-100 text-brand-700 hover:border-brand-300',
+                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-[10px] font-semibold text-white transition-all',
+                  selected ? 'border-brand-500' : 'border-transparent hover:opacity-80',
                 ].join(' ')}
+                style={{ backgroundColor: m.avatarColor || '#818cf8' }}
               >
                 {initials(m.displayName)}
               </button>

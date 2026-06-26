@@ -7,6 +7,18 @@ export interface UserDto {
   userId: string
   email: string
   displayName: string
+  avatarColor: string
+}
+
+export interface UpdateProfileRequest {
+  displayName: string
+  email: string
+  avatarColor: string
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string
+  newPassword: string
 }
 
 export interface AuthResponseDto {
@@ -68,6 +80,7 @@ export interface MemberDto {
   userId: string
   displayName: string
   email: string
+  avatarColor: string
   role: WorkspaceRole
   joinedAt: string
 }
@@ -118,6 +131,7 @@ export interface WorkspaceTaskDto {
   priority: TaskPriority
   assigneeId: string | null
   assigneeName: string | null
+  assigneeAvatarColor: string | null
   dueDate: string | null
   isOverdue: boolean
   createdById: string
@@ -149,7 +163,7 @@ export interface MoveTaskRequest {
 
 export interface TaskFilterParams {
   search?: string
-  assigneeId?: string
+  assigneeIds?: string[]
   priorities?: TaskPriority[]
 }
 
@@ -165,6 +179,7 @@ export interface TaskCommentDto {
   content: string
   createdById: string
   createdByName: string
+  createdByAvatarColor: string
   createdAt: string
   updatedAt: string
   isEdited: boolean

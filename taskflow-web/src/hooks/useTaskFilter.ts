@@ -4,7 +4,7 @@ import type { TaskFilterParams, TaskPriority } from '../types/api.types'
 export function useTaskFilter() {
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
-  const [assigneeId, setAssigneeId] = useState<string | undefined>()
+  const [assigneeIds, setAssigneeIds] = useState<string[]>([])
   const [priorities, setPriorities] = useState<TaskPriority[]>([])
 
   useEffect(() => {
@@ -12,27 +12,32 @@ export function useTaskFilter() {
     return () => clearTimeout(t)
   }, [searchInput])
 
+  const toggleAssigneeId = (id: string) =>
+    setAssigneeIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    )
+
   const filter: TaskFilterParams = useMemo(
     () => ({
       search: search || undefined,
-      assigneeId,
+      assigneeIds: assigneeIds.length ? assigneeIds : undefined,
       priorities: priorities.length ? priorities : undefined,
     }),
-    [search, assigneeId, priorities],
+    [search, assigneeIds, priorities],
   )
 
-  const hasActiveFilters = !!searchInput || !!assigneeId || priorities.length > 0
+  const hasActiveFilters = !!searchInput || assigneeIds.length > 0 || priorities.length > 0
 
   const clearAll = () => {
     setSearchInput('')
     setSearch('')
-    setAssigneeId(undefined)
+    setAssigneeIds([])
     setPriorities([])
   }
 
   return {
     searchInput, setSearchInput,
-    assigneeId, setAssigneeId,
+    assigneeIds, toggleAssigneeId,
     priorities, setPriorities,
     filter, hasActiveFilters, clearAll,
   }
