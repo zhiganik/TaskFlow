@@ -65,19 +65,45 @@ export function DashboardPage() {
   const reorderMutation = useReorderColumns(wsId)
   const moveTaskMutation = useMoveTask(wsId)
 
-  // board horizontal scroll ref (wheel → horizontal)
+  // board horizontal scroll ref (wheel → horizontal, middle mouse drag)
   const boardRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const el = boardRef.current
     if (!el) return
+
     const onWheel = (e: WheelEvent) => {
+      // let column task lists handle vertical scroll natively
+      if ((e.target as HTMLElement).closest('[data-col-scroll]')) return
       if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
         e.preventDefault()
         el.scrollLeft += e.deltaY
       }
     }
+
+    const onMouseDown = (e: MouseEvent) => {
+      if (e.button !== 1) return
+      e.preventDefault()
+      const startX = e.clientX
+      const startLeft = el.scrollLeft
+      el.style.cursor = 'grabbing'
+      const onMouseMove = (ev: MouseEvent) => {
+        el.scrollLeft = startLeft - (ev.clientX - startX)
+      }
+      const onMouseUp = () => {
+        el.style.cursor = ''
+        document.removeEventListener('mousemove', onMouseMove)
+        document.removeEventListener('mouseup', onMouseUp)
+      }
+      document.addEventListener('mousemove', onMouseMove)
+      document.addEventListener('mouseup', onMouseUp)
+    }
+
     el.addEventListener('wheel', onWheel, { passive: false })
-    return () => el.removeEventListener('wheel', onWheel)
+    el.addEventListener('mousedown', onMouseDown)
+    return () => {
+      el.removeEventListener('wheel', onWheel)
+      el.removeEventListener('mousedown', onMouseDown)
+    }
   }, [])
 
   // column drag state
@@ -412,6 +438,7 @@ export function DashboardPage() {
 
                             {/* column body — task drop zone */}
                             <div
+                              data-col-scroll
                               className={[
                                 'flex flex-1 flex-col gap-2 overflow-y-auto px-2 pb-2 transition-colors',
                                 isTaskDragOver ? 'bg-brand-50/60' : '',
