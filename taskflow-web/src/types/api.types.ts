@@ -147,3 +147,29 @@ export interface MoveTaskRequest {
   columnId: string
   order: number
 }
+
+export interface PagedResult<T> {
+  items: T[]
+  nextCursor: string | null
+  hasMore: boolean
+}
+
+export interface TaskCommentDto {
+  id: string
+  taskId: string
+  content: string
+  createdById: string
+  createdByName: string
+  createdAt: string
+  updatedAt: string
+  isEdited: boolean
+  mentionedUserIds: string[]
+}
+
+export interface CreateCommentRequest {
+  content: string
+}
+
+export interface UpdateCommentRequest {
+  content: string
+}

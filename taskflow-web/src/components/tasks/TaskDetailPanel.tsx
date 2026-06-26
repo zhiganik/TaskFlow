@@ -8,6 +8,7 @@ import { Alert } from '../ui/Alert'
 import { Button } from '../ui/Button'
 import { CalendarIcon, PencilIcon, UserIcon, XIcon } from '../ui/Icons'
 import { Spinner } from '../ui/Spinner'
+import { CommentsList } from './comments/CommentsList'
 
 interface TaskDetailPanelProps {
   task: WorkspaceTaskDto
@@ -352,6 +353,11 @@ export function TaskDetailPanel({ task, columns, workspaceId, width, onResizeSta
               <PencilIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gray-300 opacity-0 group-hover:opacity-100" />
             </div>
           )}
+        </Section>
+
+        {/* comments */}
+        <Section label="Comments">
+          <CommentsList workspaceId={workspaceId} taskId={task.id} />
         </Section>
 
         {/* meta */}
