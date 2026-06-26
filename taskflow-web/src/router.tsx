@@ -5,6 +5,7 @@ import { HealthCheckPage } from './pages/HealthCheckPage'
 import { LoginPage } from './pages/LoginPage'
 import { MembersPage } from './pages/MembersPage'
 import { RegisterPage } from './pages/RegisterPage'
+import { SettingsPage } from './pages/SettingsPage'
 import { WorkspaceRedirectPage } from './pages/WorkspaceRedirectPage'
 import { useAuthStore } from './store/authStore'
 
@@ -60,6 +61,14 @@ export function AppRouter() {
           element={
             <ProtectedRoute>
               <MembersPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/workspaces/:workspaceId/settings"
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
             </ProtectedRoute>
           }
         />

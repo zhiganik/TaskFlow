@@ -14,7 +14,9 @@ import { PencilIcon, PlusIcon, TrashIcon } from '../components/ui/Icons'
 import { Sidebar } from '../components/layout/Sidebar'
 import { Spinner } from '../components/ui/Spinner'
 import { useColumns, useReorderColumns } from '../hooks/useColumns'
+import { useLabels } from '../hooks/useLabels'
 import { useMembers } from '../hooks/useMembers'
+import { usePriorityConfig } from '../hooks/usePriorityConfig'
 import { useTaskFilter } from '../hooks/useTaskFilter'
 import { useMoveTask } from '../hooks/useTasks'
 import { useWorkspaces, useUpdateWorkspace } from '../hooks/useWorkspaces'
@@ -55,10 +57,13 @@ export function DashboardPage() {
 
   const { data: columns, isLoading: isLoadingColumns } = useColumns(wsId)
   const { data: members } = useMembers(wsId)
+  const { data: labels = [] } = useLabels(wsId)
+  const { data: priorityConfigs = [] } = usePriorityConfig(wsId)
   const {
     searchInput, setSearchInput,
     assigneeIds, toggleAssigneeId,
     priorities, setPriorities,
+    labelIds, toggleLabelId,
     filter, hasActiveFilters, clearAll,
   } = useTaskFilter()
   const reorderMutation = useReorderColumns(wsId)
@@ -339,6 +344,10 @@ export function DashboardPage() {
                   onToggleAssignee={toggleAssigneeId}
                   priorities={priorities}
                   onPriorityChange={setPriorities}
+                  priorityConfigs={priorityConfigs}
+                  labelIds={labelIds}
+                  onToggleLabel={toggleLabelId}
+                  labels={labels}
                   members={members ?? []}
                   hasActiveFilters={hasActiveFilters}
                   onClear={clearAll}
@@ -350,7 +359,7 @@ export function DashboardPage() {
                   </div>
                 )}
 
-                <div ref={boardRef} className="flex-1 overflow-x-auto overflow-y-hidden">
+                <div ref={boardRef} className="flex-1 overflow-x-auto overflow-y-hidden scrollbar-hide">
                   <div className="flex h-full min-w-max gap-3 p-4">
                     {sorted.map((column) => {
                       const isColDragging = colDraggingId === column.id
@@ -378,8 +387,7 @@ export function DashboardPage() {
                         >
                           {/* bordered card — header + body only */}
                           <div
-                            className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-xl border-2 border-b-0 bg-gray-100"
-                            style={{ borderColor: column.color + '60' }}
+                            className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-xl border border-b-0 border-gray-200 bg-gray-100"
                           >
                             {/* column header */}
                             <div className="flex items-center gap-2 px-3 py-2.5">
@@ -425,7 +433,7 @@ export function DashboardPage() {
                             <div
                               data-col-scroll
                               className={[
-                                'flex flex-1 flex-col gap-2 overflow-y-auto px-2 pb-2 transition-colors',
+                                'flex flex-1 flex-col gap-2 overflow-y-auto scrollbar-hide px-2 pb-2 transition-colors',
                                 isTaskDragOver ? 'bg-brand-50/60' : '',
                               ].join(' ')}
                               onDragOver={(e) => handleColBodyDragOver(e, column.id)}

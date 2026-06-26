@@ -1,8 +1,6 @@
-import { PRIORITY_BADGE } from '../../lib/priority'
-import type { MemberDto, TaskPriority } from '../../types/api.types'
-import { SearchIcon, UserIcon, XIcon } from '../ui/Icons'
-
-const PRIORITIES: TaskPriority[] = ['High', 'Medium', 'Low']
+import { useRef, useState, useEffect } from 'react'
+import type { LabelDto, MemberDto, PriorityConfigDto, TaskPriority } from '../../types/api.types'
+import { SearchIcon, TagIcon, UserIcon, XIcon } from '../ui/Icons'
 
 interface Props {
   searchInput: string
@@ -11,6 +9,10 @@ interface Props {
   onToggleAssignee: (id: string) => void
   priorities: TaskPriority[]
   onPriorityChange: (p: TaskPriority[]) => void
+  priorityConfigs: PriorityConfigDto[]
+  labelIds: string[]
+  onToggleLabel: (id: string) => void
+  labels: LabelDto[]
   members: MemberDto[]
   hasActiveFilters: boolean
   onClear: () => void
@@ -26,18 +28,45 @@ function initials(name: string) {
     .toUpperCase()
 }
 
+const FALLBACK_PRIORITY_COLORS: Record<TaskPriority, string> = {
+  Low: '#22c55e',
+  Medium: '#f59e0b',
+  High: '#ef4444',
+}
+
 export function TaskFilterBar({
   searchInput, onSearchChange,
   assigneeIds, onToggleAssignee,
   priorities, onPriorityChange,
+  priorityConfigs,
+  labelIds, onToggleLabel, labels,
   members, hasActiveFilters, onClear,
 }: Props) {
   const sorted = [...members].sort((a, b) => a.displayName.localeCompare(b.displayName))
+  const [labelDropdownOpen, setLabelDropdownOpen] = useState(false)
+  const labelDropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (labelDropdownRef.current && !labelDropdownRef.current.contains(e.target as Node))
+        setLabelDropdownOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const getPriorityColor = (p: TaskPriority) =>
+    priorityConfigs.find((c) => c.priority === p)?.color ?? FALLBACK_PRIORITY_COLORS[p]
+
+  const getPriorityLabel = (p: TaskPriority) =>
+    priorityConfigs.find((c) => c.priority === p)?.displayName ?? p
 
   const togglePriority = (p: TaskPriority) =>
     onPriorityChange(
       priorities.includes(p) ? priorities.filter((x) => x !== p) : [...priorities, p],
     )
+
+  const allPriorities: TaskPriority[] = ['High', 'Medium', 'Low']
 
   return (
     <div className="flex flex-wrap items-center gap-3 border-b border-gray-100 bg-white px-4 py-2">
@@ -66,7 +95,6 @@ export function TaskFilterBar({
       {/* assignee avatars */}
       {sorted.length > 0 && (
         <div className="flex items-center gap-1.5">
-          {/* unassigned */}
           <button
             type="button"
             title="Unassigned"
@@ -102,30 +130,81 @@ export function TaskFilterBar({
         </div>
       )}
 
-      {/* divider */}
       {sorted.length > 0 && <div className="h-5 w-px bg-gray-200" />}
 
       {/* priority chips */}
       <div className="flex items-center gap-1">
-        {PRIORITIES.map((p) => {
+        {allPriorities.map((p) => {
           const active = priorities.includes(p)
+          const color = getPriorityColor(p)
           return (
             <button
               key={p}
               type="button"
               onClick={() => togglePriority(p)}
               className={[
-                'h-7 rounded-full border px-3 text-xs font-medium transition-colors',
+                'flex h-7 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-colors',
                 active
-                  ? PRIORITY_BADGE[p] + ' border-transparent'
-                  : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50',
+                  ? 'border-gray-300 bg-gray-100 text-gray-700'
+                  : 'border-gray-200 text-gray-400 hover:border-gray-300 hover:bg-gray-50',
               ].join(' ')}
             >
-              {p}
+              <span
+                className="h-2 w-2 shrink-0 rounded-full transition-opacity"
+                style={{ backgroundColor: color, opacity: active ? 1 : 0.35 }}
+              />
+              {getPriorityLabel(p)}
             </button>
           )
         })}
       </div>
+
+      {/* label filter dropdown */}
+      {labels.length > 0 && (
+        <>
+          <div className="h-5 w-px bg-gray-200" />
+          <div ref={labelDropdownRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setLabelDropdownOpen((o) => !o)}
+              className={[
+                'flex h-7 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-colors',
+                labelIds.length > 0
+                  ? 'border-gray-300 bg-gray-100 text-gray-700'
+                  : 'border-gray-200 text-gray-400 hover:border-gray-300 hover:bg-gray-50',
+              ].join(' ')}
+            >
+              <TagIcon className="h-3 w-3 shrink-0" />
+              Labels
+              {labelIds.length > 0 && (
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-brand-500 text-[10px] font-semibold text-white">
+                  {labelIds.length}
+                </span>
+              )}
+            </button>
+
+            {labelDropdownOpen && (
+              <div className="absolute left-0 top-full z-50 mt-1.5 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+                {labels.map((l) => {
+                  const active = labelIds.includes(l.id)
+                  return (
+                    <button
+                      key={l.id}
+                      type="button"
+                      onClick={() => onToggleLabel(l.id)}
+                      className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-gray-50"
+                    >
+                      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: l.color }} />
+                      <span className="flex-1 text-xs text-gray-700">{l.name}</span>
+                      {active && <span className="text-xs font-bold text-brand-600">✓</span>}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </>
+      )}
 
       {/* clear */}
       {hasActiveFilters && (

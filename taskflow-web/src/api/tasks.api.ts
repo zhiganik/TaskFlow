@@ -16,6 +16,7 @@ export const tasksApi = {
           search: filter?.search || undefined,
           assigneeIds: filter?.assigneeIds?.length ? filter.assigneeIds : undefined,
           priorities: filter?.priorities?.length ? filter.priorities : undefined,
+          labelIds: filter?.labelIds?.length ? filter.labelIds : undefined,
         },
         paramsSerializer: { indexes: null },
       })
@@ -31,6 +32,7 @@ export const tasksApi = {
           search: filter.search || undefined,
           assigneeIds: filter.assigneeIds?.length ? filter.assigneeIds : undefined,
           priorities: filter.priorities?.length ? filter.priorities : undefined,
+          labelIds: filter.labelIds?.length ? filter.labelIds : undefined,
         },
         paramsSerializer: { indexes: null },
       })

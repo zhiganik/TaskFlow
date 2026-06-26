@@ -1,8 +1,15 @@
 import { type DragEvent, useEffect, useMemo, useRef } from 'react'
 import { useColumnTasks } from '../../hooks/useColumnTasks'
-import type { TaskFilterParams, WorkspaceTaskDto } from '../../types/api.types'
+import { usePriorityConfig } from '../../hooks/usePriorityConfig'
+import type { TaskFilterParams, TaskPriority, WorkspaceTaskDto } from '../../types/api.types'
 import { Spinner } from '../ui/Spinner'
 import { TaskCard } from './TaskCard'
+
+const FALLBACK_PRIORITY_COLORS: Record<TaskPriority, string> = {
+  Low: '#22c55e',
+  Medium: '#f59e0b',
+  High: '#ef4444',
+}
 
 interface Props {
   workspaceId: string
@@ -21,7 +28,15 @@ export function ColumnTaskList({
   onDragStart, onDragEnd, onCountChange,
 }: Props) {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useColumnTasks(workspaceId, columnId, filter)
+  const { data: priorityConfigs } = usePriorityConfig(workspaceId)
   const tasks = useMemo(() => data?.pages.flatMap((p) => p.items) ?? [], [data])
+
+  const priorityColorMap = useMemo<Record<TaskPriority, string>>(() => {
+    if (!priorityConfigs) return FALLBACK_PRIORITY_COLORS
+    return Object.fromEntries(
+      priorityConfigs.map((c) => [c.priority, c.color])
+    ) as Record<TaskPriority, string>
+  }, [priorityConfigs])
 
   const onCountChangeRef = useRef(onCountChange)
   onCountChangeRef.current = onCountChange
@@ -37,6 +52,7 @@ export function ColumnTaskList({
         <TaskCard
           key={task.id}
           task={task}
+          priorityColor={priorityColorMap[task.priority]}
           isSelected={task.id === selectedTaskId}
           onClick={() => onTaskClick(task)}
           onDragStart={(e) => onDragStart(e, task.id)}

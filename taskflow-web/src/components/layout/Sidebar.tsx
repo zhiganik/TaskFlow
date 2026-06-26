@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { NavLink, useParams } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
+import { BoardIcon, MembersIcon, SettingsIcon } from '../ui/Icons'
 import { ProfileModal } from '../profile/ProfileModal'
 import { WorkspaceSwitcher } from '../workspaces/WorkspaceSwitcher'
 
@@ -42,10 +43,22 @@ export function Sidebar() {
         {workspaceId && (
           <nav className="mt-3 flex flex-col gap-0.5 px-2">
             <NavLink to={`/workspaces/${workspaceId}`} end className={navLinkClassName}>
-              Board
+              <span className="flex items-center gap-1.5">
+                <BoardIcon className="h-3.5 w-3.5" />
+                Board
+              </span>
             </NavLink>
             <NavLink to={`/workspaces/${workspaceId}/members`} className={navLinkClassName}>
-              Members
+              <span className="flex items-center gap-1.5">
+                <MembersIcon className="h-3.5 w-3.5" />
+                Members
+              </span>
+            </NavLink>
+            <NavLink to={`/workspaces/${workspaceId}/settings`} className={navLinkClassName}>
+              <span className="flex items-center gap-1.5">
+                <SettingsIcon className="h-3.5 w-3.5" />
+                Settings
+              </span>
             </NavLink>
           </nav>
         )}

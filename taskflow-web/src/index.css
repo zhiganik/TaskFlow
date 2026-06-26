@@ -7,3 +7,10 @@
   --color-brand-600: #6c63d1;
   --color-brand-700: #534ab7;
 }
+
+@utility scrollbar-hide {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

@@ -11,6 +11,7 @@ import { Button } from '../ui/Button'
 import { Modal } from '../ui/Modal'
 import { Select } from '../ui/Select'
 import { TextField } from '../ui/TextField'
+import { LabelPicker } from './LabelPicker'
 
 interface CreateTaskModalProps {
   workspaceId: string
@@ -54,6 +55,7 @@ export function CreateTaskModal({
   const createMutation = useCreateTask(workspaceId)
   const { data: members } = useMembers(workspaceId)
   const [serverError, setServerError] = useState<string | null>(null)
+  const [selectedLabelIds, setSelectedLabelIds] = useState<string[]>([])
 
   const {
     register,
@@ -82,6 +84,7 @@ export function CreateTaskModal({
         priority: values.priority,
         assigneeId: values.assigneeId || null,
         dueDate: values.dueDate ? new Date(values.dueDate + 'T00:00:00Z').toISOString() : null,
+        labelIds: selectedLabelIds.length ? selectedLabelIds : undefined,
       })
       .then(onClose)
       .catch((error: unknown) => {
@@ -145,6 +148,15 @@ export function CreateTaskModal({
           {errors.dueDate && (
             <p className="mt-1.5 text-xs text-[#a32d2d]">{errors.dueDate.message}</p>
           )}
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-gray-700">Labels</label>
+          <LabelPicker
+            workspaceId={workspaceId}
+            selectedIds={selectedLabelIds}
+            onChange={setSelectedLabelIds}
+          />
         </div>
 
         <TextArea

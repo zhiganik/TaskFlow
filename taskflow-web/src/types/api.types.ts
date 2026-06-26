@@ -119,6 +119,37 @@ export interface ReorderColumnsRequest {
 
 export type TaskPriority = 'Low' | 'Medium' | 'High'
 
+export interface LabelDto {
+  id: string
+  name: string
+  color: string
+}
+
+export interface PriorityConfigDto {
+  priority: TaskPriority
+  displayName: string
+  color: string
+}
+
+export interface CreateLabelRequest {
+  name: string
+  color: string
+}
+
+export interface UpdateLabelRequest {
+  name: string
+  color: string
+}
+
+export interface UpdatePriorityConfigRequest {
+  displayName: string
+  color: string
+}
+
+export interface SetTaskLabelsRequest {
+  labelIds: string[]
+}
+
 export interface WorkspaceTaskDto {
   id: string
   number: number
@@ -138,6 +169,7 @@ export interface WorkspaceTaskDto {
   createdByName: string
   createdAt: string
   updatedAt: string
+  labels: LabelDto[]
 }
 
 export interface CreateTaskRequest {
@@ -147,6 +179,7 @@ export interface CreateTaskRequest {
   priority?: TaskPriority
   assigneeId?: string | null
   dueDate?: string | null
+  labelIds?: string[]
 }
 
 export interface UpdateTaskRequest {
@@ -165,6 +198,7 @@ export interface TaskFilterParams {
   search?: string
   assigneeIds?: string[]
   priorities?: TaskPriority[]
+  labelIds?: string[]
 }
 
 export interface PagedResult<T> {

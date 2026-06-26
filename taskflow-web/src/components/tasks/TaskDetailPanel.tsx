@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react'
 import { getErrorMessage } from '../../api/errors'
+import { useSetTaskLabels } from '../../hooks/useLabels'
 import { useDeleteTask, useMoveTask, useUpdateTask } from '../../hooks/useTasks'
 import { useMembers } from '../../hooks/useMembers'
-import { PRIORITY_BADGE } from '../../lib/priority'
+import { usePriorityConfig } from '../../hooks/usePriorityConfig'
 import type { TaskPriority, WorkspaceColumnDto, WorkspaceTaskDto } from '../../types/api.types'
 import { Alert } from '../ui/Alert'
 import { Button } from '../ui/Button'
 import { CalendarIcon, PencilIcon, UserIcon, XIcon } from '../ui/Icons'
 import { Spinner } from '../ui/Spinner'
 import { CommentsList } from './comments/CommentsList'
+import { LabelPicker } from './LabelPicker'
 
 interface TaskDetailPanelProps {
   task: WorkspaceTaskDto
@@ -44,7 +46,15 @@ export function TaskDetailPanel({ task, columns, workspaceId, width, onResizeSta
   const updateMutation = useUpdateTask(workspaceId)
   const moveMutation = useMoveTask(workspaceId)
   const deleteMutation = useDeleteTask(workspaceId)
+  const setLabelsMutation = useSetTaskLabels(workspaceId)
   const { data: members } = useMembers(workspaceId)
+  const { data: priorityConfigs = [] } = usePriorityConfig(workspaceId)
+
+  const getPriorityColor = (p: TaskPriority) =>
+    priorityConfigs.find((c) => c.priority === p)?.color ?? { Low: '#22c55e', Medium: '#f59e0b', High: '#ef4444' }[p]
+
+  const getPriorityLabel = (p: TaskPriority) =>
+    priorityConfigs.find((c) => c.priority === p)?.displayName ?? p
 
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleDraft, setTitleDraft] = useState(task.title)
@@ -123,8 +133,8 @@ export function TaskDetailPanel({ task, columns, workspaceId, width, onResizeSta
 
   return (
     <div
-      className="relative flex shrink-0 flex-col overflow-hidden border-l border-gray-200 bg-white"
-      style={{ width }}
+      className="relative flex shrink-0 flex-col overflow-hidden border-l-4 bg-white"
+      style={{ width, borderLeftColor: getPriorityColor(task.priority) }}
     >
       {/* resize handle */}
       <div
@@ -192,9 +202,15 @@ export function TaskDetailPanel({ task, columns, workspaceId, width, onResizeSta
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${PRIORITY_BADGE[task.priority]}`}>
-            {task.priority}
-          </span>
+          {task.labels.map((l) => (
+            <span
+              key={l.id}
+              className="inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium text-white"
+              style={{ backgroundColor: l.color }}
+            >
+              {l.name}
+            </span>
+          ))}
           {task.dueDate && (
             <span className={`inline-flex items-center gap-0.5 text-[11px] ${task.isOverdue ? 'font-medium text-red-600' : 'text-gray-400'}`}>
               <CalendarIcon className="h-3 w-3" />
@@ -246,10 +262,25 @@ export function TaskDetailPanel({ task, columns, workspaceId, width, onResizeSta
             onChange={(e) => saveField({ priority: e.target.value as TaskPriority })}
             className="block w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 disabled:opacity-60"
           >
-            <option value="Low">Low</option>
-            <option value="Medium">Medium</option>
-            <option value="High">High</option>
+            {(['Low', 'Medium', 'High'] as TaskPriority[]).map((p) => (
+              <option key={p} value={p}>{getPriorityLabel(p)}</option>
+            ))}
           </select>
+        </Section>
+
+        {/* labels */}
+        <Section label="Labels">
+          <LabelPicker
+            workspaceId={workspaceId}
+            selectedIds={task.labels.map((l) => l.id)}
+            disabled={setLabelsMutation.isPending}
+            onChange={(ids) =>
+              setLabelsMutation.mutate(
+                { taskId: task.id, data: { labelIds: ids } },
+                { onSuccess: (updated) => onTaskUpdated(updated) },
+              )
+            }
+          />
         </Section>
 
         {/* assignee */}
