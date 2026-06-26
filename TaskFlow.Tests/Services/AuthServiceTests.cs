@@ -193,7 +193,7 @@ public class AuthServiceTests
         var user = CreateUser();
         var request = new RefreshTokenRequest("old-refresh-token");
 
-        _cacheMock.Setup(c => c.GetAsync<string>(RefreshKey("old-refresh-token"), It.IsAny<CancellationToken>()))
+        _cacheMock.Setup(c => c.GetAsync<string>(RefreshKey("old-refresh-token"), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(user.Id);
         _userManagerMock.Setup(m => m.FindByIdAsync(user.Id)).ReturnsAsync(user);
 
@@ -221,7 +221,7 @@ public class AuthServiceTests
     {
         var request = new RefreshTokenRequest("bogus-token");
 
-        _cacheMock.Setup(c => c.GetAsync<string>(RefreshKey("bogus-token"), It.IsAny<CancellationToken>()))
+        _cacheMock.Setup(c => c.GetAsync<string>(RefreshKey("bogus-token"), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((string?)null);
 
         var act = async () => await _sut.RefreshAsync(request);
@@ -236,7 +236,7 @@ public class AuthServiceTests
     {
         var request = new RefreshTokenRequest("old-refresh-token");
 
-        _cacheMock.Setup(c => c.GetAsync<string>(RefreshKey("old-refresh-token"), It.IsAny<CancellationToken>()))
+        _cacheMock.Setup(c => c.GetAsync<string>(RefreshKey("old-refresh-token"), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("deleted-user-id");
         _userManagerMock.Setup(m => m.FindByIdAsync("deleted-user-id")).ReturnsAsync((AppUser?)null);
 

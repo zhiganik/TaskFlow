@@ -17,6 +17,7 @@ Update this file whenever a new feature is added or an existing one changes scop
 | Task Search & Filter | Complete    | [workspace-tasks.md](workspace-tasks.md)         | `GET /api/v1/workspaces/{id}/tasks?search=&assigneeId=&priorities=` |
 | Task Pagination      | Complete    | [workspace-tasks.md](workspace-tasks.md)         | `GET /api/v1/workspaces/{id}/tasks?columnId=&cursor=&limit=` |
 | Task Comments        | Complete    | [task-comments.md](task-comments.md)             | `/api/v1/workspaces/{id}/tasks/{id}/comments` |
+| Redis Caching        | Complete    | [`.claude/06_infrastructure.md`](../.claude/06_infrastructure.md) | `GET /api/v1/admin/cache-stats` |
 
 ---
 

@@ -1,5 +1,6 @@
 using AutoMapper;
 using Microsoft.Extensions.Logging;
+using TaskFlow.Application.Caching;
 using TaskFlow.Application.Domain.Entities;
 using TaskFlow.Application.Domain.Enums;
 using TaskFlow.Application.DTOs;
@@ -12,21 +13,18 @@ namespace TaskFlow.Application.Services;
 public class WorkspacesService(
     IWorkspacesRepository repository,
     IWorkspaceMembersRepository membersRepository,
+    ICacheService cache,
     IMapper mapper,
     ILogger<WorkspacesService> logger) : IWorkspacesService
 {
     public async Task<WorkspaceDto> CreateAsync(string ownerId, CreateWorkspaceRequest request, CancellationToken ct)
     {
-        var workspace = new Workspace
-        {
-            Name = request.Name,
-            OwnerId = ownerId
-        };
+        var workspace = new Workspace { Name = request.Name, OwnerId = ownerId };
 
         workspace.Members.Add(new WorkspaceMember
         {
             UserId = ownerId,
-            Role = WorkspaceRole.Owner,
+            Role   = WorkspaceRole.Owner,
             JoinedAt = DateTime.UtcNow
         });
 
@@ -36,6 +34,8 @@ public class WorkspacesService(
 
         await repository.AddAsync(workspace, ct);
 
+        await cache.InvalidateAsync(CacheKeys.UserWorkspaces(ownerId), ct);
+
         logger.LogInformation("Workspace {WorkspaceId} created by {OwnerId}", workspace.Id, ownerId);
 
         return mapper.Map<WorkspaceDto>(workspace, opts => opts.Items["myRole"] = WorkspaceRole.Owner);
@@ -43,10 +43,17 @@ public class WorkspacesService(
 
     public async Task<IReadOnlyList<WorkspaceDto>> GetForUserAsync(string userId, CancellationToken ct)
     {
+        var key    = CacheKeys.UserWorkspaces(userId);
+        var cached = await cache.GetAsync<List<WorkspaceDto>>(key, CacheKeys.Category.UserWorkspaces, ct);
+        if (cached is not null) return cached;
+
         var memberships = await membersRepository.GetMembershipsForUserAsync(userId, ct);
-        return memberships
+        var dtos = memberships
             .Select(m => mapper.Map<WorkspaceDto>(m.Workspace, opts => opts.Items["myRole"] = m.Role))
             .ToList();
+
+        await cache.SetAsync(key, dtos, CacheKeys.Ttl.UserWorkspaces, ct);
+        return dtos;
     }
 
     public async Task<WorkspaceDto> GetByIdAsync(Guid id, string userId, CancellationToken ct)
@@ -68,7 +75,9 @@ public class WorkspacesService(
         workspace.Name = request.Name;
         await repository.UpdateAsync(workspace, ct);
 
-        logger.LogInformation("Workspace {WorkspaceId} updated by {OwnerId}", workspace.Id, workspace.OwnerId);
+        await cache.InvalidateAsync(CacheKeys.UserWorkspaces(workspace.OwnerId), ct);
+
+        logger.LogInformation("Workspace {WorkspaceId} renamed", workspace.Id);
 
         return mapper.Map<WorkspaceDto>(workspace, opts => opts.Items["myRole"] = WorkspaceRole.Owner);
     }
@@ -80,6 +89,8 @@ public class WorkspacesService(
 
         await repository.DeleteAsync(id, ct);
 
-        logger.LogInformation("Workspace {WorkspaceId} deleted by {OwnerId}", id, workspace.OwnerId);
+        await cache.InvalidateAsync(CacheKeys.UserWorkspaces(workspace.OwnerId), ct);
+
+        logger.LogInformation("Workspace {WorkspaceId} deleted", id);
     }
 }

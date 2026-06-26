@@ -1,6 +1,7 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
+using TaskFlow.Application.Caching;
 using TaskFlow.Application.Domain.Entities;
 using TaskFlow.Application.Domain.Enums;
 using TaskFlow.Application.DTOs;
@@ -13,14 +14,22 @@ namespace TaskFlow.Application.Services;
 public class WorkspaceMembersService(
     IWorkspaceMembersRepository membersRepository,
     IWorkspacesRepository workspacesRepository,
+    ICacheService cache,
     UserManager<AppUser> userManager,
     IMapper mapper,
     ILogger<WorkspaceMembersService> logger) : IWorkspaceMembersService
 {
     public async Task<IReadOnlyList<MemberDto>> GetMembersAsync(Guid workspaceId, CancellationToken ct)
     {
+        var key    = CacheKeys.WorkspaceMembers(workspaceId);
+        var cached = await cache.GetAsync<List<MemberDto>>(key, CacheKeys.Category.Members, ct);
+        if (cached is not null) return cached;
+
         var members = await membersRepository.GetMembersAsync(workspaceId, ct);
-        return mapper.Map<IReadOnlyList<MemberDto>>(members);
+        var dtos    = mapper.Map<List<MemberDto>>(members);
+
+        await cache.SetAsync(key, dtos, CacheKeys.Ttl.Members, ct);
+        return dtos;
     }
 
     public async Task<MemberDto> AddAsync(Guid workspaceId, InviteMemberRequest request, CancellationToken ct)
@@ -37,13 +46,19 @@ public class WorkspaceMembersService(
         var member = new WorkspaceMember
         {
             WorkspaceId = workspaceId,
-            UserId = user.Id,
-            Role = request.Role,
-            JoinedAt = DateTime.UtcNow,
-            User = user
+            UserId      = user.Id,
+            Role        = request.Role,
+            JoinedAt    = DateTime.UtcNow,
+            User        = user
         };
 
         await membersRepository.AddAsync(member, ct);
+
+        await cache.InvalidateManyAsync(
+        [
+            CacheKeys.WorkspaceMembers(workspaceId),
+            CacheKeys.UserWorkspaces(user.Id),
+        ], ct);
 
         logger.LogInformation("User {UserId} added to workspace {WorkspaceId} with role {Role}",
             user.Id, workspaceId, request.Role);
@@ -67,6 +82,8 @@ public class WorkspaceMembersService(
 
         member.User = user;
 
+        await cache.InvalidateAsync(CacheKeys.WorkspaceMembers(workspaceId), ct);
+
         logger.LogInformation("Role for user {UserId} in workspace {WorkspaceId} changed to {Role}",
             userId, workspaceId, request.Role);
 
@@ -82,6 +99,12 @@ public class WorkspaceMembersService(
             throw new ConflictException("The workspace owner cannot be removed from the workspace.");
 
         await membersRepository.DeleteAsync(workspaceId, userId, ct);
+
+        await cache.InvalidateManyAsync(
+        [
+            CacheKeys.WorkspaceMembers(workspaceId),
+            CacheKeys.UserWorkspaces(userId),
+        ], ct);
 
         logger.LogInformation("User {UserId} removed from workspace {WorkspaceId}", userId, workspaceId);
     }

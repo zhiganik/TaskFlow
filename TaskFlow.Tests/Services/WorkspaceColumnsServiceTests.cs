@@ -7,6 +7,7 @@ using TaskFlow.Application.Domain.Entities;
 using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Exceptions;
 using TaskFlow.Application.Interfaces.Repositories;
+using TaskFlow.Application.Interfaces.Services;
 using TaskFlow.Application.Mappings;
 using TaskFlow.Application.Services;
 
@@ -17,6 +18,7 @@ public class WorkspaceColumnsServiceTests
 {
     private Mock<IWorkspaceColumnsRepository> _repositoryMock = null!;
     private Mock<IWorkspaceTasksRepository>   _tasksRepositoryMock = null!;
+    private Mock<ICacheService> _cacheMock = null!;
     private Mock<ILogger<WorkspaceColumnsService>> _loggerMock = null!;
     private IMapper _mapper = null!;
 
@@ -27,6 +29,7 @@ public class WorkspaceColumnsServiceTests
     {
         _repositoryMock      = new Mock<IWorkspaceColumnsRepository>();
         _tasksRepositoryMock = new Mock<IWorkspaceTasksRepository>();
+        _cacheMock           = new Mock<ICacheService>();
         _loggerMock          = new Mock<ILogger<WorkspaceColumnsService>>();
         _mapper = new ServiceCollection()
             .AddLogging()
@@ -37,6 +40,7 @@ public class WorkspaceColumnsServiceTests
         _sut = new WorkspaceColumnsService(
             _repositoryMock.Object,
             _tasksRepositoryMock.Object,
+            _cacheMock.Object,
             _mapper,
             _loggerMock.Object);
     }

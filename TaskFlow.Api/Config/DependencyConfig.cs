@@ -74,13 +74,19 @@ public static class DependencyConfig
 
     private static IServiceCollection AddRedisCache(this IServiceCollection services)
     {
+        services.AddMemoryCache();
+
         services.AddSingleton<IConnectionMultiplexer>(_ =>
         {
             var connectionString = Environment.GetEnvironmentVariable("REDIS_CONNECTION")
                 ?? throw new InvalidOperationException("REDIS_CONNECTION env var is required");
             return ConnectionMultiplexer.Connect(connectionString);
         });
-        services.AddSingleton<ICacheService, RedisCacheService>();
+
+        // RedisCacheService registered as concrete so HybridCacheService can inject it directly.
+        services.AddSingleton<RedisCacheService>();
+        // HybridCacheService (L1 IMemoryCache + L2 Redis) is the default ICacheService.
+        services.AddSingleton<ICacheService, HybridCacheService>();
 
         return services;
     }

@@ -9,6 +9,7 @@ using TaskFlow.Application.Domain.Enums;
 using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Exceptions;
 using TaskFlow.Application.Interfaces.Repositories;
+using TaskFlow.Application.Interfaces.Services;
 using TaskFlow.Application.Mappings;
 using TaskFlow.Application.Services;
 
@@ -19,6 +20,7 @@ public class WorkspaceMembersServiceTests
 {
     private Mock<IWorkspaceMembersRepository> _membersRepositoryMock = null!;
     private Mock<IWorkspacesRepository> _workspacesRepositoryMock = null!;
+    private Mock<ICacheService> _cacheMock = null!;
     private Mock<UserManager<AppUser>> _userManagerMock = null!;
     private Mock<ILogger<WorkspaceMembersService>> _loggerMock = null!;
     private IMapper _mapper = null!;
@@ -30,8 +32,9 @@ public class WorkspaceMembersServiceTests
     [SetUp]
     public void SetUp()
     {
-        _membersRepositoryMock = new Mock<IWorkspaceMembersRepository>();
+        _membersRepositoryMock    = new Mock<IWorkspaceMembersRepository>();
         _workspacesRepositoryMock = new Mock<IWorkspacesRepository>();
+        _cacheMock                = new Mock<ICacheService>();
 
         var userStoreMock = new Mock<IUserStore<AppUser>>();
         _userManagerMock = new Mock<UserManager<AppUser>>(
@@ -47,6 +50,7 @@ public class WorkspaceMembersServiceTests
         _sut = new WorkspaceMembersService(
             _membersRepositoryMock.Object,
             _workspacesRepositoryMock.Object,
+            _cacheMock.Object,
             _userManagerMock.Object,
             _mapper,
             _loggerMock.Object);

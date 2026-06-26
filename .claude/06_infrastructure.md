@@ -2,41 +2,97 @@
 
 ## Redis Caching
 
+### Architecture: Two-Level (Hybrid) Cache
+
+```
+Request → HybridCacheService (L1 IMemoryCache, 30 s TTL)
+                │ miss
+                ↓
+          RedisCacheService (L2, resource-specific TTL)
+                │ miss → DB query → set L2 → set L1
+```
+
+L1 eliminates Redis round-trips on the hottest reads within a single process replica. On any write/delete, **both layers** are invalidated synchronously so stale reads cannot happen.
+
 ### ICacheService Interface
+`TaskFlow.Application/Interfaces/Services/ICacheService.cs`
 ```csharp
 public interface ICacheService
 {
-    Task<T?> GetAsync<T>(string key, CancellationToken ct = default);
+    Task<T?> GetAsync<T>(string key, string? statsCategory = null, CancellationToken ct = default);
     Task SetAsync<T>(string key, T value, TimeSpan? expiry = null, CancellationToken ct = default);
     Task InvalidateAsync(string key, CancellationToken ct = default);
+    Task InvalidateManyAsync(IEnumerable<string> keys, CancellationToken ct = default);
+    Task<CacheStatsDto> GetStatsAsync(CancellationToken ct = default);
 }
 ```
 
-### RedisCacheService Implementation
-```csharp
-public class RedisCacheService(IConnectionMultiplexer redis, IOptions<CacheOptions> opts)
-    : ICacheService
-{
-    private readonly IDatabase _db = redis.GetDatabase();
-    private readonly TimeSpan _defaultExpiry =
-        TimeSpan.FromMinutes(opts.Value.DefaultExpiryMinutes);
+Pass `statsCategory` (one of `CacheKeys.Category.*`) to automatically track Redis hit/miss counters via fire-and-forget `INCR`. Omit it for refresh tokens and other non-monitored keys.
 
-    public async Task<T?> GetAsync<T>(string key, CancellationToken ct = default)
+### CacheKeys — Central Key Registry
+`TaskFlow.Application/Caching/CacheKeys.cs`
+```csharp
+public static class CacheKeys
+{
+    public static string UserWorkspaces(string userId)       => $"user:{userId}:workspaces";
+    public static string WorkspaceMembers(Guid workspaceId)  => $"workspace:{workspaceId}:members";
+    public static string WorkspaceColumns(Guid workspaceId)  => $"workspace:{workspaceId}:columns";
+
+    public static string HitCounter(string category)  => $"stats:cache:hits:{category}";
+    public static string MissCounter(string category) => $"stats:cache:misses:{category}";
+
+    public static class Category
     {
-        var value = await _db.StringGetAsync(key);
-        return value.IsNullOrEmpty ? default : JsonSerializer.Deserialize<T>(value!);
+        public const string UserWorkspaces = "user-workspaces";
+        public const string Members        = "members";
+        public const string Columns        = "columns";
     }
 
-    public async Task SetAsync<T>(string key, T value,
-        TimeSpan? expiry = null, CancellationToken ct = default)
-        => await _db.StringSetAsync(key, JsonSerializer.Serialize(value), expiry ?? _defaultExpiry);
-
-    public async Task InvalidateAsync(string key, CancellationToken ct = default)
-        => await _db.KeyDeleteAsync(key);
+    public static class Ttl
+    {
+        public static readonly TimeSpan UserWorkspaces = TimeSpan.FromMinutes(5);
+        public static readonly TimeSpan Members        = TimeSpan.FromMinutes(10);
+        public static readonly TimeSpan Columns        = TimeSpan.FromMinutes(10);
+    }
 }
 ```
 
-Cache keys: `workspace:{id}`, `workspace:{workspaceId}:projects`
+### CacheOptions
+`TaskFlow.Application/Options/CacheOptions.cs`
+```csharp
+public class CacheOptions
+{
+    public int DefaultExpiryMinutes { get; set; } = 5;
+    public int L1ExpirySeconds      { get; set; } = 30;
+}
+```
+
+### DI Registration
+`TaskFlow.Api/Config/DependencyConfig.cs — AddRedisCache()`
+```csharp
+services.AddMemoryCache();
+services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(...));
+services.AddSingleton<RedisCacheService>();          // concrete for HybridCacheService
+services.AddSingleton<ICacheService, HybridCacheService>(); // default ICacheService
+```
+
+`RedisCacheService` is registered as its concrete type so `HybridCacheService` can inject it directly without a circular dependency through the interface.
+
+### What Is Cached
+
+| Cache key | TTL | Where invalidated |
+|---|---|---|
+| `user:{userId}:workspaces` | 5 min | `WorkspacesService.CreateAsync / UpdateAsync / DeleteAsync`; `WorkspaceMembersService.AddAsync / RemoveAsync` |
+| `workspace:{wsId}:members` | 10 min | `WorkspaceMembersService.AddAsync / UpdateRoleAsync / RemoveAsync` |
+| `workspace:{wsId}:columns` | 10 min | `WorkspaceColumnsService.CreateAsync / RenameAsync / ReorderAsync / DeleteAsync` |
+
+**Not cached:** individual tasks, task comments, refresh tokens (already in Redis with their own TTL).
+
+### Stats Endpoint
+```
+GET /api/v1/admin/cache-stats          [Authorize]
+```
+Returns `CacheStatsDto` — hits, misses, hit-rate % per category and overall. Counters live in Redis (`stats:cache:hits:{category}` / `stats:cache:misses:{category}`). They persist across restarts and accumulate until manually deleted.
 
 ---
 

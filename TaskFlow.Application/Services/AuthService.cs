@@ -62,7 +62,7 @@ public class AuthService(
 
     public async Task<AuthResponseDto> RefreshAsync(RefreshTokenRequest request, CancellationToken ct = default)
     {
-        var userId = await cache.GetAsync<string>(RefreshKey(request.RefreshToken), ct)
+        var userId = await cache.GetAsync<string>(RefreshKey(request.RefreshToken), ct: ct)
             ?? throw new UnauthorizedException("Invalid or expired refresh token.");
 
         await cache.InvalidateAsync(RefreshKey(request.RefreshToken), ct);

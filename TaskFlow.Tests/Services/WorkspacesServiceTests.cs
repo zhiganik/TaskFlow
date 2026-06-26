@@ -8,6 +8,7 @@ using TaskFlow.Application.Domain.Enums;
 using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Exceptions;
 using TaskFlow.Application.Interfaces.Repositories;
+using TaskFlow.Application.Interfaces.Services;
 using TaskFlow.Application.Mappings;
 using TaskFlow.Application.Services;
 
@@ -18,6 +19,7 @@ public class WorkspacesServiceTests
 {
     private Mock<IWorkspacesRepository> _repositoryMock = null!;
     private Mock<IWorkspaceMembersRepository> _membersRepositoryMock = null!;
+    private Mock<ICacheService> _cacheMock = null!;
     private Mock<ILogger<WorkspacesService>> _loggerMock = null!;
     private IMapper _mapper = null!;
 
@@ -26,16 +28,22 @@ public class WorkspacesServiceTests
     [SetUp]
     public void SetUp()
     {
-        _repositoryMock = new Mock<IWorkspacesRepository>();
+        _repositoryMock        = new Mock<IWorkspacesRepository>();
         _membersRepositoryMock = new Mock<IWorkspaceMembersRepository>();
-        _loggerMock = new Mock<ILogger<WorkspacesService>>();
+        _cacheMock             = new Mock<ICacheService>();
+        _loggerMock            = new Mock<ILogger<WorkspacesService>>();
         _mapper = new ServiceCollection()
             .AddLogging()
             .AddAutoMapper(cfg => cfg.AddProfile<WorkspaceProfile>())
             .BuildServiceProvider()
             .GetRequiredService<IMapper>();
 
-        _sut = new WorkspacesService(_repositoryMock.Object, _membersRepositoryMock.Object, _mapper, _loggerMock.Object);
+        _sut = new WorkspacesService(
+            _repositoryMock.Object,
+            _membersRepositoryMock.Object,
+            _cacheMock.Object,
+            _mapper,
+            _loggerMock.Object);
     }
 
     private static Workspace CreateWorkspace(string ownerId = "owner-1") => new()
