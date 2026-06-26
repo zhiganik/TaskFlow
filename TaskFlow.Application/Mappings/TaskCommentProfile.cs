@@ -6,7 +6,7 @@ namespace TaskFlow.Application.Mappings;
 
 public class TaskCommentProfile : Profile
 {
-    public TaskCommentProfile()
+    public TaskCommentProfile() 
     {
         CreateMap<TaskComment, TaskCommentDto>()
             .ConstructUsing((src, ctx) => new TaskCommentDto(

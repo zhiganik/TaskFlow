@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TaskFlow.Api.Extensions;
 using TaskFlow.Application.Domain.Constants;
+using TaskFlow.Application.Domain.Enums;
 using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Interfaces.Services;
 
@@ -12,15 +13,21 @@ namespace TaskFlow.Api.Controllers;
 [Route("api/v1/workspaces/{workspaceId:guid}/tasks")]
 public class WorkspaceTasksController(IWorkspaceTasksService tasksService) : ControllerBase
 {
-    /// <summary>List all tasks in the workspace grouped by column order.</summary>
+    /// <summary>List tasks in the workspace. Supports optional filtering by search term, assignee, and priority.</summary>
     [HttpGet]
     [Authorize(Policy = WorkspacePolicies.Member)]
     [ProducesResponseType(typeof(IReadOnlyList<WorkspaceTaskDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> GetAll(Guid workspaceId, CancellationToken ct)
+    public async Task<IActionResult> GetAll(
+        Guid workspaceId,
+        [FromQuery] string? search,
+        [FromQuery] string? assigneeId,
+        [FromQuery] TaskPriority[]? priorities,
+        CancellationToken ct)
     {
-        var result = await tasksService.GetByWorkspaceAsync(workspaceId, ct);
+        var filter = new TaskFilterQuery(search, assigneeId, priorities);
+        var result = await tasksService.GetByWorkspaceAsync(workspaceId, filter, ct);
         return Ok(result);
     }
 

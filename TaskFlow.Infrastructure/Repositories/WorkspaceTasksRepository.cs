@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TaskFlow.Application.Domain.Entities;
+using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Interfaces.Repositories;
 using TaskFlow.Infrastructure.Persistence;
 
@@ -17,6 +18,39 @@ public class WorkspaceTasksRepository(AppDbContext db) : IWorkspaceTasksReposito
             .OrderBy(t => t.ColumnId)
             .ThenBy(t => t.Order)
             .ToListAsync(ct);
+
+    public async Task<IReadOnlyList<WorkspaceTask>> GetByWorkspaceIdAsync(
+        Guid workspaceId, TaskFilterQuery filter, CancellationToken ct = default)
+    {
+        var q = db.WorkspaceTasks
+            .AsNoTracking()
+            .Include(t => t.Column)
+            .Include(t => t.Assignee)
+            .Include(t => t.CreatedBy)
+            .Where(t => t.WorkspaceId == workspaceId);
+
+        if (!string.IsNullOrWhiteSpace(filter.Search))
+        {
+            var s = filter.Search.Trim();
+            if (int.TryParse(s, out var num))
+                q = q.Where(t => t.Number == num || t.Title.ToLower().Contains(s.ToLower()));
+            else
+                q = q.Where(t => t.Title.ToLower().Contains(s.ToLower()));
+        }
+
+        if (filter.AssigneeId == "unassigned")
+            q = q.Where(t => t.AssigneeId == null);
+        else if (!string.IsNullOrEmpty(filter.AssigneeId))
+            q = q.Where(t => t.AssigneeId == filter.AssigneeId);
+
+        if (filter.Priorities is { Count: > 0 })
+            q = q.Where(t => filter.Priorities.Contains(t.Priority));
+
+        return await q
+            .OrderBy(t => t.ColumnId)
+            .ThenBy(t => t.Order)
+            .ToListAsync(ct);
+    }
 
     public async Task<IReadOnlyList<WorkspaceTask>> GetByColumnIdAsync(Guid columnId, CancellationToken ct = default) =>
         await db.WorkspaceTasks

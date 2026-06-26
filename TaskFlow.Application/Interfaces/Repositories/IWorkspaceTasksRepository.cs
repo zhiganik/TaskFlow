@@ -1,10 +1,12 @@
 using TaskFlow.Application.Domain.Entities;
+using TaskFlow.Application.DTOs;
 
 namespace TaskFlow.Application.Interfaces.Repositories;
 
 public interface IWorkspaceTasksRepository
 {
     Task<IReadOnlyList<WorkspaceTask>> GetByWorkspaceIdAsync(Guid workspaceId, CancellationToken ct = default);
+    Task<IReadOnlyList<WorkspaceTask>> GetByWorkspaceIdAsync(Guid workspaceId, TaskFilterQuery filter, CancellationToken ct = default);
     Task<IReadOnlyList<WorkspaceTask>> GetByColumnIdAsync(Guid columnId, CancellationToken ct = default);
     Task<WorkspaceTask?>               GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<int>                          CountByColumnIdAsync(Guid columnId, CancellationToken ct = default);

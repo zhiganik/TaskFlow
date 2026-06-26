@@ -14,9 +14,9 @@ public class WorkspaceTasksService(
     IMapper mapper,
     ILogger<WorkspaceTasksService> logger) : IWorkspaceTasksService
 {
-    public async Task<IReadOnlyList<WorkspaceTaskDto>> GetByWorkspaceAsync(Guid workspaceId, CancellationToken ct)
+    public async Task<IReadOnlyList<WorkspaceTaskDto>> GetByWorkspaceAsync(Guid workspaceId, TaskFilterQuery filter, CancellationToken ct)
     {
-        var tasks = await repository.GetByWorkspaceIdAsync(workspaceId, ct);
+        var tasks = await repository.GetByWorkspaceIdAsync(workspaceId, filter, ct);
         return mapper.Map<IReadOnlyList<WorkspaceTaskDto>>(tasks);
     }
 

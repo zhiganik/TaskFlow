@@ -74,10 +74,10 @@ public class WorkspaceTasksServiceTests
         };
 
         _repositoryMock
-            .Setup(r => r.GetByWorkspaceIdAsync(workspaceId, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByWorkspaceIdAsync(workspaceId, It.IsAny<TaskFilterQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(tasks);
 
-        var result = await _sut.GetByWorkspaceAsync(workspaceId, CancellationToken.None);
+        var result = await _sut.GetByWorkspaceAsync(workspaceId, new TaskFilterQuery(null, null, null), CancellationToken.None);
 
         result.Should().HaveCount(2);
         result.Should().AllSatisfy(t =>
