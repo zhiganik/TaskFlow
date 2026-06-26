@@ -13,6 +13,7 @@ public class WorkspaceMemberProfile : Profile
                 src.UserId,
                 src.User.DisplayName,
                 src.User.Email ?? throw new InvalidOperationException("User has no email."),
+                src.User.AvatarColor,
                 src.Role,
                 src.JoinedAt));
     }

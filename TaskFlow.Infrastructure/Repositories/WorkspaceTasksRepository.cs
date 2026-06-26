@@ -39,10 +39,7 @@ public class WorkspaceTasksRepository(AppDbContext db) : IWorkspaceTasksReposito
                 q = q.Where(t => t.Title.ToLower().Contains(s.ToLower()));
         }
 
-        if (filter.AssigneeId == "unassigned")
-            q = q.Where(t => t.AssigneeId == null);
-        else if (!string.IsNullOrEmpty(filter.AssigneeId))
-            q = q.Where(t => t.AssigneeId == filter.AssigneeId);
+        ApplyAssigneeFilter(ref q, filter);
 
         if (filter.Priorities is { Count: > 0 })
             q = q.Where(t => filter.Priorities.Contains(t.Priority));
@@ -118,10 +115,7 @@ public class WorkspaceTasksRepository(AppDbContext db) : IWorkspaceTasksReposito
                 q = q.Where(t => t.Title.ToLower().Contains(s.ToLower()));
         }
 
-        if (filter.AssigneeId == "unassigned")
-            q = q.Where(t => t.AssigneeId == null);
-        else if (!string.IsNullOrEmpty(filter.AssigneeId))
-            q = q.Where(t => t.AssigneeId == filter.AssigneeId);
+        ApplyAssigneeFilter(ref q, filter);
 
         if (filter.Priorities is { Count: > 0 })
             q = q.Where(t => filter.Priorities.Contains(t.Priority));
@@ -153,6 +147,22 @@ public class WorkspaceTasksRepository(AppDbContext db) : IWorkspaceTasksReposito
         db.WorkspaceTasks.Remove(task);
         await db.SaveChangesAsync(ct);
         return true;
+    }
+
+    private static void ApplyAssigneeFilter(
+        ref IQueryable<WorkspaceTask> q, TaskFilterQuery filter)
+    {
+        if (filter.AssigneeIds is not { Count: > 0 }) return;
+
+        var includeUnassigned = filter.AssigneeIds.Contains("unassigned");
+        var userIds = filter.AssigneeIds.Where(id => id != "unassigned").ToList();
+
+        if (includeUnassigned && userIds.Count > 0)
+            q = q.Where(t => t.AssigneeId == null || (t.AssigneeId != null && userIds.Contains(t.AssigneeId)));
+        else if (includeUnassigned)
+            q = q.Where(t => t.AssigneeId == null);
+        else
+            q = q.Where(t => t.AssigneeId != null && userIds.Contains(t.AssigneeId));
     }
 
     private static string EncodeCursor(int order, Guid id) =>

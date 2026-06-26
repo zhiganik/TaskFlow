@@ -18,6 +18,7 @@ Update this file whenever a new feature is added or an existing one changes scop
 | Task Pagination      | Complete    | [workspace-tasks.md](workspace-tasks.md)         | `GET /api/v1/workspaces/{id}/tasks?columnId=&cursor=&limit=` |
 | Task Comments        | Complete    | [task-comments.md](task-comments.md)             | `/api/v1/workspaces/{id}/tasks/{id}/comments` |
 | Redis Caching        | Complete    | [`.claude/06_infrastructure.md`](../.claude/06_infrastructure.md) | `GET /api/v1/admin/cache-stats` |
+| Profile Management   | Complete    | [profile.md](profile.md)                                          | `/api/v1/me`                    |
 
 ---
 
@@ -47,6 +48,7 @@ Summarises who can do what across all implemented features.
 | Create / rename / reorder / delete column | ✓ | ✓ | ✗   |
 | List / get tasks              | ✓     | ✓     | ✓      |
 | Create / update / move / delete task | ✓ | ✓  | ✓      |
+| View / update own profile            | ✓ | ✓  | ✓      |
 
 ---
 

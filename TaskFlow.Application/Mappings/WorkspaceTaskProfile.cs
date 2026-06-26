@@ -21,6 +21,7 @@ public class WorkspaceTaskProfile : Profile
                 src.Priority,
                 src.AssigneeId,
                 src.Assignee?.DisplayName,
+                src.Assignee?.AvatarColor,
                 src.DueDate,
                 src.DueDate.HasValue && src.DueDate.Value < DateTime.UtcNow,
                 src.CreatedById,

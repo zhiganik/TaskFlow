@@ -4,5 +4,5 @@ namespace TaskFlow.Application.DTOs;
 
 public record TaskFilterQuery(
     string?                      Search,
-    string?                      AssigneeId,
+    IReadOnlyList<string>?       AssigneeIds,
     IReadOnlyList<TaskPriority>? Priorities);

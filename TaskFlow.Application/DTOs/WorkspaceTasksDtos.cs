@@ -14,6 +14,7 @@ public record WorkspaceTaskDto(
     TaskPriority Priority,
     string?      AssigneeId,
     string?      AssigneeName,
+    string?      AssigneeAvatarColor,
     DateTime?    DueDate,
     bool         IsOverdue,
     string       CreatedById,

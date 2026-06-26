@@ -6,6 +6,7 @@ public record TaskCommentDto(
     string                Content,
     string                CreatedById,
     string                CreatedByName,
+    string                CreatedByAvatarColor,
     DateTime              CreatedAt,
     DateTime              UpdatedAt,
     bool                  IsEdited,

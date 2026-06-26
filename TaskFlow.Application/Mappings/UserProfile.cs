@@ -12,6 +12,7 @@ public class UserProfile : Profile
             .ConstructUsing((src, ctx) => new UserDto(
                 src.Id,
                 src.Email ?? throw new InvalidOperationException("User has no email."),
-                src.DisplayName));
+                src.DisplayName,
+                src.AvatarColor));
     }
 }

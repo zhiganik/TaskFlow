@@ -171,6 +171,7 @@ public static class DependencyConfig
         services.AddScoped<IWorkspaceColumnsService, WorkspaceColumnsService>();
         services.AddScoped<IWorkspaceTasksService, WorkspaceTasksService>();
         services.AddScoped<ITaskCommentsService, TaskCommentsService>();
+        services.AddScoped<IProfileService, ProfileService>();
         return services;
     }
 

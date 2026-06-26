@@ -15,6 +15,7 @@ public class TaskCommentProfile : Profile
                 src.Content,
                 src.CreatedById,
                 src.CreatedBy.DisplayName,
+                src.CreatedBy.AvatarColor,
                 src.CreatedAt,
                 src.UpdatedAt,
                 src.UpdatedAt > src.CreatedAt.AddSeconds(1),

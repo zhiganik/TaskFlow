@@ -28,11 +28,11 @@ public class WorkspaceTasksController(IWorkspaceTasksService tasksService) : Con
         [FromQuery] string?         cursor,
         [FromQuery] int             limit      = 20,
         [FromQuery] string?         search     = null,
-        [FromQuery] string?         assigneeId = null,
+        [FromQuery] string[]?       assigneeIds = null,
         [FromQuery] TaskPriority[]? priorities = null,
         CancellationToken ct = default)
     {
-        var filter = new TaskFilterQuery(search, assigneeId, priorities);
+        var filter = new TaskFilterQuery(search, assigneeIds, priorities);
 
         if (columnId.HasValue)
         {
