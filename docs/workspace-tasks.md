@@ -290,6 +290,13 @@ DELETE /api/v1/workspaces/{workspaceId}/tasks/{taskId}
 ## DTO Reference
 
 ```typescript
+// PagedResult<T>  — returned by paginated column mode
+{
+  items:      T[]           // up to `limit` tasks
+  nextCursor: string | null // pass as ?cursor= on the next request; null when no more pages
+  hasMore:    boolean       // false when this is the last page
+}
+
 // WorkspaceTaskDto
 {
   id:            string          // guid

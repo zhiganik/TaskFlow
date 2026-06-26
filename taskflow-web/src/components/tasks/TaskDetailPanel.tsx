@@ -17,6 +17,7 @@ interface TaskDetailPanelProps {
   width: number
   onResizeStart: (e: React.MouseEvent<HTMLDivElement>) => void
   onClose: () => void
+  onTaskUpdated: (task: WorkspaceTaskDto) => void
 }
 
 function initials(name: string) {
@@ -39,7 +40,7 @@ function formatRelative(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-export function TaskDetailPanel({ task, columns, workspaceId, width, onResizeStart, onClose }: TaskDetailPanelProps) {
+export function TaskDetailPanel({ task, columns, workspaceId, width, onResizeStart, onClose, onTaskUpdated }: TaskDetailPanelProps) {
   const updateMutation = useUpdateTask(workspaceId)
   const moveMutation = useMoveTask(workspaceId)
   const deleteMutation = useDeleteTask(workspaceId)
@@ -77,7 +78,10 @@ export function TaskDetailPanel({ task, columns, workspaceId, width, onResizeSta
           ...patch,
         },
       },
-      { onError: (err) => setPanelError(getErrorMessage(err)) },
+      {
+        onSuccess: (updated) => onTaskUpdated(updated),
+        onError: (err) => setPanelError(getErrorMessage(err)),
+      },
     )
   }
 
@@ -98,7 +102,10 @@ export function TaskDetailPanel({ task, columns, workspaceId, width, onResizeSta
     setPanelError(null)
     moveMutation.mutate(
       { taskId: task.id, data: { columnId, order: 9999 } },
-      { onError: (err) => setPanelError(getErrorMessage(err)) },
+      {
+        onSuccess: (updated) => onTaskUpdated(updated),
+        onError: (err) => setPanelError(getErrorMessage(err)),
+      },
     )
   }
 

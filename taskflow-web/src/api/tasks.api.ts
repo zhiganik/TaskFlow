@@ -2,6 +2,7 @@ import { apiClient } from './client'
 import type {
   CreateTaskRequest,
   MoveTaskRequest,
+  PagedResult,
   TaskFilterParams,
   UpdateTaskRequest,
   WorkspaceTaskDto,
@@ -15,6 +16,21 @@ export const tasksApi = {
           search: filter?.search || undefined,
           assigneeId: filter?.assigneeId || undefined,
           priorities: filter?.priorities?.length ? filter.priorities : undefined,
+        },
+        paramsSerializer: { indexes: null },
+      })
+      .then((r) => r.data),
+
+  listByColumn: (workspaceId: string, columnId: string, filter: TaskFilterParams, cursor?: string | null) =>
+    apiClient
+      .get<PagedResult<WorkspaceTaskDto>>(`/workspaces/${workspaceId}/tasks`, {
+        params: {
+          columnId,
+          cursor: cursor ?? undefined,
+          limit: 20,
+          search: filter.search || undefined,
+          assigneeId: filter.assigneeId || undefined,
+          priorities: filter.priorities?.length ? filter.priorities : undefined,
         },
         paramsSerializer: { indexes: null },
       })

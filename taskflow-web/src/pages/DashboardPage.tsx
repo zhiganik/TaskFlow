@@ -1,11 +1,11 @@
-import { type DragEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { type DragEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getErrorMessage } from '../api/errors'
 import { AddColumnModal } from '../components/workspaces/AddColumnModal'
 import { DeleteColumnDialog } from '../components/workspaces/DeleteColumnDialog'
 import { RenameColumnModal } from '../components/workspaces/RenameColumnModal'
 import { CreateTaskModal } from '../components/tasks/CreateTaskModal'
-import { TaskCard } from '../components/tasks/TaskCard'
+import { ColumnTaskList } from '../components/tasks/ColumnTaskList'
 import { TaskDetailPanel } from '../components/tasks/TaskDetailPanel'
 import { TaskFilterBar } from '../components/tasks/TaskFilterBar'
 import { Alert } from '../components/ui/Alert'
@@ -16,7 +16,7 @@ import { Spinner } from '../components/ui/Spinner'
 import { useColumns, useReorderColumns } from '../hooks/useColumns'
 import { useMembers } from '../hooks/useMembers'
 import { useTaskFilter } from '../hooks/useTaskFilter'
-import { useTasks, useMoveTask } from '../hooks/useTasks'
+import { useMoveTask } from '../hooks/useTasks'
 import { useWorkspaces, useUpdateWorkspace } from '../hooks/useWorkspaces'
 import { setLastWorkspaceId } from '../lib/lastWorkspace'
 import type { WorkspaceColumnDto, WorkspaceTaskDto } from '../types/api.types'
@@ -61,7 +61,6 @@ export function DashboardPage() {
     priorities, setPriorities,
     filter, hasActiveFilters, clearAll,
   } = useTaskFilter()
-  const { data: tasks, isLoading: isLoadingTasks } = useTasks(wsId, filter)
   const reorderMutation = useReorderColumns(wsId)
   const moveTaskMutation = useMoveTask(wsId)
 
@@ -143,7 +142,8 @@ export function DashboardPage() {
   }
 
   // task state
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
+  const [selectedTask, setSelectedTask] = useState<WorkspaceTaskDto | null>(null)
+  const [colCounts, setColCounts] = useState<Record<string, number>>({})
   const [createForColumnId, setCreateForColumnId] = useState<string | null>(null)
   const [createTaskOpen, setCreateTaskOpen] = useState(false)
 
@@ -153,27 +153,13 @@ export function DashboardPage() {
   )
   const atLimit = sorted.length >= MAX_COLUMNS
 
-  const tasksByColumn = useMemo(() => {
-    const map = new Map<string, WorkspaceTaskDto[]>()
-    for (const t of tasks ?? []) {
-      const list = map.get(t.columnId) ?? []
-      list.push(t)
-      map.set(t.columnId, list)
-    }
-    // sort each bucket by order
-    for (const list of map.values()) list.sort((a, b) => a.order - b.order)
-    return map
-  }, [tasks])
+  const handleTaskClick = useCallback((task: WorkspaceTaskDto) => {
+    setSelectedTask((prev) => (prev?.id === task.id ? null : task))
+  }, [])
 
-  const selectedTask = useMemo(
-    () => (tasks ?? []).find((t) => t.id === selectedTaskId) ?? null,
-    [tasks, selectedTaskId],
-  )
-
-  // close panel if the selected task no longer exists (e.g. deleted externally)
-  useEffect(() => {
-    if (selectedTaskId && !selectedTask) setSelectedTaskId(null)
-  }, [selectedTask, selectedTaskId])
+  const handleColCount = useCallback((columnId: string, count: number) => {
+    setColCounts((prev) => ({ ...prev, [columnId]: count }))
+  }, [])
 
   // ── column DnD ────────────────────────────────────────────────────────────
   const handleColDragStart = (e: DragEvent<HTMLDivElement>, id: string) => {
@@ -237,7 +223,7 @@ export function DashboardPage() {
   }
 
   const canManage = workspace?.myRole === 'Owner' || workspace?.myRole === 'Admin'
-  const isLoading = isLoadingWorkspace || isLoadingColumns || isLoadingTasks
+  const isLoading = isLoadingWorkspace || isLoadingColumns
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
@@ -367,7 +353,6 @@ export function DashboardPage() {
                 <div ref={boardRef} className="flex-1 overflow-x-auto overflow-y-hidden">
                   <div className="flex h-full min-w-max gap-3 p-4">
                     {sorted.map((column) => {
-                      const colTasks = tasksByColumn.get(column.id) ?? []
                       const isColDragging = colDraggingId === column.id
                       const isColDragOver = colDragOverId === column.id
                       const isTaskDragOver = taskDragOverColId === column.id
@@ -409,7 +394,7 @@ export function DashboardPage() {
                                 {column.name}
                               </span>
                               <span className="shrink-0 rounded-full bg-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-gray-600">
-                                {colTasks.length}
+                                {colCounts[column.id] ?? 0}
                               </span>
 
                               {canManage && (
@@ -449,26 +434,16 @@ export function DashboardPage() {
                                 if (taskDragOverColId === column.id) setTaskDragOverColId(null)
                               }}
                             >
-                              {colTasks.map((task) => (
-                                <TaskCard
-                                  key={task.id}
-                                  task={task}
-                                  isSelected={task.id === selectedTaskId}
-                                  onClick={() =>
-                                    setSelectedTaskId(
-                                      task.id === selectedTaskId ? null : task.id,
-                                    )
-                                  }
-                                  onDragStart={(e) => handleTaskDragStart(e, task.id)}
-                                  onDragEnd={handleTaskDragEnd}
-                                />
-                              ))}
-
-                              {colTasks.length === 0 && (
-                                <p className="py-4 text-center text-xs text-gray-400">
-                                  No tasks
-                                </p>
-                              )}
+                              <ColumnTaskList
+                                workspaceId={wsId}
+                                columnId={column.id}
+                                filter={filter}
+                                selectedTaskId={selectedTask?.id ?? null}
+                                onTaskClick={handleTaskClick}
+                                onDragStart={handleTaskDragStart}
+                                onDragEnd={handleTaskDragEnd}
+                                onCountChange={(count) => handleColCount(column.id, count)}
+                              />
                             </div>
                           </div>
 
@@ -519,7 +494,8 @@ export function DashboardPage() {
               workspaceId={wsId}
               width={panelWidth}
               onResizeStart={startPanelResize}
-              onClose={() => setSelectedTaskId(null)}
+              onClose={() => setSelectedTask(null)}
+              onTaskUpdated={setSelectedTask}
             />
           )}
         </div>
