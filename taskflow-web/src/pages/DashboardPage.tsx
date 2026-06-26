@@ -7,12 +7,15 @@ import { RenameColumnModal } from '../components/workspaces/RenameColumnModal'
 import { CreateTaskModal } from '../components/tasks/CreateTaskModal'
 import { TaskCard } from '../components/tasks/TaskCard'
 import { TaskDetailPanel } from '../components/tasks/TaskDetailPanel'
+import { TaskFilterBar } from '../components/tasks/TaskFilterBar'
 import { Alert } from '../components/ui/Alert'
 import { Button } from '../components/ui/Button'
 import { PencilIcon, PlusIcon, TrashIcon } from '../components/ui/Icons'
 import { Sidebar } from '../components/layout/Sidebar'
 import { Spinner } from '../components/ui/Spinner'
 import { useColumns, useReorderColumns } from '../hooks/useColumns'
+import { useMembers } from '../hooks/useMembers'
+import { useTaskFilter } from '../hooks/useTaskFilter'
 import { useTasks, useMoveTask } from '../hooks/useTasks'
 import { useWorkspaces, useUpdateWorkspace } from '../hooks/useWorkspaces'
 import { setLastWorkspaceId } from '../lib/lastWorkspace'
@@ -51,7 +54,14 @@ export function DashboardPage() {
   }
 
   const { data: columns, isLoading: isLoadingColumns } = useColumns(wsId)
-  const { data: tasks, isLoading: isLoadingTasks } = useTasks(wsId)
+  const { data: members } = useMembers(wsId)
+  const {
+    searchInput, setSearchInput,
+    assigneeId, setAssigneeId,
+    priorities, setPriorities,
+    filter, hasActiveFilters, clearAll,
+  } = useTaskFilter()
+  const { data: tasks, isLoading: isLoadingTasks } = useTasks(wsId, filter)
   const reorderMutation = useReorderColumns(wsId)
   const moveTaskMutation = useMoveTask(wsId)
 
@@ -310,6 +320,18 @@ export function DashboardPage() {
               </div>
             ) : (
               <div className="flex h-full flex-col">
+                <TaskFilterBar
+                  searchInput={searchInput}
+                  onSearchChange={setSearchInput}
+                  assigneeId={assigneeId}
+                  onAssigneeChange={setAssigneeId}
+                  priorities={priorities}
+                  onPriorityChange={setPriorities}
+                  members={members ?? []}
+                  hasActiveFilters={hasActiveFilters}
+                  onClear={clearAll}
+                />
+
                 {colReorderError && (
                   <div className="shrink-0 px-4 pt-3">
                     <Alert variant="error">{colReorderError}</Alert>

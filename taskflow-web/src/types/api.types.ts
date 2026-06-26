@@ -148,6 +148,12 @@ export interface MoveTaskRequest {
   order: number
 }
 
+export interface TaskFilterParams {
+  search?: string
+  assigneeId?: string
+  priorities?: TaskPriority[]
+}
+
 export interface PagedResult<T> {
   items: T[]
   nextCursor: string | null

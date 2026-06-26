@@ -2,14 +2,22 @@ import { apiClient } from './client'
 import type {
   CreateTaskRequest,
   MoveTaskRequest,
+  TaskFilterParams,
   UpdateTaskRequest,
   WorkspaceTaskDto,
 } from '../types/api.types'
 
 export const tasksApi = {
-  list: (workspaceId: string) =>
+  list: (workspaceId: string, filter?: TaskFilterParams) =>
     apiClient
-      .get<WorkspaceTaskDto[]>(`/workspaces/${workspaceId}/tasks`)
+      .get<WorkspaceTaskDto[]>(`/workspaces/${workspaceId}/tasks`, {
+        params: {
+          search: filter?.search || undefined,
+          assigneeId: filter?.assigneeId || undefined,
+          priorities: filter?.priorities?.length ? filter.priorities : undefined,
+        },
+        paramsSerializer: { indexes: null },
+      })
       .then((r) => r.data),
 
   create: (workspaceId: string, data: CreateTaskRequest) =>

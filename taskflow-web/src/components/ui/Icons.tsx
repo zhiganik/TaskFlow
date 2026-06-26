@@ -137,6 +137,23 @@ export function UserIcon({ className = 'h-4 w-4' }: IconProps) {
   )
 }
 
+export function SearchIcon({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <circle cx="8.5" cy="8.5" r="5" />
+      <line x1="13" y1="13" x2="17" y2="17" />
+    </svg>
+  )
+}
+
 export function TrashIcon({ className = 'h-4 w-4' }: IconProps) {
   return (
     <svg
