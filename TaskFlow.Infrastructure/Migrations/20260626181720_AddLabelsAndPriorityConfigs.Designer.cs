@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TaskFlow.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using TaskFlow.Infrastructure.Persistence;
 namespace TaskFlow.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260626181720_AddLabelsAndPriorityConfigs")]
+    partial class AddLabelsAndPriorityConfigs
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -279,21 +282,6 @@ namespace TaskFlow.Infrastructure.Migrations
                     b.ToTable("TaskCommentMentions");
                 });
 
-            modelBuilder.Entity("TaskFlow.Application.Domain.Entities.TaskLabel", b =>
-                {
-                    b.Property<Guid>("TaskId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("LabelId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("TaskId", "LabelId");
-
-                    b.HasIndex("LabelId");
-
-                    b.ToTable("TaskLabels");
-                });
-
             modelBuilder.Entity("TaskFlow.Application.Domain.Entities.Workspace", b =>
                 {
                     b.Property<Guid>("Id")
@@ -506,6 +494,21 @@ namespace TaskFlow.Infrastructure.Migrations
                     b.ToTable("WorkspaceTasks");
                 });
 
+            modelBuilder.Entity("TaskLabel", b =>
+                {
+                    b.Property<Guid>("LabelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("LabelId", "TaskId");
+
+                    b.HasIndex("TaskId");
+
+                    b.ToTable("TaskLabel");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -593,25 +596,6 @@ namespace TaskFlow.Infrastructure.Migrations
                     b.Navigation("Comment");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("TaskFlow.Application.Domain.Entities.TaskLabel", b =>
-                {
-                    b.HasOne("TaskFlow.Application.Domain.Entities.WorkspaceLabel", "Label")
-                        .WithMany()
-                        .HasForeignKey("LabelId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("TaskFlow.Application.Domain.Entities.WorkspaceTask", "Task")
-                        .WithMany()
-                        .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Label");
-
-                    b.Navigation("Task");
                 });
 
             modelBuilder.Entity("TaskFlow.Application.Domain.Entities.Workspace", b =>
@@ -709,6 +693,21 @@ namespace TaskFlow.Infrastructure.Migrations
                     b.Navigation("CreatedBy");
 
                     b.Navigation("Workspace");
+                });
+
+            modelBuilder.Entity("TaskLabel", b =>
+                {
+                    b.HasOne("TaskFlow.Application.Domain.Entities.WorkspaceLabel", null)
+                        .WithMany()
+                        .HasForeignKey("LabelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TaskFlow.Application.Domain.Entities.WorkspaceTask", null)
+                        .WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("TaskFlow.Application.Domain.Entities.TaskComment", b =>

@@ -1,6 +1,7 @@
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 using TaskFlow.Application.Caching;
+using TaskFlow.Application.Domain.Constants;
 using TaskFlow.Application.Domain.Entities;
 using TaskFlow.Application.Domain.Enums;
 using TaskFlow.Application.DTOs;
@@ -28,9 +29,14 @@ public class WorkspacesService(
             JoinedAt = DateTime.UtcNow
         });
 
-        workspace.Columns.Add(new WorkspaceColumn { Name = "Todo",        Color = "#6366F1", Order = 0 });
-        workspace.Columns.Add(new WorkspaceColumn { Name = "In Progress", Color = "#F59E0B", Order = 1 });
-        workspace.Columns.Add(new WorkspaceColumn { Name = "Done",        Color = "#10B981", Order = 2 });
+        foreach (var col in WorkspaceDefaults.Columns)
+            workspace.Columns.Add(col);
+
+        foreach (var cfg in WorkspaceDefaults.PriorityConfigs)
+            workspace.PriorityConfigs.Add(cfg);
+
+        foreach (var label in WorkspaceDefaults.Labels)
+            workspace.Labels.Add(label);
 
         await repository.AddAsync(workspace, ct);
 

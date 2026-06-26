@@ -19,6 +19,9 @@ Update this file whenever a new feature is added or an existing one changes scop
 | Task Comments        | Complete    | [task-comments.md](task-comments.md)             | `/api/v1/workspaces/{id}/tasks/{id}/comments` |
 | Redis Caching        | Complete    | [`.claude/06_infrastructure.md`](../.claude/06_infrastructure.md) | `GET /api/v1/admin/cache-stats` |
 | Profile Management   | Complete    | [profile.md](profile.md)                                          | `/api/v1/me`                    |
+| Task Labels          | Complete    | [labels.md](labels.md)                                            | `/api/v1/workspaces/{id}/labels` |
+| Priority Display Config | Complete | [labels.md](labels.md)                                            | `/api/v1/workspaces/{id}/priority-configs` |
+| Workspace Settings   | Complete    | [workspace-settings.md](workspace-settings.md)                    | `/workspaces/:id/settings`      |
 
 ---
 

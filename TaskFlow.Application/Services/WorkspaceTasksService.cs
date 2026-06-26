@@ -5,12 +5,14 @@ using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Exceptions;
 using TaskFlow.Application.Interfaces.Repositories;
 using TaskFlow.Application.Interfaces.Services;
+using TaskFlow.Application.Domain.Enums;
 
 namespace TaskFlow.Application.Services;
 
 public class WorkspaceTasksService(
     IWorkspaceTasksRepository repository,
     IWorkspaceColumnsRepository columnsRepository,
+    IWorkspaceLabelsRepository labelsRepository,
     IMapper mapper,
     ILogger<WorkspaceTasksService> logger) : IWorkspaceTasksService
 {
@@ -59,6 +61,12 @@ public class WorkspaceTasksService(
         };
 
         await repository.AddAsync(task, ct);
+
+        if (request.LabelIds is { Count: > 0 })
+        {
+            await ValidateLabelIds(workspaceId, request.LabelIds, ct);
+            await repository.AddLabelsAsync(task.Id, request.LabelIds, ct);
+        }
 
         var created = await repository.GetByIdAsync(task.Id, ct) ?? task;
 
@@ -109,6 +117,19 @@ public class WorkspaceTasksService(
         return mapper.Map<WorkspaceTaskDto>(updated);
     }
 
+    public async Task<WorkspaceTaskDto> SetLabelsAsync(Guid workspaceId, Guid taskId, SetTaskLabelsRequest request, CancellationToken ct)
+    {
+        await GetOwnedTaskAsync(workspaceId, taskId, ct);
+        await ValidateLabelIds(workspaceId, request.LabelIds, ct);
+        await repository.SetLabelsAsync(taskId, request.LabelIds, ct);
+
+        logger.LogInformation("Labels updated on task {TaskId} in workspace {WorkspaceId}", taskId, workspaceId);
+
+        var updated = await repository.GetByIdAsync(taskId, ct)
+            ?? throw new NotFoundException($"Task {taskId} was not found.");
+        return mapper.Map<WorkspaceTaskDto>(updated);
+    }
+
     public async Task DeleteAsync(Guid workspaceId, Guid taskId, CancellationToken ct)
     {
         await GetOwnedTaskAsync(workspaceId, taskId, ct);
@@ -116,6 +137,15 @@ public class WorkspaceTasksService(
         await repository.DeleteAsync(taskId, ct);
 
         logger.LogInformation("Task {TaskId} deleted from workspace {WorkspaceId}", taskId, workspaceId);
+    }
+
+    private async Task ValidateLabelIds(Guid workspaceId, IReadOnlyList<Guid> labelIds, CancellationToken ct)
+    {
+        var workspaceLabels = await labelsRepository.GetByWorkspaceIdAsync(workspaceId, ct);
+        var validIds = workspaceLabels.Select(l => l.Id).ToHashSet();
+        var invalid = labelIds.FirstOrDefault(id => !validIds.Contains(id));
+        if (invalid != default)
+            throw new NotFoundException($"Label {invalid} was not found in this workspace.");
     }
 
     private async Task<WorkspaceTask> GetOwnedTaskAsync(Guid workspaceId, Guid taskId, CancellationToken ct)

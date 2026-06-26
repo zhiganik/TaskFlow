@@ -15,6 +15,7 @@ public class WorkspaceTasksRepository(AppDbContext db) : IWorkspaceTasksReposito
             .Include(t => t.Column)
             .Include(t => t.Assignee)
             .Include(t => t.CreatedBy)
+            .Include(t => t.Labels)
             .Where(t => t.WorkspaceId == workspaceId)
             .OrderBy(t => t.ColumnId)
             .ThenBy(t => t.Number)
@@ -28,6 +29,7 @@ public class WorkspaceTasksRepository(AppDbContext db) : IWorkspaceTasksReposito
             .Include(t => t.Column)
             .Include(t => t.Assignee)
             .Include(t => t.CreatedBy)
+            .Include(t => t.Labels)
             .Where(t => t.WorkspaceId == workspaceId);
 
         if (!string.IsNullOrWhiteSpace(filter.Search))
@@ -44,6 +46,12 @@ public class WorkspaceTasksRepository(AppDbContext db) : IWorkspaceTasksReposito
         if (filter.Priorities is { Count: > 0 })
             q = q.Where(t => filter.Priorities.Contains(t.Priority));
 
+        if (filter.LabelIds is { Count: > 0 })
+        {
+            var labelIds = filter.LabelIds.ToList();
+            q = q.Where(t => t.Labels.Any(l => labelIds.Contains(l.Id)));
+        }
+
         return await q
             .OrderBy(t => t.ColumnId)
             .ThenBy(t => t.Number)
@@ -56,6 +64,7 @@ public class WorkspaceTasksRepository(AppDbContext db) : IWorkspaceTasksReposito
             .Include(t => t.Column)
             .Include(t => t.Assignee)
             .Include(t => t.CreatedBy)
+            .Include(t => t.Labels)
             .Where(t => t.ColumnId == columnId)
             .OrderBy(t => t.Number)
             .ToListAsync(ct);
@@ -66,6 +75,7 @@ public class WorkspaceTasksRepository(AppDbContext db) : IWorkspaceTasksReposito
             .Include(t => t.Column)
             .Include(t => t.Assignee)
             .Include(t => t.CreatedBy)
+            .Include(t => t.Labels)
             .FirstOrDefaultAsync(t => t.Id == id, ct);
 
     public async Task<int> CountByColumnIdAsync(Guid columnId, CancellationToken ct = default) =>
@@ -81,6 +91,19 @@ public class WorkspaceTasksRepository(AppDbContext db) : IWorkspaceTasksReposito
         db.WorkspaceTasks.Add(task);
         await db.SaveChangesAsync(ct);
         return task;
+    }
+
+    public async Task AddLabelsAsync(Guid taskId, IReadOnlyList<Guid> labelIds, CancellationToken ct = default)
+    {
+        if (labelIds.Count == 0) return;
+        db.TaskLabels.AddRange(labelIds.Select(lid => new TaskLabel { TaskId = taskId, LabelId = lid }));
+        await db.SaveChangesAsync(ct);
+    }
+
+    public async Task SetLabelsAsync(Guid taskId, IReadOnlyList<Guid> labelIds, CancellationToken ct = default)
+    {
+        await db.TaskLabels.Where(tl => tl.TaskId == taskId).ExecuteDeleteAsync(ct);
+        await AddLabelsAsync(taskId, labelIds, ct);
     }
 
     public async Task UpdateAsync(WorkspaceTask task, CancellationToken ct = default)
@@ -104,6 +127,7 @@ public class WorkspaceTasksRepository(AppDbContext db) : IWorkspaceTasksReposito
             .Include(t => t.Column)
             .Include(t => t.Assignee)
             .Include(t => t.CreatedBy)
+            .Include(t => t.Labels)
             .Where(t => t.WorkspaceId == workspaceId && t.ColumnId == columnId);
 
         if (!string.IsNullOrWhiteSpace(filter.Search))
@@ -119,6 +143,12 @@ public class WorkspaceTasksRepository(AppDbContext db) : IWorkspaceTasksReposito
 
         if (filter.Priorities is { Count: > 0 })
             q = q.Where(t => filter.Priorities.Contains(t.Priority));
+
+        if (filter.LabelIds is { Count: > 0 })
+        {
+            var labelIds = filter.LabelIds.ToList();
+            q = q.Where(t => t.Labels.Any(l => labelIds.Contains(l.Id)));
+        }
 
         if (cursor is not null)
         {

@@ -18,6 +18,7 @@ public class WorkspaceTasksServiceTests
 {
     private Mock<IWorkspaceTasksRepository>   _repositoryMock = null!;
     private Mock<IWorkspaceColumnsRepository> _columnsRepositoryMock = null!;
+    private Mock<IWorkspaceLabelsRepository>  _labelsRepositoryMock = null!;
     private Mock<ILogger<WorkspaceTasksService>> _loggerMock = null!;
     private IMapper _mapper = null!;
 
@@ -28,6 +29,7 @@ public class WorkspaceTasksServiceTests
     {
         _repositoryMock        = new Mock<IWorkspaceTasksRepository>();
         _columnsRepositoryMock = new Mock<IWorkspaceColumnsRepository>();
+        _labelsRepositoryMock  = new Mock<IWorkspaceLabelsRepository>();
         _loggerMock            = new Mock<ILogger<WorkspaceTasksService>>();
         _mapper = new ServiceCollection()
             .AddLogging()
@@ -38,6 +40,7 @@ public class WorkspaceTasksServiceTests
         _sut = new WorkspaceTasksService(
             _repositoryMock.Object,
             _columnsRepositoryMock.Object,
+            _labelsRepositoryMock.Object,
             _mapper,
             _loggerMock.Object);
     }

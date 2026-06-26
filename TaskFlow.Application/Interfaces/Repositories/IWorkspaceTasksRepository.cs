@@ -13,6 +13,8 @@ public interface IWorkspaceTasksRepository
     Task<int>                          CountByColumnIdAsync(Guid columnId, CancellationToken ct = default);
     Task<int>                          GetNextNumberAsync(Guid workspaceId, CancellationToken ct = default);
     Task<WorkspaceTask>                AddAsync(WorkspaceTask task, CancellationToken ct = default);
+    Task                               AddLabelsAsync(Guid taskId, IReadOnlyList<Guid> labelIds, CancellationToken ct = default);
+    Task                               SetLabelsAsync(Guid taskId, IReadOnlyList<Guid> labelIds, CancellationToken ct = default);
     Task                               UpdateAsync(WorkspaceTask task, CancellationToken ct = default);
     Task                               UpdateRangeAsync(IEnumerable<WorkspaceTask> tasks, CancellationToken ct = default);
     Task<bool>                         DeleteAsync(Guid id, CancellationToken ct = default);

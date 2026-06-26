@@ -18,8 +18,9 @@ public class WorkspaceTask
     public DateTime     CreatedAt   { get; set; } = DateTime.UtcNow;
     public DateTime     UpdatedAt   { get; set; } = DateTime.UtcNow;
 
-    public Workspace       Workspace { get; set; } = null!;
-    public WorkspaceColumn Column    { get; set; } = null!;
-    public AppUser?        Assignee  { get; set; }
-    public AppUser         CreatedBy { get; set; } = null!;
+    public Workspace                   Workspace { get; set; } = null!;
+    public WorkspaceColumn             Column    { get; set; } = null!;
+    public AppUser?                    Assignee  { get; set; }
+    public AppUser                     CreatedBy { get; set; } = null!;
+    public ICollection<WorkspaceLabel> Labels    { get; set; } = [];
 }

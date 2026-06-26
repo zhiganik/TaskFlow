@@ -27,12 +27,13 @@ public class WorkspaceTasksController(IWorkspaceTasksService tasksService) : Con
         [FromQuery] Guid?           columnId,
         [FromQuery] string?         cursor,
         [FromQuery] int             limit      = 20,
-        [FromQuery] string?         search     = null,
+        [FromQuery] string?         search      = null,
         [FromQuery] string[]?       assigneeIds = null,
-        [FromQuery] TaskPriority[]? priorities = null,
+        [FromQuery] TaskPriority[]? priorities  = null,
+        [FromQuery] Guid[]?         labelIds    = null,
         CancellationToken ct = default)
     {
-        var filter = new TaskFilterQuery(search, assigneeIds, priorities);
+        var filter = new TaskFilterQuery(search, assigneeIds, priorities, labelIds);
 
         if (columnId.HasValue)
         {
@@ -96,6 +97,20 @@ public class WorkspaceTasksController(IWorkspaceTasksService tasksService) : Con
     public async Task<IActionResult> Move(Guid workspaceId, Guid taskId, MoveTaskRequest request, CancellationToken ct)
     {
         var result = await tasksService.MoveAsync(workspaceId, taskId, request, ct);
+        return Ok(result);
+    }
+
+    /// <summary>Set all labels on a task (replaces existing).</summary>
+    [HttpPut("{taskId:guid}/labels")]
+    [Authorize(Policy = WorkspacePolicies.Member)]
+    [ProducesResponseType(typeof(WorkspaceTaskDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SetLabels(Guid workspaceId, Guid taskId, SetTaskLabelsRequest request, CancellationToken ct)
+    {
+        var result = await tasksService.SetLabelsAsync(workspaceId, taskId, request, ct);
         return Ok(result);
     }
 
