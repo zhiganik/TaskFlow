@@ -1,4 +1,4 @@
-import { type DragEvent, useEffect, useMemo } from 'react'
+import { type DragEvent, useEffect, useMemo, useRef } from 'react'
 import { useColumnTasks } from '../../hooks/useColumnTasks'
 import type { TaskFilterParams, WorkspaceTaskDto } from '../../types/api.types'
 import { Spinner } from '../ui/Spinner'
@@ -23,7 +23,9 @@ export function ColumnTaskList({
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useColumnTasks(workspaceId, columnId, filter)
   const tasks = useMemo(() => data?.pages.flatMap((p) => p.items) ?? [], [data])
 
-  useEffect(() => { onCountChange(tasks.length) }, [tasks.length, onCountChange])
+  const onCountChangeRef = useRef(onCountChange)
+  onCountChangeRef.current = onCountChange
+  useEffect(() => { onCountChangeRef.current(tasks.length) }, [tasks.length])
 
   if (tasks.length === 0 && !isFetchingNextPage) {
     return <p className="py-4 text-center text-xs text-gray-400">No tasks</p>

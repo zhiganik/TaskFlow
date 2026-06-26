@@ -121,33 +121,16 @@ public class MoveTaskRequestValidatorTests
     [Test]
     public async Task Validate_EmptyColumnId_ReturnsError()
     {
-        var result = await _validator.ValidateAsync(new MoveTaskRequest(Guid.Empty, 0));
+        var result = await _validator.ValidateAsync(new MoveTaskRequest(Guid.Empty));
 
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "ColumnId");
     }
 
     [Test]
-    public async Task Validate_NegativeOrder_ReturnsError()
-    {
-        var result = await _validator.ValidateAsync(new MoveTaskRequest(Guid.NewGuid(), -1));
-
-        result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.PropertyName == "Order");
-    }
-
-    [Test]
-    public async Task Validate_ZeroOrder_Passes()
-    {
-        var result = await _validator.ValidateAsync(new MoveTaskRequest(Guid.NewGuid(), 0));
-
-        result.IsValid.Should().BeTrue();
-    }
-
-    [Test]
     public async Task Validate_ValidRequest_Passes()
     {
-        var result = await _validator.ValidateAsync(new MoveTaskRequest(Guid.NewGuid(), 3));
+        var result = await _validator.ValidateAsync(new MoveTaskRequest(Guid.NewGuid()));
 
         result.IsValid.Should().BeTrue();
     }

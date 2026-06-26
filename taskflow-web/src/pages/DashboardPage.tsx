@@ -217,7 +217,7 @@ export function DashboardPage() {
     if (!tId) return
     e.preventDefault()
     e.stopPropagation()
-    moveTaskMutation.mutate({ taskId: tId, data: { columnId, order: 9999 } })
+    moveTaskMutation.mutate({ taskId: tId, data: { columnId } })
     taskDraggedId.current = null
     setTaskDragOverColId(null)
   }

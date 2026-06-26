@@ -39,4 +39,4 @@ public record UpdateTaskRequest(
     DateTime?    DueDate
 );
 
-public record MoveTaskRequest(Guid ColumnId, int Order);
+public record MoveTaskRequest(Guid ColumnId);

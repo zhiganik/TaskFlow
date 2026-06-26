@@ -49,10 +49,10 @@ public class WorkspaceMembersService(
             UserId      = user.Id,
             Role        = request.Role,
             JoinedAt    = DateTime.UtcNow,
-            User        = user
         };
 
         await membersRepository.AddAsync(member, ct);
+        member.User = user;
 
         await cache.InvalidateManyAsync(
         [

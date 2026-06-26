@@ -101,7 +101,7 @@ export function TaskDetailPanel({ task, columns, workspaceId, width, onResizeSta
     if (columnId === task.columnId) return
     setPanelError(null)
     moveMutation.mutate(
-      { taskId: task.id, data: { columnId, order: 9999 } },
+      { taskId: task.id, data: { columnId } },
       {
         onSuccess: (updated) => onTaskUpdated(updated),
         onError: (err) => setPanelError(getErrorMessage(err)),

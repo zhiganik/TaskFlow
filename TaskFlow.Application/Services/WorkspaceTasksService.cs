@@ -91,29 +91,22 @@ public class WorkspaceTasksService(
     {
         var task = await GetOwnedTaskAsync(workspaceId, taskId, ct);
 
+        if (task.ColumnId == request.ColumnId)
+            throw new BadRequestException("Task is already in the target column.");
+
         var targetColumn = await columnsRepository.GetByIdAsync(request.ColumnId, ct);
         if (targetColumn is null || targetColumn.WorkspaceId != workspaceId)
             throw new NotFoundException($"Column {request.ColumnId} was not found in this workspace.");
 
-        var tasksInTarget = await repository.GetByColumnIdAsync(request.ColumnId, ct);
-
-        var clampedOrder   = Math.Clamp(request.Order, 0, tasksInTarget.Count);
-        var othersInTarget = tasksInTarget.Where(t => t.Id != taskId).ToList();
-
-        foreach (var t in othersInTarget.Where(t => t.Order >= clampedOrder))
-            t.Order++;
-
         task.ColumnId  = request.ColumnId;
-        task.Column    = targetColumn;
-        task.Order     = clampedOrder;
         task.UpdatedAt = DateTime.UtcNow;
 
-        var toUpdate = othersInTarget.Where(t => t.Order > clampedOrder - 1).Append(task).ToList();
-        await repository.UpdateRangeAsync(toUpdate, ct);
+        await repository.UpdateAsync(task, ct);
 
-        logger.LogInformation("Task {TaskId} moved to column {ColumnId} at order {Order}", taskId, request.ColumnId, clampedOrder);
+        logger.LogInformation("Task {TaskId} moved to column {ColumnId}", taskId, request.ColumnId);
 
-        return mapper.Map<WorkspaceTaskDto>(task);
+        var updated = await repository.GetByIdAsync(taskId, ct) ?? task;
+        return mapper.Map<WorkspaceTaskDto>(updated);
     }
 
     public async Task DeleteAsync(Guid workspaceId, Guid taskId, CancellationToken ct)

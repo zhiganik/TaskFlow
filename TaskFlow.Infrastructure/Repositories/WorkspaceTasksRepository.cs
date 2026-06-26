@@ -17,7 +17,7 @@ public class WorkspaceTasksRepository(AppDbContext db) : IWorkspaceTasksReposito
             .Include(t => t.CreatedBy)
             .Where(t => t.WorkspaceId == workspaceId)
             .OrderBy(t => t.ColumnId)
-            .ThenBy(t => t.Order)
+            .ThenBy(t => t.Number)
             .ToListAsync(ct);
 
     public async Task<IReadOnlyList<WorkspaceTask>> GetByWorkspaceIdAsync(
@@ -49,7 +49,7 @@ public class WorkspaceTasksRepository(AppDbContext db) : IWorkspaceTasksReposito
 
         return await q
             .OrderBy(t => t.ColumnId)
-            .ThenBy(t => t.Order)
+            .ThenBy(t => t.Number)
             .ToListAsync(ct);
     }
 
@@ -60,7 +60,7 @@ public class WorkspaceTasksRepository(AppDbContext db) : IWorkspaceTasksReposito
             .Include(t => t.Assignee)
             .Include(t => t.CreatedBy)
             .Where(t => t.ColumnId == columnId)
-            .OrderBy(t => t.Order)
+            .OrderBy(t => t.Number)
             .ToListAsync(ct);
 
     public async Task<WorkspaceTask?> GetByIdAsync(Guid id, CancellationToken ct = default) =>
@@ -88,13 +88,14 @@ public class WorkspaceTasksRepository(AppDbContext db) : IWorkspaceTasksReposito
 
     public async Task UpdateAsync(WorkspaceTask task, CancellationToken ct = default)
     {
-        db.WorkspaceTasks.Update(task);
+        db.Entry(task).State = EntityState.Modified;
         await db.SaveChangesAsync(ct);
     }
 
     public async Task UpdateRangeAsync(IEnumerable<WorkspaceTask> tasks, CancellationToken ct = default)
     {
-        db.WorkspaceTasks.UpdateRange(tasks);
+        foreach (var task in tasks)
+            db.Entry(task).State = EntityState.Modified;
         await db.SaveChangesAsync(ct);
     }
 
@@ -127,12 +128,12 @@ public class WorkspaceTasksRepository(AppDbContext db) : IWorkspaceTasksReposito
 
         if (cursor is not null)
         {
-            var (curOrder, curId) = DecodeCursor(cursor);
-            q = q.Where(t => t.Order > curOrder || (t.Order == curOrder && t.Id.CompareTo(curId) > 0));
+            var (curNumber, curId) = DecodeCursor(cursor);
+            q = q.Where(t => t.Number > curNumber || (t.Number == curNumber && t.Id.CompareTo(curId) > 0));
         }
 
         var items = await q
-            .OrderBy(t => t.Order)
+            .OrderBy(t => t.Number)
             .ThenBy(t => t.Id)
             .Take(limit + 1)
             .ToListAsync(ct);
@@ -140,7 +141,7 @@ public class WorkspaceTasksRepository(AppDbContext db) : IWorkspaceTasksReposito
         var hasMore = items.Count > limit;
         if (hasMore) items.RemoveAt(items.Count - 1);
 
-        var nextCursor = hasMore ? EncodeCursor(items[^1].Order, items[^1].Id) : null;
+        var nextCursor = hasMore ? EncodeCursor(items[^1].Number, items[^1].Id) : null;
         return new PagedResult<WorkspaceTask>(items, nextCursor, hasMore);
     }
 

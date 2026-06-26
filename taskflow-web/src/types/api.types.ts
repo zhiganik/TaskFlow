@@ -145,7 +145,6 @@ export interface UpdateTaskRequest {
 
 export interface MoveTaskRequest {
   columnId: string
-  order: number
 }
 
 export interface TaskFilterParams {

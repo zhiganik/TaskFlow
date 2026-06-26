@@ -244,37 +244,51 @@ public class WorkspaceTasksServiceTests
     }
 
     [Test]
-    public async Task MoveAsync_ValidRequest_ChangesColumnAndShiftsOtherTasks()
+    public async Task MoveAsync_ValidRequest_MovesTaskToTargetColumn()
     {
         var workspaceId  = Guid.NewGuid();
         var sourceColumn = CreateColumn(workspaceId, "Todo");
         var targetColumn = CreateColumn(workspaceId, "In Progress");
 
         var task = CreateTask(workspaceId, sourceColumn);
-        task.Order = 0;
 
-        var existing0 = CreateTask(workspaceId, targetColumn); existing0.Order = 0;
-        var existing1 = CreateTask(workspaceId, targetColumn); existing1.Order = 1;
+        var reloaded = CreateTask(workspaceId, targetColumn);
+        reloaded.Id     = task.Id;
+        reloaded.Column = targetColumn;
+
+        _repositoryMock
+            .SetupSequence(r => r.GetByIdAsync(task.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(task)
+            .ReturnsAsync(reloaded);
+        _columnsRepositoryMock
+            .Setup(r => r.GetByIdAsync(targetColumn.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(targetColumn);
+
+        var result = await _sut.MoveAsync(workspaceId, task.Id, new MoveTaskRequest(targetColumn.Id), CancellationToken.None);
+
+        result.ColumnId.Should().Be(targetColumn.Id);
+        result.ColumnName.Should().Be("In Progress");
+
+        _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<WorkspaceTask>(), default), Times.Once);
+        _repositoryMock.Verify(r => r.UpdateRangeAsync(It.IsAny<IEnumerable<WorkspaceTask>>(), default), Times.Never);
+        _repositoryMock.Verify(r => r.GetByColumnIdAsync(It.IsAny<Guid>(), default), Times.Never);
+    }
+
+    [Test]
+    public async Task MoveAsync_SameColumn_ThrowsBadRequestException()
+    {
+        var workspaceId = Guid.NewGuid();
+        var column      = CreateColumn(workspaceId);
+        var task        = CreateTask(workspaceId, column);
 
         _repositoryMock
             .Setup(r => r.GetByIdAsync(task.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(task);
-        _columnsRepositoryMock
-            .Setup(r => r.GetByIdAsync(targetColumn.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(targetColumn);
-        _repositoryMock
-            .Setup(r => r.GetByColumnIdAsync(targetColumn.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync([existing0, existing1]);
 
-        var result = await _sut.MoveAsync(workspaceId, task.Id, new MoveTaskRequest(targetColumn.Id, 0), CancellationToken.None);
+        var act = async () => await _sut.MoveAsync(workspaceId, task.Id, new MoveTaskRequest(column.Id), CancellationToken.None);
 
-        result.ColumnId.Should().Be(targetColumn.Id);
-        result.ColumnName.Should().Be("In Progress");
-        result.Order.Should().Be(0);
-        existing0.Order.Should().Be(1);
-        existing1.Order.Should().Be(2);
-
-        _repositoryMock.Verify(r => r.UpdateRangeAsync(It.IsAny<IEnumerable<WorkspaceTask>>(), default), Times.Once);
+        await act.Should().ThrowAsync<BadRequestException>();
+        _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<WorkspaceTask>(), default), Times.Never);
     }
 
     [Test]
@@ -283,7 +297,7 @@ public class WorkspaceTasksServiceTests
         var workspaceId  = Guid.NewGuid();
         var sourceColumn = CreateColumn(workspaceId);
         var task         = CreateTask(workspaceId, sourceColumn);
-        var foreignCol   = CreateColumn(Guid.NewGuid()); // different workspace
+        var foreignCol   = CreateColumn(Guid.NewGuid());
 
         _repositoryMock
             .Setup(r => r.GetByIdAsync(task.Id, It.IsAny<CancellationToken>()))
@@ -292,10 +306,10 @@ public class WorkspaceTasksServiceTests
             .Setup(r => r.GetByIdAsync(foreignCol.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(foreignCol);
 
-        var act = async () => await _sut.MoveAsync(workspaceId, task.Id, new MoveTaskRequest(foreignCol.Id, 0), CancellationToken.None);
+        var act = async () => await _sut.MoveAsync(workspaceId, task.Id, new MoveTaskRequest(foreignCol.Id), CancellationToken.None);
 
         await act.Should().ThrowAsync<NotFoundException>();
-        _repositoryMock.Verify(r => r.UpdateRangeAsync(It.IsAny<IEnumerable<WorkspaceTask>>(), default), Times.Never);
+        _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<WorkspaceTask>(), default), Times.Never);
     }
 
     [Test]

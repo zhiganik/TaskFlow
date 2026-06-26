@@ -22,6 +22,7 @@ public class GlobalExceptionMiddleware(RequestDelegate next)
 
         var (status, title) = ex switch
         {
+            BadRequestException   e => (400, e.Message),
             NotFoundException     e => (404, e.Message),
             ConflictException     e => (409, e.Message),
             ForbiddenException    e => (403, e.Message),
