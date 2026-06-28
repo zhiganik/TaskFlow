@@ -6,9 +6,6 @@ export const updateProfileSchema = z.object({
     .min(1, 'Display name is required.')
     .max(100, 'Display name must be 100 characters or fewer.'),
   email: z.string().min(1, 'Email is required.').email('Email must be a valid email address.'),
-  avatarColor: z
-    .string()
-    .regex(/^#[0-9a-fA-F]{6}$/, 'Must be a valid hex color.'),
 })
 
 export type UpdateProfileFormValues = z.infer<typeof updateProfileSchema>

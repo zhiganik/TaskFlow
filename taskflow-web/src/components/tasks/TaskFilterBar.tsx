@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react'
 import type { LabelDto, MemberDto, PriorityConfigDto, TaskPriority } from '../../types/api.types'
 import { SearchIcon, TagIcon, UserIcon, XIcon } from '../ui/Icons'
+import { UserAvatar } from '../ui/UserAvatar'
 
 interface Props {
   searchInput: string
@@ -16,16 +17,6 @@ interface Props {
   members: MemberDto[]
   hasActiveFilters: boolean
   onClear: () => void
-}
-
-function initials(name: string) {
-  return name
-    .split(' ')
-    .map((p) => p[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
 }
 
 const FALLBACK_PRIORITY_COLORS: Record<TaskPriority, string> = {
@@ -118,12 +109,17 @@ export function TaskFilterBar({
                 title={m.displayName}
                 onClick={() => onToggleAssignee(m.userId)}
                 className={[
-                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-[10px] font-semibold text-white transition-all',
+                  'shrink-0 rounded-full border-2 transition-all',
                   selected ? 'border-brand-500' : 'border-transparent hover:opacity-80',
                 ].join(' ')}
-                style={{ backgroundColor: m.avatarColor || '#818cf8' }}
               >
-                {initials(m.displayName)}
+                <UserAvatar
+                  displayName={m.displayName}
+                  avatarColor={m.avatarColor}
+                  avatarPath={m.avatarPath}
+                  avatarStatus={m.avatarStatus}
+                  size="sm"
+                />
               </button>
             )
           })}

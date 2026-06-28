@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { membersApi } from '../api/members.api'
 import type { InviteMemberRequest, UpdateMemberRoleRequest } from '../types/api.types'
 
-const membersKey = (workspaceId: string) => ['workspaces', workspaceId, 'members']
+export const membersKey = (workspaceId: string) => ['members', workspaceId]
 
 export const useMembers = (workspaceId: string) =>
   useQuery({

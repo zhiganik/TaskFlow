@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { NavLink, useParams } from 'react-router-dom'
+import { useProfile } from '../../hooks/useProfile'
 import { useAuthStore } from '../../store/authStore'
 import { BoardIcon, MembersIcon, SettingsIcon } from '../ui/Icons'
 import { ProfileModal } from '../profile/ProfileModal'
+import { UserAvatar } from '../ui/UserAvatar'
 import { WorkspaceSwitcher } from '../workspaces/WorkspaceSwitcher'
 
 function navLinkClassName({ isActive }: { isActive: boolean }) {
@@ -11,17 +13,10 @@ function navLinkClassName({ isActive }: { isActive: boolean }) {
   }`
 }
 
-function initials(displayName: string) {
-  return displayName
-    .split(' ')
-    .map((part) => part[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
-}
-
 export function Sidebar() {
+  // Keep profile in sync for the lifetime of the app session (not just while ProfileModal is open).
+  // This is also what drives the Pending → Ready polling and the resulting tasks/members invalidation.
+  useProfile()
   const user = useAuthStore((s) => s.user)
   const { workspaceId } = useParams<{ workspaceId: string }>()
   const [profileOpen, setProfileOpen] = useState(false)
@@ -69,12 +64,13 @@ export function Sidebar() {
             onClick={() => setProfileOpen(true)}
             className="mt-auto flex items-center gap-2 border-t border-gray-100 px-4 pt-3 text-left hover:bg-gray-50"
           >
-            <div
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-medium text-white"
-              style={{ backgroundColor: user.avatarColor }}
-            >
-              {initials(user.displayName)}
-            </div>
+            <UserAvatar
+              displayName={user.displayName}
+              avatarColor={user.avatarColor}
+              avatarPath={user.avatarPath}
+              avatarStatus={user.avatarStatus}
+              size="md"
+            />
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-medium text-gray-900">{user.displayName}</div>
               <div className="truncate text-xs text-gray-500">{user.email}</div>

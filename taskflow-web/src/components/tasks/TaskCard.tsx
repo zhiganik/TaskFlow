@@ -1,5 +1,6 @@
 import type { DragEvent } from 'react'
 import { CalendarIcon } from '../ui/Icons'
+import { UserAvatar } from '../ui/UserAvatar'
 import type { WorkspaceTaskDto } from '../../types/api.types'
 
 interface TaskCardProps {
@@ -11,15 +12,6 @@ interface TaskCardProps {
   onDragEnd?: () => void
 }
 
-function initials(name: string) {
-  return name
-    .split(' ')
-    .map((p) => p[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
-}
 
 export function TaskCard({ task, priorityColor, isSelected, onClick, onDragStart, onDragEnd }: TaskCardProps) {
   const dueDateLabel = task.dueDate
@@ -80,12 +72,14 @@ export function TaskCard({ task, priorityColor, isSelected, onClick, onDragStart
         )}
 
         {task.assigneeName && (
-          <span
-            title={task.assigneeName}
-            className="ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold text-white"
-            style={{ backgroundColor: task.assigneeAvatarColor || '#818cf8' }}
-          >
-            {initials(task.assigneeName)}
+          <span title={task.assigneeName} className="ml-auto shrink-0">
+            <UserAvatar
+              displayName={task.assigneeName}
+              avatarColor={task.assigneeAvatarColor || '#818cf8'}
+              avatarPath={task.assigneeAvatarPath}
+              avatarStatus={task.assigneeAvatarStatus ?? 'None'}
+              size="xs"
+            />
           </span>
         )}
       </div>

@@ -9,6 +9,7 @@ import { Alert } from '../ui/Alert'
 import { Button } from '../ui/Button'
 import { CalendarIcon, PencilIcon, UserIcon, XIcon } from '../ui/Icons'
 import { Spinner } from '../ui/Spinner'
+import { UserAvatar } from '../ui/UserAvatar'
 import { AttachmentSection } from './attachments/AttachmentSection'
 import { CommentsList } from './comments/CommentsList'
 import { LabelPicker } from './LabelPicker'
@@ -288,9 +289,22 @@ export function TaskDetailPanel({ task, columns, workspaceId, width, onResizeSta
         <Section label="Assignee">
           {localAssigneeId ? (
             <div className="mb-1.5 flex items-center gap-2">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-50 text-[10px] font-semibold text-brand-700">
-                {initials(members?.find((m) => m.userId === localAssigneeId)?.displayName ?? localAssigneeId)}
-              </span>
+              {(() => {
+                const member = members?.find((m) => m.userId === localAssigneeId)
+                return member ? (
+                  <UserAvatar
+                    displayName={member.displayName}
+                    avatarColor={member.avatarColor}
+                    avatarPath={member.avatarPath}
+                    avatarStatus={member.avatarStatus}
+                    size="sm"
+                  />
+                ) : (
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-50 text-[10px] font-semibold text-brand-700">
+                    {initials(localAssigneeId)}
+                  </span>
+                )
+              })()}
               <span className="min-w-0 flex-1 truncate text-sm text-gray-700">
                 {members?.find((m) => m.userId === localAssigneeId)?.displayName ?? '…'}
               </span>

@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm'
 import { getErrorMessage } from '../../../api/errors'
 import { useAttachments, useDeleteAttachment, useUploadAttachment } from '../../../hooks/useAttachments'
 import type { MemberDto, TaskCommentDto } from '../../../types/api.types'
+import { UserAvatar } from '../../ui/UserAvatar'
 import { AttachmentChip } from '../attachments/AttachmentChip'
 import { CommentInput } from './CommentInput'
 
@@ -75,12 +76,14 @@ export function CommentItem({ comment, workspaceId, taskId, currentUserId, membe
 
   return (
     <div className="group flex gap-2.5 py-3">
-      <span
-        className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white"
-        style={{ backgroundColor: comment.createdByAvatarColor }}
-      >
-        {comment.createdByName.slice(0, 2).toUpperCase()}
-      </span>
+      <UserAvatar
+        displayName={comment.createdByName}
+        avatarColor={comment.createdByAvatarColor}
+        avatarPath={comment.createdByAvatarPath}
+        avatarStatus={comment.createdByAvatarStatus}
+        size="sm"
+        className="mt-0.5"
+      />
 
       <div className="min-w-0 flex-1">
         <div className="mb-1 flex items-baseline gap-2">

@@ -9,4 +9,14 @@ export const profileApi = {
 
   changePassword: (data: ChangePasswordRequest) =>
     apiClient.put<void>('/me/password', data).then((r) => r.data),
+
+  uploadAvatar: (file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return apiClient
+      .post<UserDto>('/me/avatar', form, { headers: { 'Content-Type': 'multipart/form-data' } })
+      .then((r) => r.data)
+  },
+
+  removeAvatar: () => apiClient.delete<UserDto>('/me/avatar').then((r) => r.data),
 }

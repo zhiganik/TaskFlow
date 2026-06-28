@@ -3,17 +3,20 @@ export interface HealthDto {
   checkedAt: string
 }
 
+export type AvatarStatus = 'None' | 'Pending' | 'Ready' | 'Failed'
+
 export interface UserDto {
   userId: string
   email: string
   displayName: string
   avatarColor: string
+  avatarPath: string | null
+  avatarStatus: AvatarStatus
 }
 
 export interface UpdateProfileRequest {
   displayName: string
   email: string
-  avatarColor: string
 }
 
 export interface ChangePasswordRequest {
@@ -81,6 +84,8 @@ export interface MemberDto {
   displayName: string
   email: string
   avatarColor: string
+  avatarPath: string | null
+  avatarStatus: AvatarStatus
   role: WorkspaceRole
   joinedAt: string
 }
@@ -163,6 +168,8 @@ export interface WorkspaceTaskDto {
   assigneeId: string | null
   assigneeName: string | null
   assigneeAvatarColor: string | null
+  assigneeAvatarPath: string | null
+  assigneeAvatarStatus: AvatarStatus | null
   dueDate: string | null
   isOverdue: boolean
   createdById: string
@@ -214,6 +221,8 @@ export interface TaskCommentDto {
   createdById: string
   createdByName: string
   createdByAvatarColor: string
+  createdByAvatarPath: string | null
+  createdByAvatarStatus: AvatarStatus
   createdAt: string
   updatedAt: string
   isEdited: boolean

@@ -8,19 +8,11 @@ import { Alert } from '../components/ui/Alert'
 import { Button } from '../components/ui/Button'
 import { TrashIcon } from '../components/ui/Icons'
 import { Spinner } from '../components/ui/Spinner'
+import { UserAvatar } from '../components/ui/UserAvatar'
 import { useMembers, useUpdateMemberRole } from '../hooks/useMembers'
 import { useWorkspaces } from '../hooks/useWorkspaces'
 import type { MemberDto } from '../types/api.types'
 
-function initials(displayName: string) {
-  return displayName
-    .split(' ')
-    .map((part) => part[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
-}
 
 export function MembersPage() {
   const { workspaceId: param } = useParams<{ workspaceId: string }>()
@@ -102,9 +94,13 @@ export function MembersPage() {
                         key={member.userId}
                         className="flex items-center gap-3 border-b border-gray-100 px-4 py-3 last:border-b-0"
                       >
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-50 text-xs font-medium text-brand-700">
-                          {initials(member.displayName)}
-                        </div>
+                        <UserAvatar
+                          displayName={member.displayName}
+                          avatarColor={member.avatarColor}
+                          avatarPath={member.avatarPath}
+                          avatarStatus={member.avatarStatus}
+                          size="md"
+                        />
 
                         <div className="min-w-0 flex-1">
                           <div className="truncate text-sm font-medium text-gray-900">
