@@ -49,12 +49,15 @@ public class TaskAttachmentsController(ITaskAttachmentService attachmentService)
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Upload(
-        Guid workspaceId, Guid taskId, IFormFile file, CancellationToken ct)
+        Guid workspaceId, Guid taskId, IFormFile file,
+        [FromQuery] Guid? commentId,
+        CancellationToken ct)
     {
         await using var stream = file.OpenReadStream();
         var dto = await attachmentService.UploadAsync(
             workspaceId, taskId, User.GetUserId(),
             new UploadFileRequest(stream, file.FileName, file.ContentType, file.Length),
+            commentId,
             ct);
 
         return AcceptedAtAction(nameof(GetById), new { workspaceId, taskId, id = dto.Id }, dto);

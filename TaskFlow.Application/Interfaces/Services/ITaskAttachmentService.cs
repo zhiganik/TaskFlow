@@ -10,6 +10,7 @@ public interface ITaskAttachmentService
     Task<AttachmentDto> UploadAsync(
         Guid workspaceId, Guid taskId, string uploadedById,
         UploadFileRequest file,
+        Guid? commentId = null,
         CancellationToken ct = default);
 
     Task<(Stream Stream, string FileName, string ContentType)> DownloadAsync(

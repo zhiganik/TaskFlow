@@ -17,6 +17,9 @@ public class TaskAttachment
     public DateTime         UploadedAt       { get; set; } = DateTime.UtcNow;
     public DateTime?        ProcessedAt      { get; set; }
 
-    public WorkspaceTask Task       { get; set; } = null!;
-    public AppUser       UploadedBy { get; set; } = null!;
+    public Guid?         CommentId  { get; set; }
+
+    public WorkspaceTask  Task      { get; set; } = null!;
+    public AppUser        UploadedBy { get; set; } = null!;
+    public TaskComment?   Comment   { get; set; }
 }

@@ -9,7 +9,8 @@ public class TaskComment
     public DateTime CreatedAt   { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt   { get; set; } = DateTime.UtcNow;
 
-    public WorkspaceTask                   Task     { get; set; } = null!;
-    public AppUser                         CreatedBy { get; set; } = null!;
-    public ICollection<TaskCommentMention> Mentions  { get; set; } = [];
+    public WorkspaceTask                   Task        { get; set; } = null!;
+    public AppUser                         CreatedBy   { get; set; } = null!;
+    public ICollection<TaskCommentMention> Mentions    { get; set; } = [];
+    public ICollection<TaskAttachment>     Attachments { get; set; } = [];
 }

@@ -43,6 +43,7 @@ public class TaskAttachmentService(
     public async Task<AttachmentDto> UploadAsync(
         Guid workspaceId, Guid taskId, string uploadedById,
         UploadFileRequest file,
+        Guid? commentId = null,
         CancellationToken ct = default)
     {
         await VerifyTaskOwnershipAsync(workspaceId, taskId, ct);
@@ -62,6 +63,7 @@ public class TaskAttachmentService(
         var attachment = new TaskAttachment
         {
             TaskId           = taskId,
+            CommentId        = commentId,
             UploadedById     = uploadedById,
             OriginalFileName = file.FileName,
             ContentType      = file.ContentType,

@@ -19,6 +19,9 @@ public class TaskCommentProfile : Profile
                 src.CreatedAt,
                 src.UpdatedAt,
                 src.UpdatedAt > src.CreatedAt.AddSeconds(1),
-                src.Mentions.Select(m => m.UserId).ToList().AsReadOnly()));
+                src.Mentions.Select(m => m.UserId).ToList().AsReadOnly(),
+                src.Attachments
+                    .Select(a => ctx.Mapper.Map<AttachmentDto>(a))
+                    .ToList().AsReadOnly()));
     }
 }

@@ -17,6 +17,8 @@ public class TaskAttachmentConfiguration : IEntityTypeConfiguration<TaskAttachme
         builder.Property(a => a.UploadedById).IsRequired();
         builder.Property(a => a.Status).HasConversion<string>();
 
+        builder.Property(a => a.CommentId).IsRequired(false);
+
         builder.HasOne(a => a.Task)
             .WithMany()
             .HasForeignKey(a => a.TaskId)
@@ -26,6 +28,13 @@ public class TaskAttachmentConfiguration : IEntityTypeConfiguration<TaskAttachme
             .WithMany()
             .HasForeignKey(a => a.UploadedById)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // SetNull: deleting a comment orphans its attachments up to task level, not lost
+        builder.HasOne(a => a.Comment)
+            .WithMany(c => c.Attachments)
+            .HasForeignKey(a => a.CommentId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasIndex(a => a.TaskId)
             .HasDatabaseName("IX_TaskAttachments_TaskId");

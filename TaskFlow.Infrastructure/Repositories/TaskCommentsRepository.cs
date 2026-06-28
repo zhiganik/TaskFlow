@@ -16,6 +16,7 @@ public class TaskCommentsRepository(AppDbContext db) : ITaskCommentsRepository
             .AsNoTracking()
             .Include(c => c.CreatedBy)
             .Include(c => c.Mentions)
+            .Include(c => c.Attachments).ThenInclude(a => a.UploadedBy)
             .Where(c => c.TaskId == taskId);
 
         if (cursor is not null)
@@ -45,6 +46,7 @@ public class TaskCommentsRepository(AppDbContext db) : ITaskCommentsRepository
             .AsNoTracking()
             .Include(c => c.CreatedBy)
             .Include(c => c.Mentions)
+            .Include(c => c.Attachments).ThenInclude(a => a.UploadedBy)
             .FirstOrDefaultAsync(c => c.Id == id, ct);
 
     public async Task<TaskComment> AddAsync(TaskComment comment, CancellationToken ct = default)

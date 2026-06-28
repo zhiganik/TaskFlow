@@ -12,6 +12,7 @@ public class TaskAttachmentProfile : Profile
             .ConstructUsing((src, _) => new AttachmentDto(
                 src.Id,
                 src.TaskId,
+                src.CommentId,
                 src.OriginalFileName,
                 src.ContentType,
                 src.FileSizeBytes,

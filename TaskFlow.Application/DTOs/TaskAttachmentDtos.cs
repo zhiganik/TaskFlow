@@ -11,6 +11,7 @@ public record UploadFileRequest(
 public record AttachmentDto(
     Guid             Id,
     Guid             TaskId,
+    Guid?            CommentId,
     string           OriginalFileName,
     string           ContentType,
     long             FileSizeBytes,
