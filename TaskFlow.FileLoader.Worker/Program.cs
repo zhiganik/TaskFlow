@@ -60,6 +60,9 @@ try
                 h.Password(rabbitPass);
             });
 
+            // Each worker pulls 1 message at a time — ensures even distribution across all replicas
+            cfg.PrefetchCount = 1;
+
             cfg.ConfigureEndpoints(ctx);
         });
     });

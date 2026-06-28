@@ -54,7 +54,8 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.worker
-    container_name: taskflow_file_worker
+    deploy:
+      replicas: 3
     env_file:
       - ../.env
     environment:
