@@ -24,6 +24,7 @@ Update this file whenever a new feature is added or an existing one changes scop
 | Workspace Settings   | Complete    | [workspace-settings.md](workspace-settings.md)                    | `/workspaces/:id/settings`      |
 | Task File Attachments | Complete | [task-attachments.md](task-attachments.md)                        | `/api/v1/workspaces/{id}/tasks/{id}/attachments` |
 | User Avatars          | Complete | [avatars.md](avatars.md)                                          | `POST /api/v1/me/avatar`, `GET /api/v1/files/avatars/{file}` |
+| Archive               | Complete | [archive.md](archive.md)                                          | `GET /api/v1/workspaces/{id}/archive`, `PUT /api/v1/workspaces/{id}/tasks/{id}/close\|reopen` |
 
 ---
 
@@ -53,6 +54,11 @@ Summarises who can do what across all implemented features.
 | List / get tasks              | ✓     | ✓     | ✓      |
 | Create / update / move / delete task | ✓ | ✓  | ✓      |
 | View / update own profile            | ✓ | ✓  | ✓      |
+| View archive                         | ✓ | ✓  | ✓      |
+| Close / reopen task                  | ✓ | ✓  | ✓      |
+| Hard-delete from archive             | ✓ | ✓  | ✓      |
+| Set Done column                      | ✓ | ✓  | ✗      |
+| Update archive auto-close days       | ✓ | ✓  | ✗      |
 
 ---
 

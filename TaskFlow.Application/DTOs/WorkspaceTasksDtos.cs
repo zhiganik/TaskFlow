@@ -23,7 +23,10 @@ public record WorkspaceTaskDto(
     string                  CreatedByName,
     DateTime                CreatedAt,
     DateTime                UpdatedAt,
-    IReadOnlyList<LabelDto> Labels
+    IReadOnlyList<LabelDto> Labels,
+    WorkspaceTaskStatus              Status,
+    DateTime?               CompletedAt,
+    DateTime?               ClosedAt
 );
 
 public record CreateTaskRequest(

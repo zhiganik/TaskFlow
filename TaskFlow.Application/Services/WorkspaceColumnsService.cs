@@ -62,17 +62,29 @@ public class WorkspaceColumnsService(
         return mapper.Map<WorkspaceColumnDto>(column);
     }
 
-    public async Task<WorkspaceColumnDto> RenameAsync(Guid workspaceId, Guid columnId, UpdateColumnRequest request, CancellationToken ct)
+    public Task<WorkspaceColumnDto> RenameAsync(Guid workspaceId, Guid columnId, UpdateColumnRequest request, CancellationToken ct)
+        => UpdateAsync(workspaceId, columnId, request, ct);
+
+    public async Task<WorkspaceColumnDto> UpdateAsync(Guid workspaceId, Guid columnId, UpdateColumnRequest request, CancellationToken ct)
     {
         var column = await GetOwnedColumnAsync(workspaceId, columnId, ct);
 
         column.Name = request.Name;
         if (request.Color is not null)
             column.Color = request.Color;
+
+        if (request.IsDoneColumn.HasValue)
+        {
+            if (request.IsDoneColumn.Value && !column.IsDoneColumn)
+                await repository.ClearDoneColumnAsync(workspaceId, columnId, ct);
+
+            column.IsDoneColumn = request.IsDoneColumn.Value;
+        }
+
         await repository.UpdateAsync(column, ct);
         await cache.InvalidateAsync(CacheKeys.WorkspaceColumns(workspaceId), ct);
 
-        logger.LogInformation("Column {ColumnId} renamed in workspace {WorkspaceId}", columnId, workspaceId);
+        logger.LogInformation("Column {ColumnId} updated in workspace {WorkspaceId}", columnId, workspaceId);
 
         return mapper.Map<WorkspaceColumnDto>(column);
     }

@@ -12,6 +12,7 @@ public class WorkspaceConfiguration : IEntityTypeConfiguration<Workspace>
 
         builder.Property(w => w.Name).IsRequired().HasMaxLength(100);
         builder.Property(w => w.OwnerId).IsRequired();
+        builder.Property(w => w.ArchiveAfterDays).IsRequired().HasDefaultValue(1);
 
         builder.HasIndex(w => w.OwnerId)
                .HasDatabaseName("IX_Workspaces_OwnerId");

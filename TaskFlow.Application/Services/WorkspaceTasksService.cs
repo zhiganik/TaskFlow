@@ -99,6 +99,9 @@ public class WorkspaceTasksService(
     {
         var task = await GetOwnedTaskAsync(workspaceId, taskId, ct);
 
+        if (task.Status is WorkspaceTaskStatus.Closed or WorkspaceTaskStatus.Deleted)
+            throw new BadRequestException("Cannot move an archived task. Reopen it first.");
+
         if (task.ColumnId == request.ColumnId)
             throw new BadRequestException("Task is already in the target column.");
 
@@ -109,12 +112,61 @@ public class WorkspaceTasksService(
         task.ColumnId  = request.ColumnId;
         task.UpdatedAt = DateTime.UtcNow;
 
+        if (targetColumn.IsDoneColumn && task.Status != WorkspaceTaskStatus.Done)
+        {
+            task.Status      = WorkspaceTaskStatus.Done;
+            task.CompletedAt = DateTime.UtcNow;
+        }
+        else if (!targetColumn.IsDoneColumn && task.Status == WorkspaceTaskStatus.Done)
+        {
+            task.Status      = WorkspaceTaskStatus.Active;
+            task.CompletedAt = null;
+        }
+
         await repository.UpdateAsync(task, ct);
 
         logger.LogInformation("Task {TaskId} moved to column {ColumnId}", taskId, request.ColumnId);
 
         var updated = await repository.GetByIdAsync(taskId, ct) ?? task;
         return mapper.Map<WorkspaceTaskDto>(updated);
+    }
+
+    public async Task<WorkspaceTaskDto> CloseAsync(Guid workspaceId, Guid taskId, CancellationToken ct)
+    {
+        var task = await GetOwnedTaskAsync(workspaceId, taskId, ct);
+
+        if (task.Status == WorkspaceTaskStatus.Closed || task.Status == WorkspaceTaskStatus.Deleted)
+            throw new BadRequestException("Task is already in the archive.");
+
+        task.Status    = WorkspaceTaskStatus.Closed;
+        task.ClosedAt  = DateTime.UtcNow;
+        task.UpdatedAt = DateTime.UtcNow;
+
+        await repository.UpdateAsync(task, ct);
+
+        logger.LogInformation("Task {TaskId} closed in workspace {WorkspaceId}", taskId, workspaceId);
+
+        return mapper.Map<WorkspaceTaskDto>(task);
+    }
+
+    public async Task<WorkspaceTaskDto> ReopenAsync(Guid workspaceId, Guid taskId, CancellationToken ct)
+    {
+        var task = await GetOwnedTaskAsync(workspaceId, taskId, ct);
+
+        if (task.Status is not WorkspaceTaskStatus.Closed and not WorkspaceTaskStatus.Deleted)
+            throw new BadRequestException("Only closed or deleted tasks can be reopened.");
+
+        var column = await columnsRepository.GetByIdAsync(task.ColumnId, ct);
+        task.Status      = column?.IsDoneColumn == true ? WorkspaceTaskStatus.Done : WorkspaceTaskStatus.Active;
+        task.CompletedAt = column?.IsDoneColumn == true ? task.CompletedAt : null;
+        task.ClosedAt    = null;
+        task.UpdatedAt   = DateTime.UtcNow;
+
+        await repository.UpdateAsync(task, ct);
+
+        logger.LogInformation("Task {TaskId} reopened in workspace {WorkspaceId}", taskId, workspaceId);
+
+        return mapper.Map<WorkspaceTaskDto>(task);
     }
 
     public async Task<WorkspaceTaskDto> SetLabelsAsync(Guid workspaceId, Guid taskId, SetTaskLabelsRequest request, CancellationToken ct)
@@ -132,11 +184,22 @@ public class WorkspaceTasksService(
 
     public async Task DeleteAsync(Guid workspaceId, Guid taskId, CancellationToken ct)
     {
-        await GetOwnedTaskAsync(workspaceId, taskId, ct);
+        var task = await GetOwnedTaskAsync(workspaceId, taskId, ct);
 
-        await repository.DeleteAsync(taskId, ct);
+        if (task.Status == WorkspaceTaskStatus.Closed || task.Status == WorkspaceTaskStatus.Deleted)
+        {
+            await repository.DeleteAsync(taskId, ct);
+            logger.LogInformation("Task {TaskId} hard-deleted from workspace {WorkspaceId}", taskId, workspaceId);
+            return;
+        }
 
-        logger.LogInformation("Task {TaskId} deleted from workspace {WorkspaceId}", taskId, workspaceId);
+        task.Status    = WorkspaceTaskStatus.Deleted;
+        task.ClosedAt  = DateTime.UtcNow;
+        task.UpdatedAt = DateTime.UtcNow;
+
+        await repository.UpdateAsync(task, ct);
+
+        logger.LogInformation("Task {TaskId} soft-deleted in workspace {WorkspaceId}", taskId, workspaceId);
     }
 
     private async Task ValidateLabelIds(Guid workspaceId, IReadOnlyList<Guid> labelIds, CancellationToken ct)

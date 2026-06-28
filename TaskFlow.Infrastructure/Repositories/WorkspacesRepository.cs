@@ -34,4 +34,7 @@ public class WorkspacesRepository(AppDbContext db) : IWorkspacesRepository
         await db.SaveChangesAsync(ct);
         return true;
     }
+
+    public async Task<IReadOnlyList<Workspace>> GetAllAsync(CancellationToken ct = default) =>
+        await db.Workspaces.AsNoTracking().ToListAsync(ct);
 }

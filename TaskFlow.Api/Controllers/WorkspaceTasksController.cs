@@ -114,6 +114,34 @@ public class WorkspaceTasksController(IWorkspaceTasksService tasksService) : Con
         return Ok(result);
     }
 
+    /// <summary>Close a task (immediately moves it to the archive).</summary>
+    [HttpPut("{taskId:guid}/close")]
+    [Authorize(Policy = WorkspacePolicies.Member)]
+    [ProducesResponseType(typeof(WorkspaceTaskDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Close(Guid workspaceId, Guid taskId, CancellationToken ct)
+    {
+        var result = await tasksService.CloseAsync(workspaceId, taskId, ct);
+        return Ok(result);
+    }
+
+    /// <summary>Reopen a closed or deleted task, returning it to its column.</summary>
+    [HttpPut("{taskId:guid}/reopen")]
+    [Authorize(Policy = WorkspacePolicies.Member)]
+    [ProducesResponseType(typeof(WorkspaceTaskDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Reopen(Guid workspaceId, Guid taskId, CancellationToken ct)
+    {
+        var result = await tasksService.ReopenAsync(workspaceId, taskId, ct);
+        return Ok(result);
+    }
+
     /// <summary>Delete a task.</summary>
     [HttpDelete("{taskId:guid}")]
     [Authorize(Policy = WorkspacePolicies.Member)]

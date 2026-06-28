@@ -10,5 +10,6 @@ public interface IWorkspaceColumnsRepository
     Task<WorkspaceColumn>                AddAsync(WorkspaceColumn column, CancellationToken ct = default);
     Task                                 UpdateAsync(WorkspaceColumn column, CancellationToken ct = default);
     Task                                 UpdateRangeAsync(IEnumerable<WorkspaceColumn> columns, CancellationToken ct = default);
+    Task                                 ClearDoneColumnAsync(Guid workspaceId, Guid exceptColumnId, CancellationToken ct = default);
     Task<bool>                           DeleteAsync(Guid id, CancellationToken ct = default);
 }

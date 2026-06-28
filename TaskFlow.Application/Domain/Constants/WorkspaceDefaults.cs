@@ -9,7 +9,7 @@ public static class WorkspaceDefaults
     [
         new() { Name = "Todo",        Color = "#6366F1", Order = 0 },
         new() { Name = "In Progress", Color = "#F59E0B", Order = 1 },
-        new() { Name = "Done",        Color = "#10B981", Order = 2 },
+        new() { Name = "Done",        Color = "#10B981", Order = 2, IsDoneColumn = true },
     ];
 
     public static IReadOnlyList<WorkspacePriorityConfig> PriorityConfigs =>

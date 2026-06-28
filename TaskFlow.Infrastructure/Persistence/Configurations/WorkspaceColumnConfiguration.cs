@@ -21,6 +21,10 @@ public class WorkspaceColumnConfiguration : IEntityTypeConfiguration<WorkspaceCo
         builder.Property(c => c.WorkspaceId)
             .IsRequired();
 
+        builder.Property(c => c.IsDoneColumn)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         builder.HasIndex(c => c.WorkspaceId)
             .HasDatabaseName("IX_WorkspaceColumns_WorkspaceId");
 

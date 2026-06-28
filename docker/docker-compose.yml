@@ -117,6 +117,29 @@ services:
     networks:
       - taskflow_net
 
+  archive-worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.archive-worker
+    container_name: taskflow_archive_worker
+    env_file:
+      - ../.env
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      DOTNET_ENVIRONMENT: Production
+      POSTGRES_CONNECTION: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-s", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - taskflow_net
+
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: taskflow_rabbitmq

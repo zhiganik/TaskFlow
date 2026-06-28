@@ -15,6 +15,9 @@ public class WorkspaceTask
     public string?      AssigneeId  { get; set; }
     public DateTime?    DueDate     { get; set; }
     public string       CreatedById { get; set; } = string.Empty;
+    public WorkspaceTaskStatus   Status      { get; set; } = WorkspaceTaskStatus.Active;
+    public DateTime?    CompletedAt { get; set; }
+    public DateTime?    ClosedAt    { get; set; }
     public DateTime     CreatedAt   { get; set; } = DateTime.UtcNow;
     public DateTime     UpdatedAt   { get; set; } = DateTime.UtcNow;
 

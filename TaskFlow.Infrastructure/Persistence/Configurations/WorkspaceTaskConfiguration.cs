@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TaskFlow.Application.Domain.Entities;
+using TaskFlow.Application.Domain.Enums;
 
 namespace TaskFlow.Infrastructure.Persistence.Configurations;
 
@@ -26,6 +27,20 @@ public class WorkspaceTaskConfiguration : IEntityTypeConfiguration<WorkspaceTask
 
         builder.Property(t => t.Priority)
             .HasConversion<string>();
+
+        builder.Property(t => t.Status)
+            .HasConversion<string>()
+            .IsRequired()
+            .HasDefaultValue(WorkspaceTaskStatus.Active);
+
+        builder.HasIndex(t => new { t.WorkspaceId, t.Status })
+            .HasDatabaseName("IX_WorkspaceTasks_WorkspaceId_Status");
+
+        builder.HasIndex(t => new { t.Status, t.CompletedAt })
+            .HasDatabaseName("IX_WorkspaceTasks_Status_CompletedAt");
+
+        builder.HasIndex(t => new { t.WorkspaceId, t.ClosedAt })
+            .HasDatabaseName("IX_WorkspaceTasks_WorkspaceId_ClosedAt");
 
         builder.Property(t => t.WorkspaceId).IsRequired();
         builder.Property(t => t.ColumnId).IsRequired();

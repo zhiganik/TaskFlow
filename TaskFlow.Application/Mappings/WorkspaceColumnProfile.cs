@@ -10,6 +10,6 @@ public class WorkspaceColumnProfile : Profile
     {
         CreateMap<WorkspaceColumn, WorkspaceColumnDto>()
             .ConstructUsing((src, ctx) => new WorkspaceColumnDto(
-                src.Id, src.WorkspaceId, src.Name, src.Color, src.Order, src.CreatedAt));
+                src.Id, src.WorkspaceId, src.Name, src.Color, src.Order, src.IsDoneColumn, src.CreatedAt));
     }
 }

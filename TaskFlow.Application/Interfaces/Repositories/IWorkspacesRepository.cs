@@ -7,5 +7,6 @@ public interface IWorkspacesRepository
     Task<Workspace?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<Workspace>  AddAsync(Workspace workspace, CancellationToken ct = default);
     Task             UpdateAsync(Workspace workspace, CancellationToken ct = default);
-    Task<bool>       DeleteAsync(Guid id, CancellationToken ct = default);
+    Task<bool>                  DeleteAsync(Guid id, CancellationToken ct = default);
+    Task<IReadOnlyList<Workspace>> GetAllAsync(CancellationToken ct = default);
 }

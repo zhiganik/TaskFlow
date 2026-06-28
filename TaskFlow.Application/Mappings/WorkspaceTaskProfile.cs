@@ -30,6 +30,9 @@ public class WorkspaceTaskProfile : Profile
                 src.CreatedBy?.DisplayName ?? src.CreatedById,
                 src.CreatedAt,
                 src.UpdatedAt,
-                src.Labels.Select(l => new LabelDto(l.Id, l.Name, l.Color)).ToList().AsReadOnly()));
+                src.Labels.Select(l => new LabelDto(l.Id, l.Name, l.Color)).ToList().AsReadOnly(),
+                src.Status,
+                src.CompletedAt,
+                src.ClosedAt));
     }
 }

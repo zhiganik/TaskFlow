@@ -12,4 +12,6 @@ public interface IWorkspaceTasksService
     Task<WorkspaceTaskDto>                MoveAsync(Guid workspaceId, Guid taskId, MoveTaskRequest request, CancellationToken ct);
     Task<WorkspaceTaskDto>                SetLabelsAsync(Guid workspaceId, Guid taskId, SetTaskLabelsRequest request, CancellationToken ct);
     Task                                  DeleteAsync(Guid workspaceId, Guid taskId, CancellationToken ct);
+    Task<WorkspaceTaskDto>                CloseAsync(Guid workspaceId, Guid taskId, CancellationToken ct);
+    Task<WorkspaceTaskDto>                ReopenAsync(Guid workspaceId, Guid taskId, CancellationToken ct);
 }

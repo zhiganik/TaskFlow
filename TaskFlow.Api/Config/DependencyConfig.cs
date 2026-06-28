@@ -168,6 +168,7 @@ public static class DependencyConfig
         services.AddScoped<IWorkspaceLabelsRepository, WorkspaceLabelsRepository>();
         services.AddScoped<IWorkspacePriorityConfigRepository, WorkspacePriorityConfigRepository>();
         services.AddScoped<ITaskAttachmentRepository, TaskAttachmentRepository>();
+        services.AddScoped<IArchiveRepository, ArchiveRepository>();
         return services;
     }
 
@@ -184,6 +185,7 @@ public static class DependencyConfig
         services.AddScoped<IWorkspaceLabelsService, WorkspaceLabelsService>();
         services.AddScoped<IWorkspacePriorityConfigService, WorkspacePriorityConfigService>();
         services.AddScoped<ITaskAttachmentService, TaskAttachmentService>();
+        services.AddScoped<IArchiveService, ArchiveService>();
         return services;
     }
 

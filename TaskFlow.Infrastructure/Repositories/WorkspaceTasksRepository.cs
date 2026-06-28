@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using TaskFlow.Application.Domain.Entities;
+using TaskFlow.Application.Domain.Enums;
 using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Interfaces.Repositories;
 using TaskFlow.Infrastructure.Persistence;
@@ -16,47 +17,28 @@ public class WorkspaceTasksRepository(AppDbContext db) : IWorkspaceTasksReposito
             .Include(t => t.Assignee)
             .Include(t => t.CreatedBy)
             .Include(t => t.Labels)
-            .Where(t => t.WorkspaceId == workspaceId)
+            .Where(t => t.WorkspaceId == workspaceId
+                     && t.Status != WorkspaceTaskStatus.Closed
+                     && t.Status != WorkspaceTaskStatus.Deleted)
             .OrderBy(t => t.ColumnId)
             .ThenBy(t => t.Number)
             .ToListAsync(ct);
 
     public async Task<IReadOnlyList<WorkspaceTask>> GetByWorkspaceIdAsync(
-        Guid workspaceId, TaskFilterQuery filter, CancellationToken ct = default)
-    {
-        var q = db.WorkspaceTasks
+        Guid workspaceId, TaskFilterQuery filter, CancellationToken ct = default) =>
+        await db.WorkspaceTasks
             .AsNoTracking()
             .Include(t => t.Column)
             .Include(t => t.Assignee)
             .Include(t => t.CreatedBy)
             .Include(t => t.Labels)
-            .Where(t => t.WorkspaceId == workspaceId);
-
-        if (!string.IsNullOrWhiteSpace(filter.Search))
-        {
-            var s = filter.Search.Trim();
-            if (int.TryParse(s, out var num))
-                q = q.Where(t => t.Number == num || t.Title.ToLower().Contains(s.ToLower()));
-            else
-                q = q.Where(t => t.Title.ToLower().Contains(s.ToLower()));
-        }
-
-        ApplyAssigneeFilter(ref q, filter);
-
-        if (filter.Priorities is { Count: > 0 })
-            q = q.Where(t => filter.Priorities.Contains(t.Priority));
-
-        if (filter.LabelIds is { Count: > 0 })
-        {
-            var labelIds = filter.LabelIds.ToList();
-            q = q.Where(t => t.Labels.Any(l => labelIds.Contains(l.Id)));
-        }
-
-        return await q
+            .Where(t => t.WorkspaceId == workspaceId
+                     && t.Status != WorkspaceTaskStatus.Closed
+                     && t.Status != WorkspaceTaskStatus.Deleted)
+            .ApplyFilters(filter)
             .OrderBy(t => t.ColumnId)
             .ThenBy(t => t.Number)
             .ToListAsync(ct);
-    }
 
     public async Task<IReadOnlyList<WorkspaceTask>> GetByColumnIdAsync(Guid columnId, CancellationToken ct = default) =>
         await db.WorkspaceTasks
@@ -128,27 +110,11 @@ public class WorkspaceTasksRepository(AppDbContext db) : IWorkspaceTasksReposito
             .Include(t => t.Assignee)
             .Include(t => t.CreatedBy)
             .Include(t => t.Labels)
-            .Where(t => t.WorkspaceId == workspaceId && t.ColumnId == columnId);
-
-        if (!string.IsNullOrWhiteSpace(filter.Search))
-        {
-            var s = filter.Search.Trim();
-            if (int.TryParse(s, out var num))
-                q = q.Where(t => t.Number == num || t.Title.ToLower().Contains(s.ToLower()));
-            else
-                q = q.Where(t => t.Title.ToLower().Contains(s.ToLower()));
-        }
-
-        ApplyAssigneeFilter(ref q, filter);
-
-        if (filter.Priorities is { Count: > 0 })
-            q = q.Where(t => filter.Priorities.Contains(t.Priority));
-
-        if (filter.LabelIds is { Count: > 0 })
-        {
-            var labelIds = filter.LabelIds.ToList();
-            q = q.Where(t => t.Labels.Any(l => labelIds.Contains(l.Id)));
-        }
+            .Where(t => t.WorkspaceId == workspaceId
+                     && t.ColumnId == columnId
+                     && t.Status != WorkspaceTaskStatus.Closed
+                     && t.Status != WorkspaceTaskStatus.Deleted)
+            .ApplyFilters(filter);
 
         if (cursor is not null)
         {
@@ -177,22 +143,6 @@ public class WorkspaceTasksRepository(AppDbContext db) : IWorkspaceTasksReposito
         db.WorkspaceTasks.Remove(task);
         await db.SaveChangesAsync(ct);
         return true;
-    }
-
-    private static void ApplyAssigneeFilter(
-        ref IQueryable<WorkspaceTask> q, TaskFilterQuery filter)
-    {
-        if (filter.AssigneeIds is not { Count: > 0 }) return;
-
-        var includeUnassigned = filter.AssigneeIds.Contains("unassigned");
-        var userIds = filter.AssigneeIds.Where(id => id != "unassigned").ToList();
-
-        if (includeUnassigned && userIds.Count > 0)
-            q = q.Where(t => t.AssigneeId == null || (t.AssigneeId != null && userIds.Contains(t.AssigneeId)));
-        else if (includeUnassigned)
-            q = q.Where(t => t.AssigneeId == null);
-        else
-            q = q.Where(t => t.AssigneeId != null && userIds.Contains(t.AssigneeId));
     }
 
     private static string EncodeCursor(int order, Guid id) =>

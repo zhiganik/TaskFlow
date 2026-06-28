@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using TaskFlow.Api.Authorization;
 using TaskFlow.Api.Extensions;
 using TaskFlow.Application.Domain.Constants;
+using TaskFlow.Application.Domain.Enums;
 using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Interfaces.Services;
 
@@ -11,7 +12,9 @@ namespace TaskFlow.Api.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/v1/workspaces")]
-public class WorkspacesController(IWorkspacesService workspacesService) : ControllerBase
+public class WorkspacesController(
+    IWorkspacesService workspacesService,
+    IArchiveService archiveService) : ControllerBase
 {
     /// <summary>Create a new workspace.</summary>
     [HttpPost]
@@ -58,6 +61,39 @@ public class WorkspacesController(IWorkspacesService workspacesService) : Contro
     public async Task<IActionResult> Update(Guid workspaceId, UpdateWorkspaceRequest request, CancellationToken ct)
     {
         var result = await workspacesService.UpdateAsync(workspaceId, request, ct);
+        return Ok(result);
+    }
+
+    /// <summary>Update the workspace archive settings (auto-archive delay).</summary>
+    [HttpPut("{workspaceId:guid}/archive-settings")]
+    [Authorize(Policy = WorkspacePolicies.Admin)]
+    [ProducesResponseType(typeof(WorkspaceDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateArchiveSettings(Guid workspaceId, UpdateArchiveSettingsRequest request, CancellationToken ct)
+    {
+        var result = await workspacesService.UpdateArchiveSettingsAsync(workspaceId, User.GetUserId(), request, ct);
+        return Ok(result);
+    }
+
+    /// <summary>List closed and deleted tasks in the workspace archive.</summary>
+    [HttpGet("{workspaceId:guid}/archive")]
+    [Authorize(Policy = WorkspacePolicies.Member)]
+    [ProducesResponseType(typeof(IReadOnlyList<WorkspaceTaskDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetArchive(
+        Guid workspaceId,
+        [FromQuery] string?         search      = null,
+        [FromQuery] string[]?       assigneeIds = null,
+        [FromQuery] TaskPriority[]? priorities  = null,
+        [FromQuery] Guid[]?         labelIds    = null,
+        CancellationToken ct = default)
+    {
+        var filter = new TaskFilterQuery(search, assigneeIds, priorities, labelIds);
+        var result = await archiveService.GetAsync(workspaceId, filter, ct);
         return Ok(result);
     }
 

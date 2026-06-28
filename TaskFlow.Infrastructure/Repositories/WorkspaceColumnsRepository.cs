@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TaskFlow.Application.Domain.Entities;
 using TaskFlow.Application.Interfaces.Repositories;
 using TaskFlow.Infrastructure.Persistence;
+using TaskFlow.Application.Domain.Enums;
 
 namespace TaskFlow.Infrastructure.Repositories;
 
@@ -41,6 +42,11 @@ public class WorkspaceColumnsRepository(AppDbContext db) : IWorkspaceColumnsRepo
         db.WorkspaceColumns.UpdateRange(columns);
         await db.SaveChangesAsync(ct);
     }
+
+    public async Task ClearDoneColumnAsync(Guid workspaceId, Guid exceptColumnId, CancellationToken ct = default) =>
+        await db.WorkspaceColumns
+            .Where(c => c.WorkspaceId == workspaceId && c.Id != exceptColumnId && c.IsDoneColumn)
+            .ExecuteUpdateAsync(s => s.SetProperty(c => c.IsDoneColumn, false), ct);
 
     public async Task<bool> DeleteAsync(Guid id, CancellationToken ct = default)
     {
