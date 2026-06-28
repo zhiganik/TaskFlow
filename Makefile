@@ -1,6 +1,6 @@
 COMPOSE = docker compose --env-file .env -f docker/docker-compose.yml -f docker/docker-compose.override.yml
 
-.PHONY: up down reset build logs api-logs web-logs file-worker-logs migrate shell db-shell redis-cli rabbitmq-cli test web-install
+.PHONY: up down reset build logs api-logs web-logs file-worker-logs migrate shell db-shell redis-cli rabbitmq-cli test web-install fix-uploads
 
 up:
 	$(COMPOSE) up --build -d --remove-orphans
@@ -49,3 +49,6 @@ test:
 
 web-install:
 	cd taskflow-web && npm install
+
+fix-uploads:
+	docker run --rm -v taskflow_uploads_data:/mnt alpine sh -c "mkdir -p /mnt/processed && chmod -R 777 /mnt"
