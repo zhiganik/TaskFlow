@@ -12,7 +12,7 @@ services:
       - "3000:80"
     depends_on:
       api:
-        condition: service_started
+        condition: service_healthy
     networks:
       - taskflow_net
 
@@ -34,6 +34,12 @@ services:
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
     volumes:
       - uploads_data:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-s", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     depends_on:
       postgres:
         condition: service_healthy
@@ -52,6 +58,7 @@ services:
     env_file:
       - ../.env
     environment:
+      ASPNETCORE_URLS: http://+:8080
       DOTNET_ENVIRONMENT: Production
       POSTGRES_CONNECTION: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
       REDIS_CONNECTION: redis:6379,password=${REDIS_PASSWORD}
@@ -60,6 +67,12 @@ services:
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
     volumes:
       - uploads_data:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-s", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     depends_on:
       postgres:
         condition: service_healthy
@@ -78,6 +91,7 @@ services:
     env_file:
       - ../.env
     environment:
+      ASPNETCORE_URLS: http://+:8080
       DOTNET_ENVIRONMENT: Production
       POSTGRES_CONNECTION: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
       REDIS_CONNECTION: redis:6379,password=${REDIS_PASSWORD}
@@ -86,6 +100,12 @@ services:
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
     volumes:
       - uploads_data:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-s", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     depends_on:
       postgres:
         condition: service_healthy

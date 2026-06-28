@@ -26,6 +26,8 @@ public static class ApplicationConfig
         app.UseAuthorization();
 
         app.MapControllers();
+        app.MapHealthChecks("/health");
+
         return app;
     }
 }

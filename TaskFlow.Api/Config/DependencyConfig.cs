@@ -24,6 +24,7 @@ using TaskFlow.Application.Interfaces.Services;
 using TaskFlow.Application.Options;
 using TaskFlow.Application.Services;
 using TaskFlow.Application.Validators;
+using TaskFlow.Infrastructure.HealthChecks;
 using TaskFlow.Infrastructure.Caching;
 using TaskFlow.Infrastructure.Persistence;
 using TaskFlow.Infrastructure.Repositories;
@@ -46,7 +47,8 @@ public static class DependencyConfig
             .AddMappings()
             .AddFluentValidationServices()
             .AddSwaggerDocumentation()
-            .AddMessageBus();
+            .AddMessageBus()
+            .AddInfrastructureHealthChecks();
 
         services.AddControllers()
             .AddJsonOptions(opts => opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
@@ -171,7 +173,6 @@ public static class DependencyConfig
 
     private static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        services.AddScoped<IHealthService, HealthService>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IWorkspacesService, WorkspacesService>();
@@ -225,6 +226,12 @@ public static class DependencyConfig
             });
         });
 
+        return services;
+    }
+
+    private static IServiceCollection AddInfrastructureHealthChecks(this IServiceCollection services)
+    {
+        services.AddHealthChecks().AddInfrastructureChecks();
         return services;
     }
 

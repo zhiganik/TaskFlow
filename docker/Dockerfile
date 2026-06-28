@@ -21,7 +21,8 @@ RUN dotnet publish TaskFlow.Api/TaskFlow.Api.csproj -c Release -o /app/publish -
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
 WORKDIR /app
 
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN apk add --no-cache curl \
+ && addgroup -S appgroup && adduser -S appuser -G appgroup
 COPY --from=build /app/publish .
 RUN mkdir -p /app/uploads/processed /app/uploads/avatars \
  && chown -R appuser:appgroup /app
