@@ -72,6 +72,10 @@ apiClient.interceptors.response.use(
       }
     }
 
+    if (error.response?.status === 413) {
+      return Promise.reject({ status: 413, title: 'File too large', detail: 'The file exceeds the maximum upload size allowed by the server.' })
+    }
+
     return Promise.reject(error.response?.data ?? error)
   },
 )

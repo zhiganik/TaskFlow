@@ -9,6 +9,7 @@ import { Alert } from '../ui/Alert'
 import { Button } from '../ui/Button'
 import { CalendarIcon, PencilIcon, UserIcon, XIcon } from '../ui/Icons'
 import { Spinner } from '../ui/Spinner'
+import { AttachmentSection } from './attachments/AttachmentSection'
 import { CommentsList } from './comments/CommentsList'
 import { LabelPicker } from './LabelPicker'
 
@@ -363,7 +364,7 @@ export function TaskDetailPanel({ task, columns, workspaceId, width, onResizeSta
                 onChange={(e) => setDescDraft(e.target.value)}
                 className="block w-full resize-none rounded-md border border-brand-400 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
               />
-              <div className="flex gap-1.5">
+              <div className="flex items-center gap-1.5">
                 <button
                   type="button"
                   onClick={saveDesc}
@@ -391,6 +392,15 @@ export function TaskDetailPanel({ task, columns, workspaceId, width, onResizeSta
               <PencilIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gray-300 opacity-0 group-hover:opacity-100" />
             </div>
           )}
+        </Section>
+
+        {/* attachments */}
+        <Section label="Attachments">
+          <AttachmentSection
+            workspaceId={workspaceId}
+            taskId={task.id}
+            canDelete={true}
+          />
         </Section>
 
         {/* comments */}

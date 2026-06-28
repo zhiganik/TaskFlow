@@ -126,7 +126,7 @@ export function DashboardPage() {
   const [colReorderError, setColReorderError] = useState<string | null>(null)
 
   // detail panel resize
-  const [panelWidth, setPanelWidth] = useState(320)
+  const [panelWidth, setPanelWidth] = useState(480)
   const startPanelResize = (e: React.MouseEvent) => {
     e.preventDefault()
     const startX = e.clientX
@@ -134,7 +134,7 @@ export function DashboardPage() {
     document.body.style.cursor = 'col-resize'
     document.body.style.userSelect = 'none'
     const onMouseMove = (ev: MouseEvent) => {
-      setPanelWidth(Math.min(600, Math.max(240, startWidth + (startX - ev.clientX))))
+      setPanelWidth(Math.min(800, Math.max(320, startWidth + (startX - ev.clientX))))
     }
     const onMouseUp = () => {
       document.body.style.cursor = ''

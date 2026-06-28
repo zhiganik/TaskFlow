@@ -218,6 +218,25 @@ export interface TaskCommentDto {
   updatedAt: string
   isEdited: boolean
   mentionedUserIds: string[]
+  attachments: AttachmentDto[]
+}
+
+export type AttachmentStatus = 'Pending' | 'Processing' | 'Ready' | 'Failed'
+
+export interface AttachmentDto {
+  id: string
+  taskId: string
+  commentId: string | null
+  originalFileName: string
+  contentType: string
+  fileSizeBytes: number
+  status: AttachmentStatus
+  processingError: string | null
+  uploadedById: string
+  uploadedByName: string
+  uploadedByAvatarColor: string
+  uploadedAt: string
+  processedAt: string | null
 }
 
 export interface CreateCommentRequest {

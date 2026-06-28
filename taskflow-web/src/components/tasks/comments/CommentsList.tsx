@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useUploadAttachment } from '../../../hooks/useAttachments'
 import { useComments, useCreateComment, useDeleteComment, useUpdateComment } from '../../../hooks/useComments'
 import { useMembers } from '../../../hooks/useMembers'
 import { useAuthStore } from '../../../store/authStore'
@@ -23,6 +24,7 @@ export function CommentsList({ workspaceId, taskId }: Props) {
   const createMutation = useCreateComment(workspaceId, taskId)
   const updateMutation = useUpdateComment(workspaceId, taskId)
   const deleteMutation = useDeleteComment(workspaceId, taskId)
+  const uploadMutation = useUploadAttachment(workspaceId, taskId)
 
   const sentinelRef = useRef<HTMLDivElement>(null)
 
@@ -45,12 +47,18 @@ export function CommentsList({ workspaceId, taskId }: Props) {
 
   const comments = data?.pages.flatMap((p) => p.items) ?? []
 
-  const handleCreate = async (content: string) => {
-    await createMutation.mutateAsync({ content })
+  const handleCreate = async (content: string, stagedFiles: File[]) => {
+    const newComment = await createMutation.mutateAsync({ content })
+    for (const file of stagedFiles) {
+      uploadMutation.mutate({ file, commentId: newComment.id })
+    }
   }
 
-  const handleUpdate = async (commentId: string, content: string) => {
+  const handleUpdate = async (commentId: string, content: string, stagedFiles: File[]) => {
     await updateMutation.mutateAsync({ commentId, data: { content } })
+    for (const file of stagedFiles) {
+      uploadMutation.mutate({ file, commentId })
+    }
   }
 
   const handleDelete = async (commentId: string) => {
@@ -59,6 +67,14 @@ export function CommentsList({ workspaceId, taskId }: Props) {
 
   return (
     <div>
+      <div className="pb-4">
+        <CommentInput
+          members={members}
+          isSubmitting={createMutation.isPending}
+          onSubmit={handleCreate}
+        />
+      </div>
+
       {isLoading ? (
         <div className="flex justify-center py-4">
           <Spinner className="h-4 w-4 border-gray-200 border-t-gray-500" />
@@ -69,6 +85,8 @@ export function CommentsList({ workspaceId, taskId }: Props) {
             <CommentItem
               key={comment.id}
               comment={comment}
+              workspaceId={workspaceId}
+              taskId={taskId}
               currentUserId={currentUserId}
               members={members}
               onUpdate={handleUpdate}
@@ -85,14 +103,6 @@ export function CommentsList({ workspaceId, taskId }: Props) {
       )}
 
       <div ref={sentinelRef} className="h-px" />
-
-      <div className="pt-3">
-        <CommentInput
-          members={members}
-          isSubmitting={createMutation.isPending}
-          onSubmit={handleCreate}
-        />
-      </div>
     </div>
   )
 }

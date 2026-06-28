@@ -13,7 +13,7 @@ export function isValidationProblemDetails(error: unknown): error is ValidationP
 
 // Top-level message for a banner/alert — covers 401/403/404/409/500 ProblemDetails and network errors.
 export function getErrorMessage(error: unknown): string {
-  if (isProblemDetails(error) && error.title) return error.title
+  if (isProblemDetails(error)) return (error as { detail?: string }).detail ?? error.title ?? FALLBACK_MESSAGE
   if (error instanceof Error) return NETWORK_MESSAGE
   return FALLBACK_MESSAGE
 }
