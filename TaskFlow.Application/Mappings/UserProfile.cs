@@ -13,6 +13,8 @@ public class UserProfile : Profile
                 src.Id,
                 src.Email ?? throw new InvalidOperationException("User has no email."),
                 src.DisplayName,
-                src.AvatarColor));
+                src.AvatarColor,
+                src.AvatarPath,
+                src.AvatarStatus.ToString()));
     }
 }

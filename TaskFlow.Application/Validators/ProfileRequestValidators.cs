@@ -16,9 +16,6 @@ public class UpdateProfileRequestValidator : AbstractValidator<UpdateProfileRequ
             .EmailAddress().WithMessage("Email must be a valid email address.")
             .MaximumLength(200);
 
-        RuleFor(x => x.AvatarColor)
-            .NotEmpty().WithMessage("Avatar color is required.")
-            .Matches(@"^#[0-9a-fA-F]{6}$").WithMessage("Avatar color must be a valid hex color (e.g. #818cf8).");
     }
 }
 

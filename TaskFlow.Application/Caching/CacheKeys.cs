@@ -6,6 +6,7 @@ public static class CacheKeys
     public static string WorkspaceMembers(Guid workspaceId)  => $"workspace:{workspaceId}:members";
     public static string WorkspaceColumns(Guid workspaceId)  => $"workspace:{workspaceId}:columns";
     public static string TempFile(Guid attachmentId)         => $"file:temp:{attachmentId}";
+    public static string TempAvatar(string userId)           => $"avatar:temp:{userId}";
 
     public static string HitCounter(string category)  => $"stats:cache:hits:{category}";
     public static string MissCounter(string category) => $"stats:cache:misses:{category}";
@@ -23,5 +24,6 @@ public static class CacheKeys
         public static readonly TimeSpan Members        = TimeSpan.FromMinutes(10);
         public static readonly TimeSpan Columns        = TimeSpan.FromMinutes(10);
         public static readonly TimeSpan TempFile       = TimeSpan.FromMinutes(30);
+        public static readonly TimeSpan TempAvatar     = TimeSpan.FromMinutes(30);
     }
 }

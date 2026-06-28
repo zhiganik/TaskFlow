@@ -3,11 +3,15 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 using TaskFlow.Application.Domain.Entities;
 using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Exceptions;
+using TaskFlow.Application.Interfaces.Repositories;
+using TaskFlow.Application.Interfaces.Services;
 using TaskFlow.Application.Mappings;
+using TaskFlow.Application.Options;
 using TaskFlow.Application.Services;
 
 namespace TaskFlow.Tests.Services;
@@ -16,6 +20,8 @@ namespace TaskFlow.Tests.Services;
 public class ProfileServiceTests
 {
     private Mock<UserManager<AppUser>> _userManagerMock = null!;
+    private Mock<IWorkspaceMembersRepository> _membersRepoMock = null!;
+    private Mock<ICacheService> _cacheMock = null!;
     private Mock<ILogger<ProfileService>> _loggerMock = null!;
     private IMapper _mapper = null!;
     private ProfileService _sut = null!;
@@ -34,6 +40,16 @@ public class ProfileServiceTests
             .Setup(m => m.NormalizeName(It.IsAny<string>()))
             .Returns<string>(n => n.ToUpperInvariant());
 
+        _membersRepoMock = new Mock<IWorkspaceMembersRepository>();
+        _membersRepoMock
+            .Setup(r => r.GetMembershipsForUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        _cacheMock = new Mock<ICacheService>();
+        _cacheMock
+            .Setup(c => c.InvalidateManyAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
         _loggerMock = new Mock<ILogger<ProfileService>>();
 
         _mapper = new ServiceCollection()
@@ -42,7 +58,18 @@ public class ProfileServiceTests
             .BuildServiceProvider()
             .GetRequiredService<IMapper>();
 
-        _sut = new ProfileService(_userManagerMock.Object, _mapper, _loggerMock.Object);
+        var storageOpts = Options.Create(new StorageOptions { BasePath = "/app/uploads" });
+
+        _sut = new ProfileService(
+            _userManagerMock.Object,
+            new Mock<IBlobService>().Object,
+            new Mock<ITemporaryFileStore>().Object,
+            new Mock<IMessagePublisher>().Object,
+            _membersRepoMock.Object,
+            _cacheMock.Object,
+            storageOpts,
+            _mapper,
+            _loggerMock.Object);
     }
 
     private static AppUser CreateUser() => new()
@@ -86,7 +113,7 @@ public class ProfileServiceTests
     public async Task UpdateAsync_AllFieldsChanged_UpdatesAndReturnsDto()
     {
         var user = CreateUser();
-        var request = new UpdateProfileRequest("New Name", "new@example.com", "#60a5fa");
+        var request = new UpdateProfileRequest("New Name", "new@example.com");
 
         _userManagerMock.Setup(m => m.FindByIdAsync(user.Id)).ReturnsAsync(user);
         _userManagerMock.Setup(m => m.FindByEmailAsync(request.Email)).ReturnsAsync((AppUser?)null);
@@ -96,7 +123,6 @@ public class ProfileServiceTests
 
         result.DisplayName.Should().Be("New Name");
         result.Email.Should().Be("new@example.com");
-        result.AvatarColor.Should().Be("#60a5fa");
 
         _userManagerMock.Verify(m => m.UpdateAsync(user), Times.Once);
     }
@@ -105,7 +131,7 @@ public class ProfileServiceTests
     public async Task UpdateAsync_EmailUnchanged_SkipsEmailUniquenessCheck()
     {
         var user = CreateUser();
-        var request = new UpdateProfileRequest("Jane Doe", user.Email!, "#34d399");
+        var request = new UpdateProfileRequest("Jane Doe", user.Email!);
 
         _userManagerMock.Setup(m => m.FindByIdAsync(user.Id)).ReturnsAsync(user);
         _userManagerMock.Setup(m => m.UpdateAsync(user)).ReturnsAsync(IdentityResult.Success);
@@ -120,7 +146,7 @@ public class ProfileServiceTests
     {
         var user = CreateUser();
         var other = new AppUser { Id = "user-2", Email = "taken@example.com" };
-        var request = new UpdateProfileRequest("Jane Doe", "taken@example.com", "#818cf8");
+        var request = new UpdateProfileRequest("Jane Doe", "taken@example.com");
 
         _userManagerMock.Setup(m => m.FindByIdAsync(user.Id)).ReturnsAsync(user);
         _userManagerMock.Setup(m => m.FindByEmailAsync("taken@example.com")).ReturnsAsync(other);
@@ -135,7 +161,7 @@ public class ProfileServiceTests
     public async Task UpdateAsync_EmailChanged_NormalizesEmailAndUsername()
     {
         var user = CreateUser();
-        var request = new UpdateProfileRequest("Jane Doe", "NEW@example.com", "#818cf8");
+        var request = new UpdateProfileRequest("Jane Doe", "NEW@example.com");
 
         _userManagerMock.Setup(m => m.FindByIdAsync(user.Id)).ReturnsAsync(user);
         _userManagerMock.Setup(m => m.FindByEmailAsync(request.Email)).ReturnsAsync((AppUser?)null);
@@ -153,7 +179,7 @@ public class ProfileServiceTests
     public async Task UpdateAsync_IdentityUpdateFails_ThrowsBadRequestException()
     {
         var user = CreateUser();
-        var request = new UpdateProfileRequest("Jane Doe", user.Email!, "#818cf8");
+        var request = new UpdateProfileRequest("Jane Doe", user.Email!);
 
         _userManagerMock.Setup(m => m.FindByIdAsync(user.Id)).ReturnsAsync(user);
         _userManagerMock.Setup(m => m.UpdateAsync(user))
@@ -172,7 +198,7 @@ public class ProfileServiceTests
         _userManagerMock.Setup(m => m.FindByIdAsync("missing")).ReturnsAsync((AppUser?)null);
 
         var act = async () => await _sut.UpdateAsync("missing",
-            new UpdateProfileRequest("Name", "a@b.com", "#818cf8"));
+            new UpdateProfileRequest("Name", "a@b.com"));
 
         await act.Should().ThrowAsync<NotFoundException>();
     }

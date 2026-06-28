@@ -23,6 +23,7 @@ Update this file whenever a new feature is added or an existing one changes scop
 | Priority Display Config | Complete | [labels.md](labels.md)                                            | `/api/v1/workspaces/{id}/priority-configs` |
 | Workspace Settings   | Complete    | [workspace-settings.md](workspace-settings.md)                    | `/workspaces/:id/settings`      |
 | Task File Attachments | Complete | [task-attachments.md](task-attachments.md)                        | `/api/v1/workspaces/{id}/tasks/{id}/attachments` |
+| User Avatars          | Complete | [avatars.md](avatars.md)                                          | `POST /api/v1/me/avatar`, `GET /api/v1/files/avatars/{file}` |
 
 ---
 

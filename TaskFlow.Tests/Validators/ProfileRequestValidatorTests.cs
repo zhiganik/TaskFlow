@@ -18,7 +18,7 @@ public class UpdateProfileRequestValidatorTests
     public async Task Validate_EmptyDisplayName_ReturnsError()
     {
         var result = await _validator.ValidateAsync(
-            new UpdateProfileRequest("", "user@example.com", "#818cf8"));
+            new UpdateProfileRequest("", "user@example.com"));
 
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "DisplayName");
@@ -28,7 +28,7 @@ public class UpdateProfileRequestValidatorTests
     public async Task Validate_DisplayNameTooLong_ReturnsError()
     {
         var result = await _validator.ValidateAsync(
-            new UpdateProfileRequest(new string('a', 101), "user@example.com", "#818cf8"));
+            new UpdateProfileRequest(new string('a', 101), "user@example.com"));
 
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "DisplayName");
@@ -40,7 +40,7 @@ public class UpdateProfileRequestValidatorTests
     public async Task Validate_EmptyEmail_ReturnsError()
     {
         var result = await _validator.ValidateAsync(
-            new UpdateProfileRequest("Jane Doe", "", "#818cf8"));
+            new UpdateProfileRequest("Jane Doe", ""));
 
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "Email");
@@ -50,59 +50,19 @@ public class UpdateProfileRequestValidatorTests
     public async Task Validate_InvalidEmail_ReturnsError()
     {
         var result = await _validator.ValidateAsync(
-            new UpdateProfileRequest("Jane Doe", "not-an-email", "#818cf8"));
+            new UpdateProfileRequest("Jane Doe", "not-an-email"));
 
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "Email");
     }
 
-    // ── AvatarColor ───────────────────────────────────────────────────────────
-
-    [Test]
-    public async Task Validate_EmptyAvatarColor_ReturnsError()
-    {
-        var result = await _validator.ValidateAsync(
-            new UpdateProfileRequest("Jane Doe", "user@example.com", ""));
-
-        result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.PropertyName == "AvatarColor");
-    }
-
-    [Test]
-    [TestCase("818cf8")]       // missing #
-    [TestCase("#818cf")]       // 5 hex digits
-    [TestCase("#818cf88")]     // 7 hex digits
-    [TestCase("#zzzzzz")]      // non-hex chars
-    [TestCase("red")]          // named color
-    public async Task Validate_InvalidAvatarColor_ReturnsError(string color)
-    {
-        var result = await _validator.ValidateAsync(
-            new UpdateProfileRequest("Jane Doe", "user@example.com", color));
-
-        result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.PropertyName == "AvatarColor");
-    }
-
     // ── Valid ─────────────────────────────────────────────────────────────────
-
-    [Test]
-    [TestCase("#818cf8")]
-    [TestCase("#000000")]
-    [TestCase("#FFFFFF")]
-    [TestCase("#aAbBcC")]
-    public async Task Validate_ValidAvatarColor_Passes(string color)
-    {
-        var result = await _validator.ValidateAsync(
-            new UpdateProfileRequest("Jane Doe", "user@example.com", color));
-
-        result.Errors.Should().NotContain(e => e.PropertyName == "AvatarColor");
-    }
 
     [Test]
     public async Task Validate_ValidRequest_Passes()
     {
         var result = await _validator.ValidateAsync(
-            new UpdateProfileRequest("Jane Doe", "user@example.com", "#818cf8"));
+            new UpdateProfileRequest("Jane Doe", "user@example.com"));
 
         result.IsValid.Should().BeTrue();
     }

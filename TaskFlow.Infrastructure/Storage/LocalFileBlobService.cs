@@ -1,9 +1,10 @@
+using Microsoft.Extensions.Logging;
 using TaskFlow.Application.Exceptions;
 using TaskFlow.Application.Interfaces.Services;
 
 namespace TaskFlow.Infrastructure.Storage;
 
-public class LocalFileBlobService : IBlobService
+public class LocalFileBlobService(ILogger<LocalFileBlobService> logger) : IBlobService
 {
     public async Task SaveAsync(Stream content, string storagePath, CancellationToken ct = default)
     {
@@ -17,6 +18,8 @@ public class LocalFileBlobService : IBlobService
 
     public Task<Stream> ReadAsync(string storagePath, CancellationToken ct = default)
     {
+        logger.LogInformation($"Reading file {storagePath}");
+        
         if (!File.Exists(storagePath))
             throw new NotFoundException($"File not found: {storagePath}");
 

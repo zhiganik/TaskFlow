@@ -70,6 +70,32 @@ services:
     networks:
       - taskflow_net
 
+  avatar-worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.avatar-worker
+    container_name: taskflow_avatar_worker
+    env_file:
+      - ../.env
+    environment:
+      DOTNET_ENVIRONMENT: Production
+      POSTGRES_CONNECTION: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      REDIS_CONNECTION: redis:6379,password=${REDIS_PASSWORD}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - taskflow_net
+
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: taskflow_rabbitmq

@@ -8,6 +8,7 @@
 # SECRETS — never commit under any circumstances
 # =============================================================================
 .env
+.env.local
 *.env
 !.env.example            # .env.example IS committed — it's the safe template
 
@@ -59,6 +60,12 @@ coverage/
 # =============================================================================
 # docker-compose.override.yml is safe to commit in this project (no local paths)
 # If it ever contains machine-specific paths, add it here
+
+
+# =============================================================================
+# Local dev uploads (host-only, Docker uses a named volume)
+# =============================================================================
+local-uploads/
 
 
 # =============================================================================

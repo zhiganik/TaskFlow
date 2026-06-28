@@ -22,6 +22,8 @@ public class WorkspaceTaskProfile : Profile
                 src.AssigneeId,
                 src.Assignee?.DisplayName,
                 src.Assignee?.AvatarColor,
+                src.Assignee?.AvatarPath,
+                src.Assignee?.AvatarStatus.ToString(),
                 src.DueDate,
                 src.DueDate.HasValue && src.DueDate.Value < DateTime.UtcNow,
                 src.CreatedById,

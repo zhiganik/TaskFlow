@@ -10,6 +10,7 @@ try
 {
     Log.Information("Starting TaskFlow API");
     DotNetEnv.Env.TraversePath().Load();
+    DotNetEnv.Env.TraversePath().Load(".env.local"); // host-only overrides; silently skipped if absent
     
     var builder = WebApplication.CreateBuilder(args);
 

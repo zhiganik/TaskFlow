@@ -23,7 +23,7 @@ WORKDIR /app
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 COPY --from=build /app/publish .
-RUN mkdir -p /app/uploads/processed \
+RUN mkdir -p /app/uploads/processed /app/uploads/avatars \
  && chown -R appuser:appgroup /app
 USER appuser
 

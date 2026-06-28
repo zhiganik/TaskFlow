@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskFlow.Contracts", "TaskF
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskFlow.FileLoader.Worker", "TaskFlow.FileLoader.Worker\TaskFlow.FileLoader.Worker.csproj", "{5F7AF72F-1509-4785-9423-4C0893E53AC1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskFlow.AvatarWorker", "TaskFlow.AvatarWorker\TaskFlow.AvatarWorker.csproj", "{172CBC57-BE46-448F-AEA1-D1B6657DB197}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -97,6 +99,18 @@ Global
 		{5F7AF72F-1509-4785-9423-4C0893E53AC1}.Release|x64.Build.0 = Release|Any CPU
 		{5F7AF72F-1509-4785-9423-4C0893E53AC1}.Release|x86.ActiveCfg = Release|Any CPU
 		{5F7AF72F-1509-4785-9423-4C0893E53AC1}.Release|x86.Build.0 = Release|Any CPU
+		{172CBC57-BE46-448F-AEA1-D1B6657DB197}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{172CBC57-BE46-448F-AEA1-D1B6657DB197}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{172CBC57-BE46-448F-AEA1-D1B6657DB197}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{172CBC57-BE46-448F-AEA1-D1B6657DB197}.Debug|x64.Build.0 = Debug|Any CPU
+		{172CBC57-BE46-448F-AEA1-D1B6657DB197}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{172CBC57-BE46-448F-AEA1-D1B6657DB197}.Debug|x86.Build.0 = Debug|Any CPU
+		{172CBC57-BE46-448F-AEA1-D1B6657DB197}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{172CBC57-BE46-448F-AEA1-D1B6657DB197}.Release|Any CPU.Build.0 = Release|Any CPU
+		{172CBC57-BE46-448F-AEA1-D1B6657DB197}.Release|x64.ActiveCfg = Release|Any CPU
+		{172CBC57-BE46-448F-AEA1-D1B6657DB197}.Release|x64.Build.0 = Release|Any CPU
+		{172CBC57-BE46-448F-AEA1-D1B6657DB197}.Release|x86.ActiveCfg = Release|Any CPU
+		{172CBC57-BE46-448F-AEA1-D1B6657DB197}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

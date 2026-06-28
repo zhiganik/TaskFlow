@@ -15,6 +15,8 @@ public record WorkspaceTaskDto(
     string?                 AssigneeId,
     string?                 AssigneeName,
     string?                 AssigneeAvatarColor,
+    string?                 AssigneeAvatarPath,
+    string?                 AssigneeAvatarStatus,
     DateTime?               DueDate,
     bool                    IsOverdue,
     string                  CreatedById,

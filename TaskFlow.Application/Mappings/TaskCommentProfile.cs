@@ -6,7 +6,7 @@ namespace TaskFlow.Application.Mappings;
 
 public class TaskCommentProfile : Profile
 {
-    public TaskCommentProfile() 
+    public TaskCommentProfile()
     {
         CreateMap<TaskComment, TaskCommentDto>()
             .ConstructUsing((src, ctx) => new TaskCommentDto(
@@ -16,6 +16,8 @@ public class TaskCommentProfile : Profile
                 src.CreatedById,
                 src.CreatedBy.DisplayName,
                 src.CreatedBy.AvatarColor,
+                src.CreatedBy.AvatarPath,
+                src.CreatedBy.AvatarStatus.ToString(),
                 src.CreatedAt,
                 src.UpdatedAt,
                 src.UpdatedAt > src.CreatedAt.AddSeconds(1),

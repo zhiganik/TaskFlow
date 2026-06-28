@@ -1,6 +1,6 @@
 COMPOSE = docker compose --env-file .env -f docker/docker-compose.yml -f docker/docker-compose.override.yml
 
-.PHONY: up down reset build logs api-logs web-logs file-worker-logs migrate shell db-shell redis-cli rabbitmq-cli test web-install fix-uploads
+.PHONY: up down reset build logs api-logs web-logs file-worker-logs avatar-worker-logs migrate shell db-shell redis-cli rabbitmq-cli test web-install fix-uploads
 
 up:
 	$(COMPOSE) up --build -d --remove-orphans
@@ -26,6 +26,9 @@ web-logs:
 
 file-worker-logs:
 	$(COMPOSE) logs -f file-worker
+
+avatar-worker-logs:
+	$(COMPOSE) logs -f avatar-worker
 
 rabbitmq-cli:
 	$(COMPOSE) exec rabbitmq rabbitmqctl
