@@ -1,6 +1,6 @@
 COMPOSE = docker compose --env-file .env -f docker/docker-compose.yml -f docker/docker-compose.override.yml
 
-.PHONY: up down reset build logs api-logs web-logs migrate shell db-shell redis-cli test web-install
+.PHONY: up down reset build logs api-logs web-logs worker-logs migrate shell db-shell redis-cli rabbitmq-cli test web-install
 
 up:
 	$(COMPOSE) up --build -d
@@ -23,6 +23,12 @@ api-logs:
 
 web-logs:
 	$(COMPOSE) logs -f web
+
+worker-logs:
+	$(COMPOSE) logs -f worker
+
+rabbitmq-cli:
+	$(COMPOSE) exec rabbitmq rabbitmqctl
 
 migrate:
 	dotnet ef database update \

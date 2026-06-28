@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -42,7 +43,8 @@ public static class DependencyConfig
             .AddApplicationServices()
             .AddMappings()
             .AddFluentValidationServices()
-            .AddSwaggerDocumentation();
+            .AddSwaggerDocumentation()
+            .AddMessageBus();
 
         services.AddControllers()
             .AddJsonOptions(opts => opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
@@ -190,6 +192,30 @@ public static class DependencyConfig
     {
         services.AddFluentValidationAutoValidation();
         services.AddValidatorsFromAssemblyContaining<RegisterRequestValidator>();
+        return services;
+    }
+
+    private static IServiceCollection AddMessageBus(this IServiceCollection services)
+    {
+        services.AddMassTransit(x =>
+        {
+            x.UsingRabbitMq((_, cfg) =>
+            {
+                var host = Environment.GetEnvironmentVariable("RABBITMQ_HOST")
+                    ?? throw new InvalidOperationException("RABBITMQ_HOST env var is required");
+                var user = Environment.GetEnvironmentVariable("RABBITMQ_USER")
+                    ?? throw new InvalidOperationException("RABBITMQ_USER env var is required");
+                var pass = Environment.GetEnvironmentVariable("RABBITMQ_PASSWORD")
+                    ?? throw new InvalidOperationException("RABBITMQ_PASSWORD env var is required");
+
+                cfg.Host(host, "/", h =>
+                {
+                    h.Username(user);
+                    h.Password(pass);
+                });
+            });
+        });
+
         return services;
     }
 

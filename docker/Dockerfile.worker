@@ -1,0 +1,25 @@
+# Stage 1 — restore (cached until .csproj files change)
+FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS restore
+WORKDIR /src
+
+COPY Directory.Build.props .
+COPY TaskFlow.Contracts/TaskFlow.Contracts.csproj TaskFlow.Contracts/
+COPY TaskFlow.FileLoader.Worker/TaskFlow.FileLoader.Worker.csproj TaskFlow.FileLoader.Worker/
+RUN dotnet restore TaskFlow.FileLoader.Worker/TaskFlow.FileLoader.Worker.csproj
+
+# Stage 2 — build & publish
+FROM restore AS build
+COPY TaskFlow.Contracts/ TaskFlow.Contracts/
+COPY TaskFlow.FileLoader.Worker/ TaskFlow.FileLoader.Worker/
+RUN dotnet publish TaskFlow.FileLoader.Worker/TaskFlow.FileLoader.Worker.csproj -c Release -o /app/publish --no-restore
+
+# Stage 3 — runtime only (no SDK, no source)
+FROM mcr.microsoft.com/dotnet/runtime:10.0-alpine AS runtime
+WORKDIR /app
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+COPY --from=build /app/publish .
+RUN chown -R appuser:appgroup /app
+USER appuser
+
+ENTRYPOINT ["dotnet", "TaskFlow.FileLoader.Worker.dll"]

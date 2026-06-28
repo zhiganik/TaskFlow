@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-TaskFlow.FileLoader.Worker-c7259f52-7d03-4c33-99bc-02cf0c950d29</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MassTransit.RabbitMQ" Version="8.*" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.2" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="9.*" />
+    <PackageReference Include="Serilog.Formatting.Compact" Version="3.*" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="9.*" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TaskFlow.Contracts\TaskFlow.Contracts.csproj" />
+  </ItemGroup>
+</Project>

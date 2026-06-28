@@ -3,6 +3,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS restore
 WORKDIR /src
 
 COPY Directory.Build.props .
+COPY TaskFlow.Contracts/TaskFlow.Contracts.csproj TaskFlow.Contracts/
 COPY TaskFlow.Api/TaskFlow.Api.csproj TaskFlow.Api/
 COPY TaskFlow.Application/TaskFlow.Application.csproj TaskFlow.Application/
 COPY TaskFlow.Infrastructure/TaskFlow.Infrastructure.csproj TaskFlow.Infrastructure/
@@ -10,6 +11,7 @@ RUN dotnet restore TaskFlow.Api/TaskFlow.Api.csproj
 
 # Stage 2 — build & publish
 FROM restore AS build
+COPY TaskFlow.Contracts/ TaskFlow.Contracts/
 COPY TaskFlow.Api/ TaskFlow.Api/
 COPY TaskFlow.Application/ TaskFlow.Application/
 COPY TaskFlow.Infrastructure/ TaskFlow.Infrastructure/

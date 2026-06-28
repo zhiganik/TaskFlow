@@ -6,8 +6,10 @@
 |-----------|-------|------|---------|
 | `taskflow_web` | Built from `docker/Dockerfile.web` | `3000→80` | React UI + Nginx proxy |
 | `taskflow_api` | Built from `docker/Dockerfile` | `5000→8080` | ASP.NET Core 9 API + Swagger |
+| `taskflow_worker` | Built from `docker/Dockerfile.worker` | — | FileLoader Worker (MassTransit consumer) |
 | `taskflow_postgres` | `postgres:16-alpine` | `5432` | PostgreSQL |
 | `taskflow_redis` | `redis:7-alpine` | `6379` | Redis cache |
+| `taskflow_rabbitmq` | `rabbitmq:3-management-alpine` | `5672`, `15672` | RabbitMQ message broker + management UI |
 
 All on isolated `taskflow_net` bridge network. Services talk to each other by container name.
 
@@ -124,8 +126,10 @@ location ~* \.(js|css|...)$ {
 ```
 .env (host file)
   ↓  env_file in docker-compose
-API container env — CORS_ORIGINS, ConnectionStrings__Postgres, REDIS_CONNECTION, JWT_SECRET
-Web container env — VITE_API_URL (build arg, baked into JS at build time)
+API container env    — CORS_ORIGINS, POSTGRES_CONNECTION, REDIS_CONNECTION, JWT_SECRET,
+                       RABBITMQ_HOST (=rabbitmq), RABBITMQ_USER, RABBITMQ_PASSWORD
+Worker container env — RABBITMQ_HOST (=rabbitmq), RABBITMQ_USER, RABBITMQ_PASSWORD
+Web container env    — VITE_API_URL (build arg, baked into JS at build time)
 ```
 
 `VITE_API_URL` in `docker-compose.yml` is set to `""` (empty string) because the React app uses relative paths (`/api/v1/...`) and Nginx handles the proxy. No hardcoded `localhost:5000` in the built JS.
