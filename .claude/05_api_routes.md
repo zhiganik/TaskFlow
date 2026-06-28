@@ -3,13 +3,15 @@
 ## Routing Convention
 
 ```
-/api/v1/auth                                         → AuthController
-/api/v1/workspaces                                   → WorkspacesController
-/api/v1/workspaces/{workspaceId}/members             → WorkspaceMembersController
-/api/v1/workspaces/{workspaceId}/projects            → ProjectsController
-/api/v1/projects/{projectId}/tasks                   → TasksController
-/api/v1/tasks/{taskId}/attachments                   → TaskAttachmentsController  ← NEW
-/api/v1/me/tasks                                     → MeController
+/api/v1/auth                                                        → AuthController
+/api/v1/workspaces                                               → WorkspacesController
+/api/v1/workspaces/{workspaceId}/members                         → WorkspaceMembersController
+/api/v1/workspaces/{workspaceId}/columns                         → WorkspaceColumnsController
+/api/v1/workspaces/{workspaceId}/tasks                           → WorkspaceTasksController
+/api/v1/workspaces/{workspaceId}/tasks/{taskId}/attachments      → TaskAttachmentsController
+/api/v1/workspaces/{workspaceId}/labels                          → WorkspaceLabelsController
+/api/v1/workspaces/{workspaceId}/priority-configs                → WorkspacePriorityConfigController
+/api/v1/me                                                       → ProfileController
 ```
 
 ---
@@ -78,14 +80,14 @@ File upload endpoints use `[Consumes("multipart/form-data")]`.
 | PATCH | `/projects/{projectId}/tasks/{id}/assign` | Admin | `200 TaskDto` |
 | DELETE | `/projects/{projectId}/tasks/{id}` | Admin | `204` |
 
-### Task Attachments — 🔒 *(new)*
+### Task Attachments — 🔒
 | Method | Route | Policy | Returns |
 |--------|-------|--------|---------|
-| POST | `/tasks/{taskId}/attachments` | Member | `202 AttachmentDto` |
-| GET | `/tasks/{taskId}/attachments` | Member | `200 AttachmentDto[]` |
-| GET | `/tasks/{taskId}/attachments/{id}` | Member | `200 AttachmentDto` |
-| GET | `/tasks/{taskId}/attachments/{id}/download` | Member | `200 FileStreamResult` |
-| DELETE | `/tasks/{taskId}/attachments/{id}` | Admin | `204` |
+| POST | `/workspaces/{wid}/tasks/{taskId}/attachments` | Member | `202 AttachmentDto` |
+| GET | `/workspaces/{wid}/tasks/{taskId}/attachments` | Member | `200 AttachmentDto[]` |
+| GET | `/workspaces/{wid}/tasks/{taskId}/attachments/{id}` | Member | `200 AttachmentDto` |
+| GET | `/workspaces/{wid}/tasks/{taskId}/attachments/{id}/download` | Member | `200 FileStreamResult` |
+| DELETE | `/workspaces/{wid}/tasks/{taskId}/attachments/{id}` | Member | `204` |
 
 ### Me — 🔒
 | Method | Route | Returns |
@@ -215,27 +217,22 @@ public class TaskAttachmentsController(ITaskAttachmentService attachmentService)
 
 ---
 
-## StorageOptions (new IOptions section)
+## StorageOptions (IOptions section)
 
 ```csharp
 // TaskFlow.Application/Options/StorageOptions.cs
 public class StorageOptions
 {
-    public string BasePath { get; set; } = string.Empty;      // absolute path on disk
-    public long MaxFileSizeBytes { get; set; } = 20_971_520;  // 20 MB default
-    public string[] AllowedExtensions { get; set; } =
-        [".pdf", ".png", ".jpg", ".jpeg", ".gif", ".txt", ".docx", ".xlsx"];
+    public string   BasePath          { get; set; } = "/app/uploads";
+    public long     MaxFileSizeBytes  { get; set; } = 20_971_520;  // 20 MB
+    // Blocklist — all other extensions accepted (Jira-like behavior)
+    public string[] BlockedExtensions { get; set; } =
+        [".exe", ".bat", ".cmd", ".ps1", ".sh", ".msi",
+         ".dll", ".com", ".scr", ".vbs", ".jar", ".app", ".dmg", ".bin", ".run"];
 }
 ```
 
-```json
-// appsettings.json (safe values — no secrets)
-"Storage": {
-  "BasePath": "/app/uploads",
-  "MaxFileSizeBytes": 20971520,
-  "AllowedExtensions": [".pdf", ".png", ".jpg", ".jpeg", ".gif", ".txt", ".docx", ".xlsx"]
-}
-```
+Redis temp file TTL lives in `CacheKeys.Ttl.TempFile` (default 30 min), not in `StorageOptions`.
 
 ---
 

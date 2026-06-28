@@ -6,6 +6,8 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using TaskFlow.Infrastructure.Messaging;
+using TaskFlow.Infrastructure.Storage;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -60,6 +62,7 @@ public static class DependencyConfig
                 ?? throw new InvalidOperationException("JWT_SECRET env var is required"));
 
         services.Configure<CacheOptions>(config.GetSection("Cache"));
+        services.Configure<StorageOptions>(config.GetSection("Storage"));
 
         return services;
     }
@@ -162,6 +165,7 @@ public static class DependencyConfig
         services.AddScoped<ITaskCommentsRepository, TaskCommentsRepository>();
         services.AddScoped<IWorkspaceLabelsRepository, WorkspaceLabelsRepository>();
         services.AddScoped<IWorkspacePriorityConfigRepository, WorkspacePriorityConfigRepository>();
+        services.AddScoped<ITaskAttachmentRepository, TaskAttachmentRepository>();
         return services;
     }
 
@@ -178,6 +182,7 @@ public static class DependencyConfig
         services.AddScoped<IProfileService, ProfileService>();
         services.AddScoped<IWorkspaceLabelsService, WorkspaceLabelsService>();
         services.AddScoped<IWorkspacePriorityConfigService, WorkspacePriorityConfigService>();
+        services.AddScoped<ITaskAttachmentService, TaskAttachmentService>();
         return services;
     }
 
@@ -197,6 +202,10 @@ public static class DependencyConfig
 
     private static IServiceCollection AddMessageBus(this IServiceCollection services)
     {
+        services.AddSingleton<IBlobService, LocalFileBlobService>();
+        services.AddSingleton<ITemporaryFileStore, RedisTemporaryFileStore>();
+        services.AddScoped<IMessagePublisher, MassTransitPublisher>();
+
         services.AddMassTransit(x =>
         {
             x.UsingRabbitMq((_, cfg) =>

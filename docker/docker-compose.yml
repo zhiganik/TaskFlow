@@ -32,6 +32,8 @@ services:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_USER: ${RABBITMQ_USER}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+    volumes:
+      - uploads_data:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -42,19 +44,27 @@ services:
     networks:
       - taskflow_net
 
-  worker:
+  file-worker:
     build:
       context: ..
       dockerfile: docker/Dockerfile.worker
-    container_name: taskflow_worker
+    container_name: taskflow_file_worker
     env_file:
       - ../.env
     environment:
       DOTNET_ENVIRONMENT: Production
+      POSTGRES_CONNECTION: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      REDIS_CONNECTION: redis:6379,password=${REDIS_PASSWORD}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_USER: ${RABBITMQ_USER}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+    volumes:
+      - uploads_data:/app/uploads
     depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
     networks:
@@ -65,7 +75,7 @@ services:
     container_name: taskflow_rabbitmq
     ports:
       - "5672:5672"
-      - "15672:15672"   # management UI
+      - "15672:15672"   # management UI — http://localhost:15672
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
@@ -124,3 +134,4 @@ volumes:
   postgres_data:
   redis_data:
   rabbitmq_data:
+  uploads_data:    # api reads processed files; file-worker writes them

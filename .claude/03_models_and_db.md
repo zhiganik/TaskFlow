@@ -113,10 +113,10 @@ public class TaskAttachment
 
 public enum AttachmentStatus
 {
-    Pending    = 0,   // on disk, queued in Channel<T>
-    Processing = 1,   // background service picked it up
-    Ready      = 2,   // processing complete
-    Failed     = 3    // processing failed — ProcessingError has details
+    Pending    = 0,   // bytes in Redis (TTL: 30 min), message published to RabbitMQ
+    Processing = 1,   // file-worker received message, reading from Redis
+    Ready      = 2,   // worker wrote to permanent disk; StoragePath is set
+    Failed     = 3    // worker error — ProcessingError has details; Redis key gone
 }
 ```
 

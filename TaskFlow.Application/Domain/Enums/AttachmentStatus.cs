@@ -1,0 +1,9 @@
+namespace TaskFlow.Application.Domain.Enums;
+
+public enum AttachmentStatus
+{
+    Pending    = 0,
+    Processing = 1,
+    Ready      = 2,
+    Failed     = 3
+}

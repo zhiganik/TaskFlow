@@ -1,20 +1,71 @@
 using MassTransit;
+using TaskFlow.Application.Domain.Enums;
+using TaskFlow.Application.Interfaces.Repositories;
+using TaskFlow.Application.Interfaces.Services;
 using TaskFlow.Contracts.Messages;
 
 namespace TaskFlow.FileLoader.Worker.Consumers;
 
-public class FileUploadConsumer(ILogger<FileUploadConsumer> logger) : IConsumer<FileUploadMessage>
+public class FileUploadConsumer(
+    ITaskAttachmentRepository repo,
+    IBlobService blobService,
+    ITemporaryFileStore tempStore,
+    ILogger<FileUploadConsumer> logger) : IConsumer<FileUploadMessage>
 {
-    public Task Consume(ConsumeContext<FileUploadMessage> context)
+    public async Task Consume(ConsumeContext<FileUploadMessage> context)
     {
-        logger.LogInformation(
-            "Received file upload job: FileId={FileId} FileName={FileName} TaskId={TaskId}",
-            context.Message.FileId,
-            context.Message.FileName,
-            context.Message.TaskId);
+        var msg = context.Message;
+        var ct  = context.CancellationToken;
 
-        // File processing logic will be implemented here
+        var attachment = await repo.GetByIdAsync(msg.AttachmentId, ct);
+        if (attachment is null)
+        {
+            logger.LogWarning(
+                "Attachment {AttachmentId} not found — message may be stale, skipping",
+                msg.AttachmentId);
+            return;
+        }
 
-        return Task.CompletedTask;
+        attachment.Status = AttachmentStatus.Processing;
+        await repo.UpdateAsync(attachment, ct);
+
+        try
+        {
+            // Read from Redis temp store
+            var fileBytes = await tempStore.GetAsync(msg.RedisKey, ct);
+            if (fileBytes is null)
+            {
+                throw new InvalidOperationException(
+                    $"Temp file expired in Redis before processing (key: {msg.RedisKey}). " +
+                    $"Consider increasing the Redis TTL.");
+            }
+
+            // Save to permanent disk storage
+            using var stream = new MemoryStream(fileBytes);
+            await blobService.SaveAsync(stream, msg.PermanentPath, ct);
+
+            // Clean up the Redis key
+            await tempStore.DeleteAsync(msg.RedisKey, ct);
+
+            // Mark as Ready
+            attachment.StoragePath = msg.PermanentPath;
+            attachment.Status      = AttachmentStatus.Ready;
+            attachment.ProcessedAt = DateTime.UtcNow;
+            await repo.UpdateAsync(attachment, ct);
+
+            logger.LogInformation(
+                "Attachment {AttachmentId} processed — {FileName} for task {TaskId}",
+                msg.AttachmentId, msg.OriginalFileName, msg.TaskId);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogError(ex,
+                "Failed to process attachment {AttachmentId} ({FileName})",
+                msg.AttachmentId, msg.OriginalFileName);
+
+            attachment.Status          = AttachmentStatus.Failed;
+            attachment.ProcessingError = ex.Message;
+            await repo.UpdateAsync(attachment, ct);
+        }
     }
 }

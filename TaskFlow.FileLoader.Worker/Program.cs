@@ -1,7 +1,14 @@
 using MassTransit;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Formatting.Compact;
+using StackExchange.Redis;
+using TaskFlow.Application.Interfaces.Repositories;
+using TaskFlow.Application.Interfaces.Services;
 using TaskFlow.FileLoader.Worker.Consumers;
+using TaskFlow.Infrastructure.Persistence;
+using TaskFlow.Infrastructure.Repositories;
+using TaskFlow.Infrastructure.Storage;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -17,8 +24,26 @@ try
                .ReadFrom.Services(services)
                .Enrich.FromLogContext()
                .WriteTo.Console(new CompactJsonFormatter()))
-        .ConfigureServices(services =>
+        .ConfigureServices((_, services) =>
         {
+            var postgresConn = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION")
+                ?? throw new InvalidOperationException("POSTGRES_CONNECTION env var is required");
+
+            var redisConn = Environment.GetEnvironmentVariable("REDIS_CONNECTION")
+                ?? throw new InvalidOperationException("REDIS_CONNECTION env var is required");
+
+            // Database — scoped per MassTransit consumer message
+            services.AddDbContext<AppDbContext>(opts => opts.UseNpgsql(postgresConn));
+            services.AddScoped<ITaskAttachmentRepository, TaskAttachmentRepository>();
+
+            // Redis temp store — reads file bytes uploaded by the API
+            services.AddSingleton<IConnectionMultiplexer>(_ =>
+                ConnectionMultiplexer.Connect(redisConn));
+            services.AddSingleton<ITemporaryFileStore, RedisTemporaryFileStore>();
+
+            // Blob service — writes processed files to permanent disk storage
+            services.AddSingleton<IBlobService, LocalFileBlobService>();
+
             services.AddMassTransit(x =>
             {
                 x.AddConsumer<FileUploadConsumer>();
