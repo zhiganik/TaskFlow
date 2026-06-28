@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { ArchivePage } from './pages/ArchivePage'
 import { DashboardPage } from './pages/DashboardPage'
 import { HealthCheckPage } from './pages/HealthCheckPage'
 import { LoginPage } from './pages/LoginPage'
@@ -61,6 +62,14 @@ export function AppRouter() {
           element={
             <ProtectedRoute>
               <MembersPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/workspaces/:workspaceId/archive"
+          element={
+            <ProtectedRoute>
+              <ArchivePage />
             </ProtectedRoute>
           }
         />

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { NavLink, useParams } from 'react-router-dom'
 import { useProfile } from '../../hooks/useProfile'
 import { useAuthStore } from '../../store/authStore'
-import { BoardIcon, MembersIcon, SettingsIcon } from '../ui/Icons'
+import { ArchiveIcon, BoardIcon, MembersIcon, SettingsIcon } from '../ui/Icons'
 import { ProfileModal } from '../profile/ProfileModal'
 import { UserAvatar } from '../ui/UserAvatar'
 import { WorkspaceSwitcher } from '../workspaces/WorkspaceSwitcher'
@@ -41,6 +41,12 @@ export function Sidebar() {
               <span className="flex items-center gap-1.5">
                 <BoardIcon className="h-3.5 w-3.5" />
                 Board
+              </span>
+            </NavLink>
+            <NavLink to={`/workspaces/${workspaceId}/archive`} className={navLinkClassName}>
+              <span className="flex items-center gap-1.5">
+                <ArchiveIcon className="h-3.5 w-3.5" />
+                Archive
               </span>
             </NavLink>
             <NavLink to={`/workspaces/${workspaceId}/members`} className={navLinkClassName}>

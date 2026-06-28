@@ -38,18 +38,15 @@ export function MembersPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex h-screen overflow-hidden bg-gray-50">
       <Sidebar />
 
-      <main className="flex flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-3">
-          <span className="text-sm font-medium text-gray-900">
-            {isLoadingWorkspace
-              ? 'Loading…'
-              : workspace
-                ? `${workspace.name} — Members`
-                : 'Workspace not found'}
-          </span>
+      <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <header className="flex shrink-0 items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900">Members</h1>
+            {workspace && <p className="mt-0.5 text-sm text-gray-500">{workspace.name}</p>}
+          </div>
           {canManage && (
             <Button type="button" onClick={() => setInviteOpen(true)}>
               Add member

@@ -2,6 +2,9 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { tasksApi } from '../api/tasks.api'
 import type { CreateTaskRequest, MoveTaskRequest, TaskFilterParams, UpdateTaskRequest } from '../types/api.types'
 
+const closedTasksKey = (workspaceId: string, filter?: TaskFilterParams) =>
+  ['closed-tasks', workspaceId, filter ?? {}]
+
 const tasksKey = (workspaceId: string, filter?: TaskFilterParams) =>
   ['tasks', workspaceId, filter ?? {}]
 
@@ -43,6 +46,39 @@ export const useDeleteTask = (workspaceId: string) => {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (taskId: string) => tasksApi.remove(workspaceId, taskId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks', workspaceId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tasks', workspaceId] })
+      qc.invalidateQueries({ queryKey: ['closed-tasks', workspaceId] })
+    },
+  })
+}
+
+export const useClosedTasks = (workspaceId: string, filter?: TaskFilterParams) =>
+  useQuery({
+    queryKey: closedTasksKey(workspaceId, filter),
+    queryFn: () => tasksApi.listClosed(workspaceId, filter),
+    enabled: !!workspaceId,
+    placeholderData: keepPreviousData,
+  })
+
+export const useCloseTask = (workspaceId: string) => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (taskId: string) => tasksApi.close(workspaceId, taskId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tasks', workspaceId] })
+      qc.invalidateQueries({ queryKey: ['closed-tasks', workspaceId] })
+    },
+  })
+}
+
+export const useReopenTask = (workspaceId: string) => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (taskId: string) => tasksApi.reopen(workspaceId, taskId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tasks', workspaceId] })
+      qc.invalidateQueries({ queryKey: ['closed-tasks', workspaceId] })
+    },
   })
 }

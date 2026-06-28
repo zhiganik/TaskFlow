@@ -1,5 +1,5 @@
 import type { DragEvent } from 'react'
-import { CalendarIcon } from '../ui/Icons'
+import { CalendarIcon, CheckIcon } from '../ui/Icons'
 import { UserAvatar } from '../ui/UserAvatar'
 import type { WorkspaceTaskDto } from '../../types/api.types'
 
@@ -21,6 +21,8 @@ export function TaskCard({ task, priorityColor, isSelected, onClick, onDragStart
   const visibleLabels = task.labels.slice(0, 3)
   const overflowCount = task.labels.length - 3
 
+  const isDone = task.status === 'Done'
+
   return (
     <div
       draggable
@@ -28,11 +30,18 @@ export function TaskCard({ task, priorityColor, isSelected, onClick, onDragStart
       onDragEnd={onDragEnd}
       onClick={onClick}
       className={[
-        'cursor-pointer rounded-lg border border-l-4 bg-white px-3 py-2.5 shadow-sm transition-colors hover:border-gray-300 hover:border-l-4',
+        'relative cursor-pointer rounded-lg border border-l-4 bg-white px-3 py-2.5 shadow-sm transition-colors hover:border-gray-300 hover:border-l-4',
         isSelected ? 'border-brand-500' : 'border-gray-200',
+        isDone ? 'opacity-50' : '',
       ].join(' ')}
       style={{ borderLeftColor: priorityColor }}
     >
+      {isDone && (
+        <span className="absolute -right-1.5 -top-1.5 flex items-center gap-0.5 rounded-full bg-green-500 px-1.5 py-0.5 text-[9px] font-semibold text-white shadow-sm">
+          <CheckIcon className="h-2.5 w-2.5" />
+          Done
+        </span>
+      )}
       <div className="mb-1.5 flex items-start gap-1.5">
         <span className="mt-px shrink-0 text-[10px] font-medium text-gray-400">
           #{task.number}

@@ -225,6 +225,58 @@ export function MembersIcon({ className = 'h-4 w-4' }: IconProps) {
   )
 }
 
+export function CheckIcon({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <polyline points="4 10 8 14 16 6" />
+    </svg>
+  )
+}
+
+export function ArchiveIcon({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <rect x="2" y="3" width="16" height="4" rx="1" />
+      <path d="M4 7v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7" />
+      <line x1="8" y1="11" x2="12" y2="11" />
+    </svg>
+  )
+}
+
+export function ColumnsIcon({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <rect x="2" y="3" width="4" height="14" rx="1" />
+      <rect x="8" y="3" width="4" height="14" rx="1" />
+      <rect x="14" y="3" width="4" height="14" rx="1" />
+    </svg>
+  )
+}
+
 export function TrashIcon({ className = 'h-4 w-4' }: IconProps) {
   return (
     <svg

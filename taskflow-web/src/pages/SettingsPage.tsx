@@ -1,5 +1,7 @@
 import { useParams } from 'react-router-dom'
 import { Sidebar } from '../components/layout/Sidebar'
+import { ArchiveSettings } from '../components/settings/ArchiveSettings'
+import { DoneColumnSettings } from '../components/settings/DoneColumnSettings'
 import { LabelsSettings } from '../components/settings/LabelsSettings'
 import { PrioritySettings } from '../components/settings/PrioritySettings'
 import { useWorkspaces } from '../hooks/useWorkspaces'
@@ -32,6 +34,18 @@ export function SettingsPage() {
 
             <section className="rounded-xl border border-gray-200 bg-white p-5">
               <PrioritySettings workspaceId={wsId} canManage={canManage} />
+            </section>
+
+            <section className="rounded-xl border border-gray-200 bg-white p-5">
+              <DoneColumnSettings workspaceId={wsId} canManage={canManage} />
+            </section>
+
+            <section className="rounded-xl border border-gray-200 bg-white p-5">
+              <ArchiveSettings
+                workspaceId={wsId}
+                canManage={canManage}
+                currentDays={workspace?.archiveAfterDays ?? 1}
+              />
             </section>
           </div>
         </div>

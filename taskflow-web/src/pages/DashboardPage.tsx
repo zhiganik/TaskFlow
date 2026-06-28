@@ -10,7 +10,7 @@ import { TaskDetailPanel } from '../components/tasks/TaskDetailPanel'
 import { TaskFilterBar } from '../components/tasks/TaskFilterBar'
 import { Alert } from '../components/ui/Alert'
 import { Button } from '../components/ui/Button'
-import { PencilIcon, PlusIcon, TrashIcon } from '../components/ui/Icons'
+import { CheckIcon, PencilIcon, PlusIcon, TrashIcon } from '../components/ui/Icons'
 import { Sidebar } from '../components/layout/Sidebar'
 import { Spinner } from '../components/ui/Spinner'
 import { useColumns, useReorderColumns } from '../hooks/useColumns'
@@ -429,11 +429,21 @@ export function DashboardPage() {
                               )}
                             </div>
 
+                            {/* Done column indicator strip */}
+                            {column.isDoneColumn && (
+                              <div className="flex items-center gap-1 border-b border-green-100 bg-green-50 px-3 py-1">
+                                <CheckIcon className="h-2.5 w-2.5 shrink-0 text-green-500" />
+                                <span className="text-[10px] font-medium uppercase tracking-wide text-green-600">
+                                  Done column
+                                </span>
+                              </div>
+                            )}
+
                             {/* column body — task drop zone */}
                             <div
                               data-col-scroll
                               className={[
-                                'flex flex-1 flex-col gap-2 overflow-y-auto scrollbar-hide px-2 pb-2 transition-colors',
+                                'flex flex-1 flex-col gap-2 overflow-y-auto scrollbar-hide px-2 pt-2 pb-2 transition-colors',
                                 isTaskDragOver ? 'bg-brand-50/60' : '',
                               ].join(' ')}
                               onDragOver={(e) => handleColBodyDragOver(e, column.id)}

@@ -69,6 +69,11 @@ export interface WorkspaceDto {
   ownerId: string
   createdAt: string
   myRole: WorkspaceRole
+  archiveAfterDays: number
+}
+
+export interface UpdateArchiveSettingsRequest {
+  archiveAfterDays: number
 }
 
 export interface CreateWorkspaceRequest {
@@ -105,6 +110,7 @@ export interface WorkspaceColumnDto {
   name: string
   color: string
   order: number
+  isDoneColumn: boolean
   createdAt: string
 }
 
@@ -116,6 +122,7 @@ export interface CreateColumnRequest {
 export interface UpdateColumnRequest {
   name: string
   color?: string
+  isDoneColumn?: boolean
 }
 
 export interface ReorderColumnsRequest {
@@ -123,6 +130,7 @@ export interface ReorderColumnsRequest {
 }
 
 export type TaskPriority = 'Low' | 'Medium' | 'High'
+export type WorkspaceTaskStatus = 'Active' | 'Done' | 'Closed' | 'Deleted'
 
 export interface LabelDto {
   id: string
@@ -177,6 +185,9 @@ export interface WorkspaceTaskDto {
   createdAt: string
   updatedAt: string
   labels: LabelDto[]
+  status: WorkspaceTaskStatus
+  completedAt: string | null
+  closedAt: string | null
 }
 
 export interface CreateTaskRequest {

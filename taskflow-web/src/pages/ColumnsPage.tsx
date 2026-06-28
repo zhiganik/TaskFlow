@@ -8,6 +8,7 @@ import { RenameColumnModal } from '../components/workspaces/RenameColumnModal'
 import { Alert } from '../components/ui/Alert'
 import { Button } from '../components/ui/Button'
 import {
+  CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   PencilIcon,
@@ -15,7 +16,7 @@ import {
   TrashIcon,
 } from '../components/ui/Icons'
 import { Spinner } from '../components/ui/Spinner'
-import { useColumns, useReorderColumns } from '../hooks/useColumns'
+import { useColumns, useReorderColumns, useUpdateColumn } from '../hooks/useColumns'
 import { useWorkspaces } from '../hooks/useWorkspaces'
 import type { WorkspaceColumnDto } from '../types/api.types'
 
@@ -31,6 +32,7 @@ export function ColumnsPage() {
 
   const { data: columns, isLoading: isLoadingColumns } = useColumns(workspaceId)
   const reorderMutation = useReorderColumns(workspaceId)
+  const updateColumnMutation = useUpdateColumn(workspaceId)
 
   const [addOpen, setAddOpen] = useState(false)
   const [renameTarget, setRenameTarget] = useState<WorkspaceColumnDto | null>(null)
@@ -144,30 +146,61 @@ export function ColumnsPage() {
                           </div>
 
                           {/* card body */}
-                          <div className="flex items-center justify-between px-4 py-3">
-                            <span className="text-xs text-gray-400">Position {index + 1}</span>
+                          <div className="px-4 py-3 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-gray-400">Position {index + 1}</span>
+
+                              {canManage && (
+                                <div className="flex items-center gap-0.5">
+                                  <button
+                                    type="button"
+                                    aria-label="Move left"
+                                    disabled={index === 0 || reorderMutation.isPending}
+                                    onClick={() => move(index, -1)}
+                                    className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-30"
+                                  >
+                                    <ChevronLeftIcon className="h-4 w-4" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    aria-label="Move right"
+                                    disabled={index === sorted.length - 1 || reorderMutation.isPending}
+                                    onClick={() => move(index, 1)}
+                                    className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-30"
+                                  >
+                                    <ChevronRightIcon className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
 
                             {canManage && (
-                              <div className="flex items-center gap-0.5">
-                                <button
-                                  type="button"
-                                  aria-label="Move left"
-                                  disabled={index === 0 || reorderMutation.isPending}
-                                  onClick={() => move(index, -1)}
-                                  className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-30"
-                                >
-                                  <ChevronLeftIcon className="h-4 w-4" />
-                                </button>
-                                <button
-                                  type="button"
-                                  aria-label="Move right"
-                                  disabled={index === sorted.length - 1 || reorderMutation.isPending}
-                                  onClick={() => move(index, 1)}
-                                  className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-30"
-                                >
-                                  <ChevronRightIcon className="h-4 w-4" />
-                                </button>
-                              </div>
+                              <button
+                                type="button"
+                                disabled={updateColumnMutation.isPending}
+                                onClick={() =>
+                                  updateColumnMutation.mutate({
+                                    columnId: column.id,
+                                    data: { name: column.name, color: column.color, isDoneColumn: !column.isDoneColumn },
+                                  })
+                                }
+                                className={[
+                                  'flex w-full items-center gap-2 rounded-md border px-3 py-1.5 text-xs transition-colors disabled:opacity-60',
+                                  column.isDoneColumn
+                                    ? 'border-green-300 bg-green-50 font-medium text-green-700'
+                                    : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50',
+                                ].join(' ')}
+                              >
+                                <CheckIcon className="h-3.5 w-3.5 shrink-0" />
+                                {column.isDoneColumn ? 'Done column (active)' : 'Set as Done column'}
+                              </button>
+                            )}
+
+                            {!canManage && column.isDoneColumn && (
+                              <span className="flex items-center gap-1.5 text-xs text-green-600">
+                                <CheckIcon className="h-3.5 w-3.5" />
+                                Done column
+                              </span>
                             )}
                           </div>
                         </div>

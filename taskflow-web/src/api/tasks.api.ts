@@ -8,6 +8,13 @@ import type {
   WorkspaceTaskDto,
 } from '../types/api.types'
 
+const buildFilterParams = (filter?: TaskFilterParams) => ({
+  search: filter?.search || undefined,
+  assigneeIds: filter?.assigneeIds?.length ? filter.assigneeIds : undefined,
+  priorities: filter?.priorities?.length ? filter.priorities : undefined,
+  labelIds: filter?.labelIds?.length ? filter.labelIds : undefined,
+})
+
 export const tasksApi = {
   list: (workspaceId: string, filter?: TaskFilterParams) =>
     apiClient
@@ -56,5 +63,23 @@ export const tasksApi = {
   remove: (workspaceId: string, taskId: string) =>
     apiClient
       .delete<void>(`/workspaces/${workspaceId}/tasks/${taskId}`)
+      .then((r) => r.data),
+
+  listClosed: (workspaceId: string, filter?: TaskFilterParams) =>
+    apiClient
+      .get<WorkspaceTaskDto[]>(`/workspaces/${workspaceId}/archive`, {
+        params: buildFilterParams(filter),
+        paramsSerializer: { indexes: null },
+      })
+      .then((r) => r.data),
+
+  close: (workspaceId: string, taskId: string) =>
+    apiClient
+      .put<WorkspaceTaskDto>(`/workspaces/${workspaceId}/tasks/${taskId}/close`)
+      .then((r) => r.data),
+
+  reopen: (workspaceId: string, taskId: string) =>
+    apiClient
+      .put<WorkspaceTaskDto>(`/workspaces/${workspaceId}/tasks/${taskId}/reopen`)
       .then((r) => r.data),
 }
