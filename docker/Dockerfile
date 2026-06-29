@@ -9,6 +9,16 @@ COPY TaskFlow.Application/TaskFlow.Application.csproj TaskFlow.Application/
 COPY TaskFlow.Infrastructure/TaskFlow.Infrastructure.csproj TaskFlow.Infrastructure/
 RUN dotnet restore TaskFlow.Api/TaskFlow.Api.csproj
 
+# Stage — migration
+FROM restore AS build
+RUN dotnet tool install --global dotnet-ef
+ENV PATH="$PATH:/root/.dotnet/tools"
+COPY . .
+RUN dotnet publish TaskFlow.Api/TaskFlow.Api.csproj \
+    --configuration Release \
+    --no-restore \
+    --output /app/publish
+
 # Stage 2 — build & publish
 FROM restore AS build
 COPY TaskFlow.Contracts/ TaskFlow.Contracts/
