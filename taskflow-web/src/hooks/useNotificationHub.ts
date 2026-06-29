@@ -16,8 +16,6 @@ export function useNotificationHub() {
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(HUB_URL, {
         accessTokenFactory: () => getAccessToken() ?? '',
-        // skipNegotiation + WebSockets avoids the negotiate POST hitting a different
-        // replica than the WebSocket upgrade — connectionToken is server-local, not in Redis.
         transport: signalR.HttpTransportType.WebSockets,
         skipNegotiation: true,
       })
