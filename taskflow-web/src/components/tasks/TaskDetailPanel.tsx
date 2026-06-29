@@ -19,6 +19,7 @@ interface TaskDetailPanelProps {
   columns: WorkspaceColumnDto[]
   workspaceId: string
   width: number
+  initialCommentId?: string | null
   onResizeStart: (e: React.MouseEvent<HTMLDivElement>) => void
   onClose: () => void
   onTaskUpdated: (task: WorkspaceTaskDto) => void
@@ -44,7 +45,7 @@ function formatRelative(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-export function TaskDetailPanel({ task, columns, workspaceId, width, onResizeStart, onClose, onTaskUpdated }: TaskDetailPanelProps) {
+export function TaskDetailPanel({ task, columns, workspaceId, width, initialCommentId, onResizeStart, onClose, onTaskUpdated }: TaskDetailPanelProps) {
   const updateMutation = useUpdateTask(workspaceId)
   const moveMutation = useMoveTask(workspaceId)
   const deleteMutation = useDeleteTask(workspaceId)
@@ -442,7 +443,7 @@ export function TaskDetailPanel({ task, columns, workspaceId, width, onResizeSta
         </RichSection>
 
         <RichSection label="Comments">
-          <CommentsList workspaceId={workspaceId} taskId={task.id} />
+          <CommentsList workspaceId={workspaceId} taskId={task.id} initialCommentId={initialCommentId} />
         </RichSection>
 
         {/* meta */}

@@ -1,5 +1,5 @@
 import { type DragEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { getErrorMessage } from '../api/errors'
 import { AddColumnModal } from '../components/workspaces/AddColumnModal'
 import { DeleteColumnDialog } from '../components/workspaces/DeleteColumnDialog'
@@ -18,7 +18,7 @@ import { useLabels } from '../hooks/useLabels'
 import { useMembers } from '../hooks/useMembers'
 import { usePriorityConfig } from '../hooks/usePriorityConfig'
 import { useTaskFilter } from '../hooks/useTaskFilter'
-import { useMoveTask } from '../hooks/useTasks'
+import { useMoveTask, useTask } from '../hooks/useTasks'
 import { useWorkspaces, useUpdateWorkspace } from '../hooks/useWorkspaces'
 import { setLastWorkspaceId } from '../lib/lastWorkspace'
 import type { WorkspaceColumnDto, WorkspaceTaskDto } from '../types/api.types'
@@ -28,6 +28,9 @@ const MAX_COLUMNS = 7
 export function DashboardPage() {
   const { workspaceId } = useParams<{ workspaceId: string }>()
   const wsId = workspaceId ?? ''
+  const [searchParams, setSearchParams] = useSearchParams()
+  const linkedTaskId  = searchParams.get('taskId')
+  const linkedCommentId = searchParams.get('commentId')
 
   useEffect(() => {
     if (workspaceId) setLastWorkspaceId(workspaceId)
@@ -146,8 +149,18 @@ export function DashboardPage() {
     window.addEventListener('mouseup', onMouseUp)
   }
 
+  // open task + optional comment from notification deep-link
+  const { data: linkedTask } = useTask(wsId, linkedTaskId)
+  useEffect(() => {
+    if (!linkedTask) return
+    setSelectedTask(linkedTask)
+    setInitialCommentId(linkedCommentId)
+    setSearchParams({}, { replace: true })
+  }, [linkedTask, linkedCommentId, setSearchParams])
+
   // task state
   const [selectedTask, setSelectedTask] = useState<WorkspaceTaskDto | null>(null)
+  const [initialCommentId, setInitialCommentId] = useState<string | null>(null)
   const [colCounts, setColCounts] = useState<Record<string, number>>({})
   const [createForColumnId, setCreateForColumnId] = useState<string | null>(null)
   const [createTaskOpen, setCreateTaskOpen] = useState(false)
@@ -160,6 +173,7 @@ export function DashboardPage() {
 
   const handleTaskClick = useCallback((task: WorkspaceTaskDto) => {
     setSelectedTask((prev) => (prev?.id === task.id ? null : task))
+    setInitialCommentId(null)
   }, [])
 
   const handleColCount = useCallback((columnId: string, count: number) => {
@@ -511,8 +525,9 @@ export function DashboardPage() {
               columns={sorted}
               workspaceId={wsId}
               width={panelWidth}
+              initialCommentId={initialCommentId}
               onResizeStart={startPanelResize}
-              onClose={() => setSelectedTask(null)}
+              onClose={() => { setSelectedTask(null); setInitialCommentId(null) }}
               onTaskUpdated={setSelectedTask}
             />
           )}

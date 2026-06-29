@@ -50,7 +50,13 @@ export function NotificationsModal({
 
   function handleClick(n: NotificationDto) {
     if (!n.isRead) markRead.mutate(n.id)
-    if (n.workspaceId) navigate(`/workspaces/${n.workspaceId}`)
+    if (n.workspaceId) {
+      const params = new URLSearchParams()
+      if (n.taskId) params.set('taskId', n.taskId)
+      if (n.commentId) params.set('commentId', n.commentId)
+      const qs = params.size > 0 ? `?${params}` : ''
+      navigate(`/workspaces/${n.workspaceId}${qs}`)
+    }
     onClose()
   }
 

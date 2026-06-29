@@ -45,6 +45,11 @@ export const tasksApi = {
       })
       .then((r) => r.data),
 
+  getById: (workspaceId: string, taskId: string) =>
+    apiClient
+      .get<WorkspaceTaskDto>(`/workspaces/${workspaceId}/tasks/${taskId}`)
+      .then((r) => r.data),
+
   create: (workspaceId: string, data: CreateTaskRequest) =>
     apiClient
       .post<WorkspaceTaskDto>(`/workspaces/${workspaceId}/tasks`, data)

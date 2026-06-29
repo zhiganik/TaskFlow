@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useUploadAttachment } from '../../../hooks/useAttachments'
 import { useComments, useCreateComment, useDeleteComment, useUpdateComment } from '../../../hooks/useComments'
 import { useMembers } from '../../../hooks/useMembers'
@@ -10,11 +10,14 @@ import { CommentItem } from './CommentItem'
 interface Props {
   workspaceId: string
   taskId: string
+  initialCommentId?: string | null
 }
 
-export function CommentsList({ workspaceId, taskId }: Props) {
+export function CommentsList({ workspaceId, taskId, initialCommentId }: Props) {
   const currentUserId = useAuthStore((s) => s.user?.userId)
   const { data: members = [] } = useMembers(workspaceId)
+  const [highlightedCommentId, setHighlightedCommentId] = useState<string | null>(null)
+  const scrolledRef = useRef(false)
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useComments(
     workspaceId,
@@ -46,6 +49,17 @@ export function CommentsList({ workspaceId, taskId }: Props) {
   }, [fetchNextPage, hasNextPage, isFetchingNextPage])
 
   const comments = data?.pages.flatMap((p) => p.items) ?? []
+
+  useEffect(() => {
+    if (!initialCommentId || isLoading || scrolledRef.current || comments.length === 0) return
+    const el = document.querySelector(`[data-comment-id="${initialCommentId}"]`)
+    if (!el) return
+    scrolledRef.current = true
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    setHighlightedCommentId(initialCommentId)
+    const timer = setTimeout(() => setHighlightedCommentId(null), 3000)
+    return () => clearTimeout(timer)
+  }, [initialCommentId, isLoading, comments])
 
   const handleCreate = async (content: string, stagedFiles: File[]) => {
     const newComment = await createMutation.mutateAsync({ content })
@@ -89,6 +103,7 @@ export function CommentsList({ workspaceId, taskId }: Props) {
               taskId={taskId}
               currentUserId={currentUserId}
               members={members}
+              isHighlighted={highlightedCommentId === comment.id}
               onUpdate={handleUpdate}
               onDelete={handleDelete}
             />

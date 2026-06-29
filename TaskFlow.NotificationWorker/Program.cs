@@ -41,9 +41,7 @@ try
 
     builder.Services.AddDbContext<AppDbContext>(opts => opts.UseNpgsql(postgresConn));
 
-    var mux = ConnectionMultiplexer.Connect(redisConn);
-    builder.Services.AddSingleton<IConnectionMultiplexer>(mux);
-
+    builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConn));
     builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
     builder.Services.AddScoped<INotificationDispatchService, NotificationDispatchService>();
 

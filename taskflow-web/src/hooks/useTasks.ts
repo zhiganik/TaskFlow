@@ -8,6 +8,13 @@ const closedTasksKey = (workspaceId: string, filter?: TaskFilterParams) =>
 const tasksKey = (workspaceId: string, filter?: TaskFilterParams) =>
   ['tasks', workspaceId, filter ?? {}]
 
+export const useTask = (workspaceId: string, taskId: string | null) =>
+  useQuery({
+    queryKey: ['task', workspaceId, taskId],
+    queryFn: () => tasksApi.getById(workspaceId, taskId!),
+    enabled: !!workspaceId && !!taskId,
+  })
+
 export const useTasks = (workspaceId: string, filter?: TaskFilterParams) =>
   useQuery({
     queryKey: tasksKey(workspaceId, filter),

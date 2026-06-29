@@ -14,6 +14,7 @@ interface Props {
   taskId: string
   currentUserId: string | undefined
   members: MemberDto[]
+  isHighlighted?: boolean
   onUpdate: (commentId: string, content: string, stagedFiles: File[]) => Promise<void>
   onDelete: (commentId: string) => Promise<void>
 }
@@ -28,7 +29,7 @@ function formatRelative(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-export function CommentItem({ comment, workspaceId, taskId, currentUserId, members, onUpdate, onDelete }: Props) {
+export function CommentItem({ comment, workspaceId, taskId, currentUserId, members, isHighlighted, onUpdate, onDelete }: Props) {
   const [editing, setEditing] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -75,7 +76,10 @@ export function CommentItem({ comment, workspaceId, taskId, currentUserId, membe
   }
 
   return (
-    <div className="group flex gap-2.5 py-3">
+    <div
+      data-comment-id={comment.id}
+      className={`group flex gap-2.5 py-3 transition-colors duration-700 ${isHighlighted ? 'rounded-md bg-brand-50 ring-1 ring-brand-300' : ''}`}
+    >
       <UserAvatar
         displayName={comment.createdByName}
         avatarColor={comment.createdByAvatarColor}
