@@ -277,6 +277,23 @@ export function ColumnsIcon({ className = 'h-4 w-4' }: IconProps) {
   )
 }
 
+export function BellIcon({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M10 2a6 6 0 0 0-6 6c0 3.5-1.5 5-2 5.5h16c-.5-.5-2-2-2-5.5a6 6 0 0 0-6-6z" />
+      <path d="M8.5 17a1.5 1.5 0 0 0 3 0" />
+    </svg>
+  )
+}
+
 export function TrashIcon({ className = 'h-4 w-4' }: IconProps) {
   return (
     <svg

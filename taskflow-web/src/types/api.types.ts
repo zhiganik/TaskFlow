@@ -261,3 +261,25 @@ export interface CreateCommentRequest {
 export interface UpdateCommentRequest {
   content: string
 }
+
+export type NotificationType =
+  | 'MentionedInComment'
+  | 'TaskAssigned'
+  | 'TaskStatusChanged'
+  | 'MemberInvited'
+
+export interface NotificationDto {
+  id: string
+  type: NotificationType
+  title: string
+  body: string
+  isRead: boolean
+  createdAt: string
+  workspaceId: string | null
+  taskId: string | null
+  commentId: string | null
+}
+
+export interface UnreadCountDto {
+  count: number
+}

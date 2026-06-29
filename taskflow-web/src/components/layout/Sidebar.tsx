@@ -1,11 +1,16 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink, useParams } from 'react-router-dom'
+import { notificationsApi } from '../../api/notifications.api'
 import { useProfile } from '../../hooks/useProfile'
+import { useNotificationHub } from '../../hooks/useNotificationHub'
 import { useAuthStore } from '../../store/authStore'
-import { ArchiveIcon, BoardIcon, MembersIcon, SettingsIcon } from '../ui/Icons'
+import { useNotificationStore } from '../../store/notificationStore'
+import { ArchiveIcon, BellIcon, BoardIcon, MembersIcon, SettingsIcon } from '../ui/Icons'
 import { ProfileModal } from '../profile/ProfileModal'
 import { UserAvatar } from '../ui/UserAvatar'
 import { WorkspaceSwitcher } from '../workspaces/WorkspaceSwitcher'
+import { NotificationsModal } from '../notifications/NotificationsModal'
+import type { NotificationType } from '../../types/api.types'
 
 function navLinkClassName({ isActive }: { isActive: boolean }) {
   return `block rounded-md px-2.5 py-1.5 text-xs font-medium ${
@@ -14,12 +19,20 @@ function navLinkClassName({ isActive }: { isActive: boolean }) {
 }
 
 export function Sidebar() {
-  // Keep profile in sync for the lifetime of the app session (not just while ProfileModal is open).
-  // This is also what drives the Pending → Ready polling and the resulting tasks/members invalidation.
   useProfile()
+  useNotificationHub()
   const user = useAuthStore((s) => s.user)
+  const unreadCount = useNotificationStore((s) => s.unreadCount)
+  const setUnreadCount = useNotificationStore((s) => s.setUnreadCount)
   const { workspaceId } = useParams<{ workspaceId: string }>()
   const [profileOpen, setProfileOpen] = useState(false)
+  const [notifOpen, setNotifOpen] = useState(false)
+  const [unreadOnly, setUnreadOnly] = useState(false)
+  const [typeFilter, setTypeFilter] = useState<NotificationType | undefined>()
+
+  useEffect(() => {
+    notificationsApi.unreadCount().then((r) => setUnreadCount(r.count)).catch(() => {})
+  }, [setUnreadCount])
 
   return (
     <>
@@ -65,27 +78,56 @@ export function Sidebar() {
         )}
 
         {user && (
-          <button
-            type="button"
-            onClick={() => setProfileOpen(true)}
-            className="mt-auto flex items-center gap-2 border-t border-gray-100 px-4 pt-3 text-left hover:bg-gray-50"
-          >
-            <UserAvatar
-              displayName={user.displayName}
-              avatarColor={user.avatarColor}
-              avatarPath={user.avatarPath}
-              avatarStatus={user.avatarStatus}
-              size="md"
-            />
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-medium text-gray-900">{user.displayName}</div>
-              <div className="truncate text-xs text-gray-500">{user.email}</div>
+          <div className="mt-auto">
+            <div className="border-t border-gray-100 px-2 pt-2 pb-1">
+              <button
+                type="button"
+                onClick={() => setNotifOpen(true)}
+                className="flex w-full items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              >
+                <span className="relative flex items-center">
+                  <BellIcon className="h-3.5 w-3.5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -right-1.5 -top-1.5 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 text-[8px] font-semibold leading-none text-white">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </span>
+                Notifications
+              </button>
             </div>
-          </button>
+            <button
+              type="button"
+              onClick={() => setProfileOpen(true)}
+              className="flex w-full items-center gap-2 border-t border-gray-100 px-4 py-3 text-left hover:bg-gray-50"
+            >
+              <UserAvatar
+                displayName={user.displayName}
+                avatarColor={user.avatarColor}
+                avatarPath={user.avatarPath}
+                avatarStatus={user.avatarStatus}
+                size="md"
+              />
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-medium text-gray-900">{user.displayName}</div>
+                <div className="truncate text-xs text-gray-500">{user.email}</div>
+              </div>
+            </button>
+          </div>
         )}
       </aside>
 
       {profileOpen && <ProfileModal onClose={() => setProfileOpen(false)} />}
+
+      {notifOpen && (
+        <NotificationsModal
+          unreadOnly={unreadOnly}
+          typeFilter={typeFilter}
+          onUnreadOnlyChange={setUnreadOnly}
+          onTypeFilterChange={setTypeFilter}
+          onClose={() => setNotifOpen(false)}
+        />
+      )}
     </>
   )
 }
