@@ -27,7 +27,6 @@ try
         ?? throw new InvalidOperationException("POSTGRES_CONNECTION env var is required");
 
     builder.Services.AddDbContext<AppDbContext>(opts => opts.UseNpgsql(postgresConn));
-    builder.Services.AddScoped<IWorkspacesRepository, WorkspacesRepository>();
     builder.Services.AddScoped<IArchiveRepository, ArchiveRepository>();
 
     builder.Services.AddHostedService<ArchiveWorkerService>();

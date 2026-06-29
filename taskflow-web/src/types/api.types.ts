@@ -69,11 +69,6 @@ export interface WorkspaceDto {
   ownerId: string
   createdAt: string
   myRole: WorkspaceRole
-  archiveAfterDays: number
-}
-
-export interface UpdateArchiveSettingsRequest {
-  archiveAfterDays: number
 }
 
 export interface CreateWorkspaceRequest {

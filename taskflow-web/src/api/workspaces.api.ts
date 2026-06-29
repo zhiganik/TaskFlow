@@ -1,7 +1,6 @@
 import { apiClient } from './client'
 import type {
   CreateWorkspaceRequest,
-  UpdateArchiveSettingsRequest,
   UpdateWorkspaceRequest,
   WorkspaceDto,
 } from '../types/api.types'
@@ -18,7 +17,4 @@ export const workspacesApi = {
     apiClient.put<WorkspaceDto>(`/workspaces/${id}`, data).then((r) => r.data),
 
   remove: (id: string) => apiClient.delete<void>(`/workspaces/${id}`).then((r) => r.data),
-
-  updateArchiveSettings: (id: string, data: UpdateArchiveSettingsRequest) =>
-    apiClient.put<WorkspaceDto>(`/workspaces/${id}/archive-settings`, data).then((r) => r.data),
 }

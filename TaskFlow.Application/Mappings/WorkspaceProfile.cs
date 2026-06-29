@@ -15,7 +15,6 @@ public class WorkspaceProfile : Profile
                 src.Name,
                 src.OwnerId,
                 src.CreatedAt,
-                (WorkspaceRole)ctx.Items["myRole"],
-                src.ArchiveAfterDays));
+                (WorkspaceRole)ctx.Items["myRole"]));
     }
 }

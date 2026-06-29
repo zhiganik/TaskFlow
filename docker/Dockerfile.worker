@@ -6,16 +6,16 @@ COPY Directory.Build.props .
 COPY TaskFlow.Contracts/TaskFlow.Contracts.csproj               TaskFlow.Contracts/
 COPY TaskFlow.Application/TaskFlow.Application.csproj           TaskFlow.Application/
 COPY TaskFlow.Infrastructure/TaskFlow.Infrastructure.csproj     TaskFlow.Infrastructure/
-COPY TaskFlow.FileLoader.Worker/TaskFlow.FileLoader.Worker.csproj TaskFlow.FileLoader.Worker/
-RUN dotnet restore TaskFlow.FileLoader.Worker/TaskFlow.FileLoader.Worker.csproj
+COPY TaskFlow.FileWorker/TaskFlow.FileWorker.csproj             TaskFlow.FileWorker/
+RUN dotnet restore TaskFlow.FileWorker/TaskFlow.FileWorker.csproj
 
 # Stage 2 — build & publish
 FROM restore AS build
 COPY TaskFlow.Contracts/     TaskFlow.Contracts/
 COPY TaskFlow.Application/   TaskFlow.Application/
 COPY TaskFlow.Infrastructure/ TaskFlow.Infrastructure/
-COPY TaskFlow.FileLoader.Worker/ TaskFlow.FileLoader.Worker/
-RUN dotnet publish TaskFlow.FileLoader.Worker/TaskFlow.FileLoader.Worker.csproj \
+COPY TaskFlow.FileWorker/    TaskFlow.FileWorker/
+RUN dotnet publish TaskFlow.FileWorker/TaskFlow.FileWorker.csproj \
     -c Release -o /app/publish --no-restore
 
 # Stage 3 — runtime only (no SDK, no source)
@@ -30,4 +30,4 @@ RUN mkdir -p /app/uploads/processed \
 USER appuser
 
 EXPOSE 8080
-ENTRYPOINT ["dotnet", "TaskFlow.FileLoader.Worker.dll"]
+ENTRYPOINT ["dotnet", "TaskFlow.FileWorker.dll"]

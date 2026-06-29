@@ -64,20 +64,6 @@ public class WorkspacesController(
         return Ok(result);
     }
 
-    /// <summary>Update the workspace archive settings (auto-archive delay).</summary>
-    [HttpPut("{workspaceId:guid}/archive-settings")]
-    [Authorize(Policy = WorkspacePolicies.Admin)]
-    [ProducesResponseType(typeof(WorkspaceDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdateArchiveSettings(Guid workspaceId, UpdateArchiveSettingsRequest request, CancellationToken ct)
-    {
-        var result = await workspacesService.UpdateArchiveSettingsAsync(workspaceId, User.GetUserId(), request, ct);
-        return Ok(result);
-    }
-
     /// <summary>List closed and deleted tasks in the workspace archive.</summary>
     [HttpGet("{workspaceId:guid}/archive")]
     [Authorize(Policy = WorkspacePolicies.Member)]

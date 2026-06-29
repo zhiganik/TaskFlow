@@ -20,25 +20,13 @@ public class ArchiveWorkerService(IServiceScopeFactory scopeFactory, ILogger<Arc
     {
         try
         {
-            await using var scope = scopeFactory.CreateAsyncScope();
-            var workspacesRepo = scope.ServiceProvider.GetRequiredService<IWorkspacesRepository>();
-            var archiveRepo    = scope.ServiceProvider.GetRequiredService<IArchiveRepository>();
-
-            var workspaces = await workspacesRepo.GetAllAsync(ct);
-            var active     = workspaces.Where(w => w.ArchiveAfterDays > 0).ToList();
-
-            var totalClosed = 0;
-
-            foreach (var ws in active)
-            {
-                var cutoff = DateTime.UtcNow.AddDays(-ws.ArchiveAfterDays);
-                totalClosed += await archiveRepo.BulkCloseExpiredDoneTasksAsync(ws.Id, cutoff, ct);
-            }
+            await using var scope       = scopeFactory.CreateAsyncScope();
+            var archiveRepo             = scope.ServiceProvider.GetRequiredService<IArchiveRepository>();
+            var cutoff                  = DateTime.UtcNow.AddDays(-1);
+            var totalClosed             = await archiveRepo.BulkCloseExpiredDoneTasksAsync(cutoff, ct);
 
             if (totalClosed > 0)
-                logger.LogInformation(
-                    "Archive pass complete: {Count} task(s) closed across {Workspaces} workspace(s)",
-                    totalClosed, active.Count);
+                logger.LogInformation("Archive pass complete: {Count} task(s) closed", totalClosed);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

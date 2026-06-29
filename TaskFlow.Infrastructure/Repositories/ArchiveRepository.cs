@@ -23,10 +23,9 @@ public class ArchiveRepository(AppDbContext db) : IArchiveRepository
             .OrderByDescending(t => t.ClosedAt)
             .ToListAsync(ct);
 
-    public async Task<int> BulkCloseExpiredDoneTasksAsync(Guid workspaceId, DateTime cutoff, CancellationToken ct = default) =>
+    public async Task<int> BulkCloseExpiredDoneTasksAsync(DateTime cutoff, CancellationToken ct = default) =>
         await db.WorkspaceTasks
-            .Where(t => t.WorkspaceId == workspaceId
-                     && t.Status == WorkspaceTaskStatus.Done
+            .Where(t => t.Status == WorkspaceTaskStatus.Done
                      && t.CompletedAt != null
                      && t.CompletedAt <= cutoff)
             .ExecuteUpdateAsync(s => s

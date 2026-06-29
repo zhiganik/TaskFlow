@@ -88,22 +88,6 @@ public class WorkspacesService(
         return mapper.Map<WorkspaceDto>(workspace, opts => opts.Items["myRole"] = WorkspaceRole.Owner);
     }
 
-    public async Task<WorkspaceDto> UpdateArchiveSettingsAsync(Guid id, string callerId, UpdateArchiveSettingsRequest request, CancellationToken ct)
-    {
-        var workspace = await repository.GetByIdAsync(id, ct)
-            ?? throw new NotFoundException($"Workspace {id} was not found.");
-
-        workspace.ArchiveAfterDays = request.ArchiveAfterDays;
-        await repository.UpdateAsync(workspace, ct);
-
-        await cache.InvalidateAsync(CacheKeys.UserWorkspaces(workspace.OwnerId), ct);
-
-        logger.LogInformation("Workspace {WorkspaceId} archive settings updated: ArchiveAfterDays={Days}", id, request.ArchiveAfterDays);
-
-        var member = await membersRepository.GetMemberAsync(id, callerId, ct);
-        return mapper.Map<WorkspaceDto>(workspace, opts => opts.Items["myRole"] = member?.Role ?? WorkspaceRole.Owner);
-    }
-
     public async Task DeleteAsync(Guid id, CancellationToken ct)
     {
         var workspace = await repository.GetByIdAsync(id, ct)

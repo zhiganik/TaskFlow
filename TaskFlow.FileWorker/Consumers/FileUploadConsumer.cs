@@ -4,7 +4,7 @@ using TaskFlow.Application.Interfaces.Repositories;
 using TaskFlow.Application.Interfaces.Services;
 using TaskFlow.Contracts.Messages;
 
-namespace TaskFlow.FileLoader.Worker.Consumers;
+namespace TaskFlow.FileWorker.Consumers;
 
 public class FileUploadConsumer(
     ITaskAttachmentRepository repo,

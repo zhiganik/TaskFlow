@@ -13,7 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskFlow.Tests", "TaskFlow.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskFlow.Contracts", "TaskFlow.Contracts\TaskFlow.Contracts.csproj", "{BA911640-10FC-42FC-80A7-80114B87DE18}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskFlow.FileLoader.Worker", "TaskFlow.FileLoader.Worker\TaskFlow.FileLoader.Worker.csproj", "{5F7AF72F-1509-4785-9423-4C0893E53AC1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskFlow.FileWorker", "TaskFlow.FileWorker\TaskFlow.FileWorker.csproj", "{5F7AF72F-1509-4785-9423-4C0893E53AC1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskFlow.AvatarWorker", "TaskFlow.AvatarWorker\TaskFlow.AvatarWorker.csproj", "{172CBC57-BE46-448F-AEA1-D1B6657DB197}"
 EndProject

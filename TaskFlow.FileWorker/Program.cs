@@ -5,7 +5,7 @@ using Serilog.Formatting.Compact;
 using StackExchange.Redis;
 using TaskFlow.Application.Interfaces.Repositories;
 using TaskFlow.Application.Interfaces.Services;
-using TaskFlow.FileLoader.Worker.Consumers;
+using TaskFlow.FileWorker.Consumers;
 using TaskFlow.Infrastructure.HealthChecks; // AddInfrastructureChecks
 using TaskFlow.Infrastructure.Persistence;
 using TaskFlow.Infrastructure.Repositories;
@@ -17,7 +17,7 @@ Log.Logger = new LoggerConfiguration()
 
 try
 {
-    Log.Information("Starting TaskFlow FileLoader Worker");
+    Log.Information("Starting TaskFlow File Worker");
 
     var builder = WebApplication.CreateBuilder(args);
 
