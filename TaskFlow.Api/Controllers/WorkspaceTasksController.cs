@@ -82,7 +82,7 @@ public class WorkspaceTasksController(IWorkspaceTasksService tasksService) : Con
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(Guid workspaceId, Guid taskId, UpdateTaskRequest request, CancellationToken ct)
     {
-        var result = await tasksService.UpdateAsync(workspaceId, taskId, request, ct);
+        var result = await tasksService.UpdateAsync(workspaceId, taskId, request, User.GetUserId(), ct);
         return Ok(result);
     }
 
@@ -96,7 +96,7 @@ public class WorkspaceTasksController(IWorkspaceTasksService tasksService) : Con
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Move(Guid workspaceId, Guid taskId, MoveTaskRequest request, CancellationToken ct)
     {
-        var result = await tasksService.MoveAsync(workspaceId, taskId, request, ct);
+        var result = await tasksService.MoveAsync(workspaceId, taskId, request, User.GetUserId(), ct);
         return Ok(result);
     }
 
@@ -124,7 +124,7 @@ public class WorkspaceTasksController(IWorkspaceTasksService tasksService) : Con
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Close(Guid workspaceId, Guid taskId, CancellationToken ct)
     {
-        var result = await tasksService.CloseAsync(workspaceId, taskId, ct);
+        var result = await tasksService.CloseAsync(workspaceId, taskId, User.GetUserId(), ct);
         return Ok(result);
     }
 
@@ -138,7 +138,7 @@ public class WorkspaceTasksController(IWorkspaceTasksService tasksService) : Con
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Reopen(Guid workspaceId, Guid taskId, CancellationToken ct)
     {
-        var result = await tasksService.ReopenAsync(workspaceId, taskId, ct);
+        var result = await tasksService.ReopenAsync(workspaceId, taskId, User.GetUserId(), ct);
         return Ok(result);
     }
 
@@ -151,7 +151,7 @@ public class WorkspaceTasksController(IWorkspaceTasksService tasksService) : Con
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid workspaceId, Guid taskId, CancellationToken ct)
     {
-        await tasksService.DeleteAsync(workspaceId, taskId, ct);
+        await tasksService.DeleteAsync(workspaceId, taskId, User.GetUserId(), ct);
         return NoContent();
     }
 }

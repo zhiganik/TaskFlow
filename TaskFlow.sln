@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskFlow.AvatarWorker", "Ta
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskFlow.ArchiveWorker", "TaskFlow.ArchiveWorker\TaskFlow.ArchiveWorker.csproj", "{C1ACA927-A7FE-4308-A917-194D5F37C191}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskFlow.NotificationWorker", "TaskFlow.NotificationWorker\TaskFlow.NotificationWorker.csproj", "{CA2BA5FD-5365-4BCB-A732-84C063F97D7E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -125,6 +127,18 @@ Global
 		{C1ACA927-A7FE-4308-A917-194D5F37C191}.Release|x64.Build.0 = Release|Any CPU
 		{C1ACA927-A7FE-4308-A917-194D5F37C191}.Release|x86.ActiveCfg = Release|Any CPU
 		{C1ACA927-A7FE-4308-A917-194D5F37C191}.Release|x86.Build.0 = Release|Any CPU
+		{CA2BA5FD-5365-4BCB-A732-84C063F97D7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA2BA5FD-5365-4BCB-A732-84C063F97D7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA2BA5FD-5365-4BCB-A732-84C063F97D7E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CA2BA5FD-5365-4BCB-A732-84C063F97D7E}.Debug|x64.Build.0 = Debug|Any CPU
+		{CA2BA5FD-5365-4BCB-A732-84C063F97D7E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CA2BA5FD-5365-4BCB-A732-84C063F97D7E}.Debug|x86.Build.0 = Debug|Any CPU
+		{CA2BA5FD-5365-4BCB-A732-84C063F97D7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA2BA5FD-5365-4BCB-A732-84C063F97D7E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA2BA5FD-5365-4BCB-A732-84C063F97D7E}.Release|x64.ActiveCfg = Release|Any CPU
+		{CA2BA5FD-5365-4BCB-A732-84C063F97D7E}.Release|x64.Build.0 = Release|Any CPU
+		{CA2BA5FD-5365-4BCB-A732-84C063F97D7E}.Release|x86.ActiveCfg = Release|Any CPU
+		{CA2BA5FD-5365-4BCB-A732-84C063F97D7E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

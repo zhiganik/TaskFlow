@@ -6,12 +6,14 @@ using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Exceptions;
 using TaskFlow.Application.Interfaces.Repositories;
 using TaskFlow.Application.Interfaces.Services;
+using TaskFlow.Contracts.Messages;
 
 namespace TaskFlow.Application.Services;
 
 public partial class TaskCommentsService(
     ITaskCommentsRepository commentsRepository,
     IWorkspaceTasksRepository tasksRepository,
+    IMessagePublisher publisher,
     IMapper mapper,
     ILogger<TaskCommentsService> logger) : ITaskCommentsService
 {
@@ -43,13 +45,21 @@ public partial class TaskCommentsService(
             CreatedById = createdById,
         };
 
-        comment.Mentions = ExtractMentions(comment.Id, request.Content);
-
         await commentsRepository.AddAsync(comment, ct);
 
         var created = await commentsRepository.GetByIdAsync(comment.Id, ct) ?? comment;
 
         logger.LogInformation("Comment {CommentId} created on task {TaskId} by {UserId}", comment.Id, taskId, createdById);
+
+        await publisher.PublishAsync(new CommentPostedEvent(
+            comment.Id,
+            taskId,
+            Guid.Empty,
+            workspaceId,
+            createdById,
+            created.CreatedBy?.DisplayName ?? string.Empty,
+            request.Content,
+            comment.CreatedAt), ct);
 
         return mapper.Map<TaskCommentDto>(created);
     }

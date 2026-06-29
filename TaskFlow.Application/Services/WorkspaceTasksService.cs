@@ -1,11 +1,13 @@
 using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using TaskFlow.Application.Domain.Entities;
+using TaskFlow.Application.Domain.Enums;
 using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Exceptions;
 using TaskFlow.Application.Interfaces.Repositories;
 using TaskFlow.Application.Interfaces.Services;
-using TaskFlow.Application.Domain.Enums;
+using TaskFlow.Contracts.Messages;
 
 namespace TaskFlow.Application.Services;
 
@@ -13,6 +15,8 @@ public class WorkspaceTasksService(
     IWorkspaceTasksRepository repository,
     IWorkspaceColumnsRepository columnsRepository,
     IWorkspaceLabelsRepository labelsRepository,
+    IMessagePublisher publisher,
+    UserManager<AppUser> userManager,
     IMapper mapper,
     ILogger<WorkspaceTasksService> logger) : IWorkspaceTasksService
 {
@@ -72,12 +76,28 @@ public class WorkspaceTasksService(
 
         logger.LogInformation("Task {TaskId} created in column {ColumnId} by {UserId}", task.Id, request.ColumnId, createdById);
 
+        if (request.AssigneeId is not null && request.AssigneeId != createdById)
+        {
+            var creator = await userManager.FindByIdAsync(createdById);
+            await publisher.PublishAsync(new TaskAssignedEvent(
+                task.Id,
+                task.Title,
+                Guid.Empty,
+                workspaceId,
+                request.AssigneeId,
+                createdById,
+                creator?.DisplayName ?? string.Empty,
+                DateTime.UtcNow), ct);
+        }
+
         return mapper.Map<WorkspaceTaskDto>(created);
     }
 
-    public async Task<WorkspaceTaskDto> UpdateAsync(Guid workspaceId, Guid taskId, UpdateTaskRequest request, CancellationToken ct)
+    public async Task<WorkspaceTaskDto> UpdateAsync(Guid workspaceId, Guid taskId, UpdateTaskRequest request, string updatedById, CancellationToken ct)
     {
         var task = await GetOwnedTaskAsync(workspaceId, taskId, ct);
+
+        var previousAssigneeId = task.AssigneeId;
 
         task.Title       = request.Title;
         task.Description = request.Description;
@@ -91,11 +111,27 @@ public class WorkspaceTasksService(
 
         logger.LogInformation("Task {TaskId} updated in workspace {WorkspaceId}", taskId, workspaceId);
 
+        if (request.AssigneeId is not null
+            && request.AssigneeId != previousAssigneeId
+            && request.AssigneeId != updatedById)
+        {
+            var updatedBy = await userManager.FindByIdAsync(updatedById);
+            await publisher.PublishAsync(new TaskAssignedEvent(
+                taskId,
+                task.Title,
+                Guid.Empty,
+                workspaceId,
+                request.AssigneeId,
+                updatedById,
+                updatedBy?.DisplayName ?? string.Empty,
+                DateTime.UtcNow), ct);
+        }
+
         var updated = await repository.GetByIdAsync(taskId, ct) ?? task;
         return mapper.Map<WorkspaceTaskDto>(updated);
     }
 
-    public async Task<WorkspaceTaskDto> MoveAsync(Guid workspaceId, Guid taskId, MoveTaskRequest request, CancellationToken ct)
+    public async Task<WorkspaceTaskDto> MoveAsync(Guid workspaceId, Guid taskId, MoveTaskRequest request, string movedById, CancellationToken ct)
     {
         var task = await GetOwnedTaskAsync(workspaceId, taskId, ct);
 
@@ -108,6 +144,8 @@ public class WorkspaceTasksService(
         var targetColumn = await columnsRepository.GetByIdAsync(request.ColumnId, ct);
         if (targetColumn is null || targetColumn.WorkspaceId != workspaceId)
             throw new NotFoundException($"Column {request.ColumnId} was not found in this workspace.");
+
+        var oldStatus = task.Status;
 
         task.ColumnId  = request.ColumnId;
         task.UpdatedAt = DateTime.UtcNow;
@@ -127,16 +165,21 @@ public class WorkspaceTasksService(
 
         logger.LogInformation("Task {TaskId} moved to column {ColumnId}", taskId, request.ColumnId);
 
+        if (task.Status != oldStatus)
+            await PublishStatusChangedEventAsync(task, workspaceId, oldStatus, task.Status, movedById, ct);
+
         var updated = await repository.GetByIdAsync(taskId, ct) ?? task;
         return mapper.Map<WorkspaceTaskDto>(updated);
     }
 
-    public async Task<WorkspaceTaskDto> CloseAsync(Guid workspaceId, Guid taskId, CancellationToken ct)
+    public async Task<WorkspaceTaskDto> CloseAsync(Guid workspaceId, Guid taskId, string closedById, CancellationToken ct)
     {
         var task = await GetOwnedTaskAsync(workspaceId, taskId, ct);
 
         if (task.Status == WorkspaceTaskStatus.Closed || task.Status == WorkspaceTaskStatus.Deleted)
             throw new BadRequestException("Task is already in the archive.");
+
+        var oldStatus = task.Status;
 
         task.Status    = WorkspaceTaskStatus.Closed;
         task.ClosedAt  = DateTime.UtcNow;
@@ -146,16 +189,19 @@ public class WorkspaceTasksService(
 
         logger.LogInformation("Task {TaskId} closed in workspace {WorkspaceId}", taskId, workspaceId);
 
+        await PublishStatusChangedEventAsync(task, workspaceId, oldStatus, WorkspaceTaskStatus.Closed, closedById, ct);
+
         return mapper.Map<WorkspaceTaskDto>(task);
     }
 
-    public async Task<WorkspaceTaskDto> ReopenAsync(Guid workspaceId, Guid taskId, CancellationToken ct)
+    public async Task<WorkspaceTaskDto> ReopenAsync(Guid workspaceId, Guid taskId, string reopenedById, CancellationToken ct)
     {
         var task = await GetOwnedTaskAsync(workspaceId, taskId, ct);
 
         if (task.Status is not WorkspaceTaskStatus.Closed and not WorkspaceTaskStatus.Deleted)
             throw new BadRequestException("Only closed or deleted tasks can be reopened.");
 
+        var oldStatus = task.Status;
         var column = await columnsRepository.GetByIdAsync(task.ColumnId, ct);
         task.Status      = column?.IsDoneColumn == true ? WorkspaceTaskStatus.Done : WorkspaceTaskStatus.Active;
         task.CompletedAt = column?.IsDoneColumn == true ? task.CompletedAt : null;
@@ -165,6 +211,8 @@ public class WorkspaceTasksService(
         await repository.UpdateAsync(task, ct);
 
         logger.LogInformation("Task {TaskId} reopened in workspace {WorkspaceId}", taskId, workspaceId);
+
+        await PublishStatusChangedEventAsync(task, workspaceId, oldStatus, task.Status, reopenedById, ct);
 
         return mapper.Map<WorkspaceTaskDto>(task);
     }
@@ -182,7 +230,7 @@ public class WorkspaceTasksService(
         return mapper.Map<WorkspaceTaskDto>(updated);
     }
 
-    public async Task DeleteAsync(Guid workspaceId, Guid taskId, CancellationToken ct)
+    public async Task DeleteAsync(Guid workspaceId, Guid taskId, string deletedById, CancellationToken ct)
     {
         var task = await GetOwnedTaskAsync(workspaceId, taskId, ct);
 
@@ -193,6 +241,8 @@ public class WorkspaceTasksService(
             return;
         }
 
+        var oldStatus = task.Status;
+
         task.Status    = WorkspaceTaskStatus.Deleted;
         task.ClosedAt  = DateTime.UtcNow;
         task.UpdatedAt = DateTime.UtcNow;
@@ -200,6 +250,30 @@ public class WorkspaceTasksService(
         await repository.UpdateAsync(task, ct);
 
         logger.LogInformation("Task {TaskId} soft-deleted in workspace {WorkspaceId}", taskId, workspaceId);
+
+        await PublishStatusChangedEventAsync(task, workspaceId, oldStatus, WorkspaceTaskStatus.Deleted, deletedById, ct);
+    }
+
+    private async Task PublishStatusChangedEventAsync(
+        WorkspaceTask task,
+        Guid workspaceId,
+        WorkspaceTaskStatus oldStatus,
+        WorkspaceTaskStatus newStatus,
+        string changedById,
+        CancellationToken ct)
+    {
+        var changedBy = await userManager.FindByIdAsync(changedById);
+        await publisher.PublishAsync(new TaskStatusChangedEvent(
+            task.Id,
+            task.Title,
+            Guid.Empty,
+            workspaceId,
+            changedById,
+            changedBy?.DisplayName ?? string.Empty,
+            oldStatus.ToString(),
+            newStatus.ToString(),
+            task.AssigneeId,
+            DateTime.UtcNow), ct);
     }
 
     private async Task ValidateLabelIds(Guid workspaceId, IReadOnlyList<Guid> labelIds, CancellationToken ct)

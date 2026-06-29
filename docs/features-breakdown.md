@@ -25,6 +25,7 @@ Update this file whenever a new feature is added or an existing one changes scop
 | Task File Attachments | Complete | [task-attachments.md](task-attachments.md)                        | `/api/v1/workspaces/{id}/tasks/{id}/attachments` |
 | User Avatars          | Complete | [avatars.md](avatars.md)                                          | `POST /api/v1/me/avatar`, `GET /api/v1/files/avatars/{file}` |
 | Archive               | Complete | [archive.md](archive.md)                                          | `GET /api/v1/workspaces/{id}/archive`, `PUT /api/v1/workspaces/{id}/tasks/{id}/close\|reopen` |
+| Notifications         | Complete | [notifications.md](notifications.md)                              | `GET /api/v1/notifications`, SignalR `/hubs/notifications` |
 
 ---
 

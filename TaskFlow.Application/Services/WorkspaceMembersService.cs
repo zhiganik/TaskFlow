@@ -8,6 +8,7 @@ using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Exceptions;
 using TaskFlow.Application.Interfaces.Repositories;
 using TaskFlow.Application.Interfaces.Services;
+using TaskFlow.Contracts.Messages;
 
 namespace TaskFlow.Application.Services;
 
@@ -16,6 +17,7 @@ public class WorkspaceMembersService(
     IWorkspacesRepository workspacesRepository,
     ICacheService cache,
     UserManager<AppUser> userManager,
+    IMessagePublisher publisher,
     IMapper mapper,
     ILogger<WorkspaceMembersService> logger) : IWorkspaceMembersService
 {
@@ -32,10 +34,10 @@ public class WorkspaceMembersService(
         return dtos;
     }
 
-    public async Task<MemberDto> AddAsync(Guid workspaceId, InviteMemberRequest request, CancellationToken ct)
+    public async Task<MemberDto> AddAsync(Guid workspaceId, InviteMemberRequest request, string invitedById, CancellationToken ct)
     {
-        if (await workspacesRepository.GetByIdAsync(workspaceId, ct) is null)
-            throw new NotFoundException($"Workspace {workspaceId} was not found.");
+        var workspace = await workspacesRepository.GetByIdAsync(workspaceId, ct)
+            ?? throw new NotFoundException($"Workspace {workspaceId} was not found.");
 
         var user = await userManager.FindByEmailAsync(request.Email)
             ?? throw new NotFoundException($"No user with email {request.Email} exists.");
@@ -62,6 +64,15 @@ public class WorkspaceMembersService(
 
         logger.LogInformation("User {UserId} added to workspace {WorkspaceId} with role {Role}",
             user.Id, workspaceId, request.Role);
+
+        var invitedBy = await userManager.FindByIdAsync(invitedById);
+        await publisher.PublishAsync(new MemberInvitedEvent(
+            workspaceId,
+            workspace.Name,
+            user.Id,
+            invitedBy?.DisplayName ?? string.Empty,
+            request.Role.ToString(),
+            DateTime.UtcNow), ct);
 
         return mapper.Map<MemberDto>(member);
     }

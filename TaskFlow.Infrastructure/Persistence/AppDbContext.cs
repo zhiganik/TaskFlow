@@ -16,7 +16,8 @@ public sealed class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<WorkspacePriorityConfig> WorkspacePriorityConfigs => Set<WorkspacePriorityConfig>();
     public DbSet<TaskLabel>               TaskLabels               => Set<TaskLabel>();
     public DbSet<TaskAttachment>          TaskAttachments          => Set<TaskAttachment>();
-    
+    public DbSet<Notification>            Notifications            => Set<Notification>();
+
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
         ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;

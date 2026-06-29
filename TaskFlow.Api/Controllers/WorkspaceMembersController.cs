@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TaskFlow.Api.Authorization;
+using TaskFlow.Api.Extensions;
 using TaskFlow.Application.Domain.Constants;
 using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Interfaces.Services;
@@ -35,7 +35,7 @@ public class WorkspaceMembersController(IWorkspaceMembersService membersService)
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Add(Guid workspaceId, InviteMemberRequest request, CancellationToken ct)
     {
-        var result = await membersService.AddAsync(workspaceId, request, ct);
+        var result = await membersService.AddAsync(workspaceId, request, User.GetUserId(), ct);
         return StatusCode(StatusCodes.Status201Created, result);
     }
 

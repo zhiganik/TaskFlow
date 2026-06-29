@@ -58,7 +58,19 @@ public class TaskCommentsRepository(AppDbContext db) : ITaskCommentsRepository
 
     public async Task UpdateAsync(TaskComment comment, CancellationToken ct = default)
     {
-        db.TaskComments.Update(comment);
+        // Explicit mention sync: db.Update/AttachGraph never deletes removed items from a
+        // collection navigation, so edits that remove @mentions would leave orphaned rows.
+        var existing = await db.Set<TaskCommentMention>()
+            .Where(m => m.CommentId == comment.Id)
+            .ToListAsync(ct);
+
+        db.Set<TaskCommentMention>().RemoveRange(existing);
+
+        if (comment.Mentions?.Count > 0)
+            db.Set<TaskCommentMention>().AddRange(comment.Mentions);
+
+        // db.Entry().State = Modified skips graph traversal per CLAUDE.md EF Core rule.
+        db.Entry(comment).State = EntityState.Modified;
         await db.SaveChangesAsync(ct);
     }
 

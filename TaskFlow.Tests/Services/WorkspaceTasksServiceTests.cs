@@ -1,5 +1,6 @@
 using AutoMapper;
 using FluentAssertions;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -8,6 +9,7 @@ using TaskFlow.Application.Domain.Enums;
 using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Exceptions;
 using TaskFlow.Application.Interfaces.Repositories;
+using TaskFlow.Application.Interfaces.Services;
 using TaskFlow.Application.Mappings;
 using TaskFlow.Application.Services;
 
@@ -16,10 +18,12 @@ namespace TaskFlow.Tests.Services;
 [TestFixture]
 public class WorkspaceTasksServiceTests
 {
-    private Mock<IWorkspaceTasksRepository>   _repositoryMock = null!;
-    private Mock<IWorkspaceColumnsRepository> _columnsRepositoryMock = null!;
-    private Mock<IWorkspaceLabelsRepository>  _labelsRepositoryMock = null!;
-    private Mock<ILogger<WorkspaceTasksService>> _loggerMock = null!;
+    private Mock<IWorkspaceTasksRepository>      _repositoryMock        = null!;
+    private Mock<IWorkspaceColumnsRepository>    _columnsRepositoryMock = null!;
+    private Mock<IWorkspaceLabelsRepository>     _labelsRepositoryMock  = null!;
+    private Mock<IMessagePublisher>              _publisherMock         = null!;
+    private Mock<UserManager<AppUser>>           _userManagerMock       = null!;
+    private Mock<ILogger<WorkspaceTasksService>> _loggerMock            = null!;
     private IMapper _mapper = null!;
 
     private WorkspaceTasksService _sut = null!;
@@ -30,7 +34,18 @@ public class WorkspaceTasksServiceTests
         _repositoryMock        = new Mock<IWorkspaceTasksRepository>();
         _columnsRepositoryMock = new Mock<IWorkspaceColumnsRepository>();
         _labelsRepositoryMock  = new Mock<IWorkspaceLabelsRepository>();
+        _publisherMock         = new Mock<IMessagePublisher>();
         _loggerMock            = new Mock<ILogger<WorkspaceTasksService>>();
+
+        var userStoreMock = new Mock<IUserStore<AppUser>>();
+        _userManagerMock = new Mock<UserManager<AppUser>>(
+            userStoreMock.Object, null!, null!, null!, null!, null!, null!, null!, null!);
+        _userManagerMock.Setup(m => m.FindByIdAsync(It.IsAny<string>()))
+                        .ReturnsAsync((AppUser?)null);
+
+        _publisherMock.Setup(p => p.PublishAsync(It.IsAny<object>(), It.IsAny<CancellationToken>()))
+                      .Returns(Task.CompletedTask);
+
         _mapper = new ServiceCollection()
             .AddLogging()
             .AddAutoMapper(cfg => cfg.AddProfile<WorkspaceTaskProfile>())
@@ -41,6 +56,8 @@ public class WorkspaceTasksServiceTests
             _repositoryMock.Object,
             _columnsRepositoryMock.Object,
             _labelsRepositoryMock.Object,
+            _publisherMock.Object,
+            _userManagerMock.Object,
             _mapper,
             _loggerMock.Object);
     }
@@ -218,7 +235,7 @@ public class WorkspaceTasksServiceTests
             .Setup(r => r.GetByIdAsync(task.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(task);
 
-        var result = await _sut.UpdateAsync(workspaceId, task.Id, request, CancellationToken.None);
+        var result = await _sut.UpdateAsync(workspaceId, task.Id, request, "user-1", CancellationToken.None);
 
         _repositoryMock.Verify(
             r => r.UpdateAsync(
@@ -240,7 +257,7 @@ public class WorkspaceTasksServiceTests
             .ReturnsAsync((WorkspaceTask?)null);
 
         var act = async () => await _sut.UpdateAsync(Guid.NewGuid(), taskId,
-            new UpdateTaskRequest("T", null, TaskPriority.Medium, null, null), CancellationToken.None);
+            new UpdateTaskRequest("T", null, TaskPriority.Medium, null, null), "user-1", CancellationToken.None);
 
         await act.Should().ThrowAsync<NotFoundException>();
         _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<WorkspaceTask>(), default), Times.Never);
@@ -267,7 +284,7 @@ public class WorkspaceTasksServiceTests
             .Setup(r => r.GetByIdAsync(targetColumn.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(targetColumn);
 
-        var result = await _sut.MoveAsync(workspaceId, task.Id, new MoveTaskRequest(targetColumn.Id), CancellationToken.None);
+        var result = await _sut.MoveAsync(workspaceId, task.Id, new MoveTaskRequest(targetColumn.Id), "user-1", CancellationToken.None);
 
         result.ColumnId.Should().Be(targetColumn.Id);
         result.ColumnName.Should().Be("In Progress");
@@ -288,7 +305,7 @@ public class WorkspaceTasksServiceTests
             .Setup(r => r.GetByIdAsync(task.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(task);
 
-        var act = async () => await _sut.MoveAsync(workspaceId, task.Id, new MoveTaskRequest(column.Id), CancellationToken.None);
+        var act = async () => await _sut.MoveAsync(workspaceId, task.Id, new MoveTaskRequest(column.Id), "user-1", CancellationToken.None);
 
         await act.Should().ThrowAsync<BadRequestException>();
         _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<WorkspaceTask>(), default), Times.Never);
@@ -309,26 +326,29 @@ public class WorkspaceTasksServiceTests
             .Setup(r => r.GetByIdAsync(foreignCol.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(foreignCol);
 
-        var act = async () => await _sut.MoveAsync(workspaceId, task.Id, new MoveTaskRequest(foreignCol.Id), CancellationToken.None);
+        var act = async () => await _sut.MoveAsync(workspaceId, task.Id, new MoveTaskRequest(foreignCol.Id), "user-1", CancellationToken.None);
 
         await act.Should().ThrowAsync<NotFoundException>();
         _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<WorkspaceTask>(), default), Times.Never);
     }
 
     [Test]
-    public async Task DeleteAsync_ValidRequest_DeletesTask()
+    public async Task DeleteAsync_ActiveTask_SoftDeletesTask()
     {
         var workspaceId = Guid.NewGuid();
         var column      = CreateColumn(workspaceId);
-        var task        = CreateTask(workspaceId, column);
+        var task        = CreateTask(workspaceId, column); // Status = Active
 
         _repositoryMock
             .Setup(r => r.GetByIdAsync(task.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(task);
 
-        await _sut.DeleteAsync(workspaceId, task.Id, CancellationToken.None);
+        await _sut.DeleteAsync(workspaceId, task.Id, "user-1", CancellationToken.None);
 
-        _repositoryMock.Verify(r => r.DeleteAsync(task.Id, default), Times.Once);
+        _repositoryMock.Verify(
+            r => r.UpdateAsync(It.Is<WorkspaceTask>(t => t.Status == WorkspaceTaskStatus.Deleted), default),
+            Times.Once);
+        _repositoryMock.Verify(r => r.DeleteAsync(It.IsAny<Guid>(), default), Times.Never);
     }
 
     [Test]
@@ -340,7 +360,7 @@ public class WorkspaceTasksServiceTests
             .Setup(r => r.GetByIdAsync(taskId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((WorkspaceTask?)null);
 
-        var act = async () => await _sut.DeleteAsync(Guid.NewGuid(), taskId, CancellationToken.None);
+        var act = async () => await _sut.DeleteAsync(Guid.NewGuid(), taskId, "user-1", CancellationToken.None);
 
         await act.Should().ThrowAsync<NotFoundException>();
         _repositoryMock.Verify(r => r.DeleteAsync(It.IsAny<Guid>(), default), Times.Never);
