@@ -45,6 +45,7 @@ public static class DependencyConfig
             .AddRepositories()
             .AddApplicationServices()
             .AddMappings()
+            .AddCors()
             .AddFluentValidationServices()
             .AddSwaggerDocumentation()
             .AddMessageBus()
@@ -52,6 +53,21 @@ public static class DependencyConfig
 
         services.AddControllers()
             .AddJsonOptions(opts => opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
+        return services;
+    }
+    
+    private static IServiceCollection AddCors(this IServiceCollection services)
+    {
+        var origins = Environment.GetEnvironmentVariable("CORS_ORIGINS")
+                      ?? "http://localhost:3000";
+
+        services.AddCors(opts =>
+            opts.AddPolicy("AllowFrontend", policy =>
+                policy.WithOrigins(origins.Split(','))
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials()));
 
         return services;
     }

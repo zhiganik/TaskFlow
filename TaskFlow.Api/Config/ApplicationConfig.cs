@@ -10,18 +10,15 @@ public static class ApplicationConfig
         app.UseMiddleware<GlobalExceptionMiddleware>();
         app.UseSerilogRequestLogging();
 
-        if (app.Environment.IsDevelopment())
+        app.UseSwagger();
+        app.UseSwaggerUI(opts =>
         {
-            app.UseSwagger();
-            app.UseSwaggerUI(opts =>
-            {
-                opts.SwaggerEndpoint("/swagger/v1/swagger.json", "TaskFlow API v1");
-                opts.DisplayRequestDuration();
-            });
-        }
+            opts.SwaggerEndpoint("/swagger/v1/swagger.json", "TaskFlow API v1");
+            opts.DisplayRequestDuration();
+        });
 
         app.UseHttpsRedirection();
-
+        app.UseCors("AllowFrontend");
         app.UseAuthentication();
         app.UseAuthorization();
 
