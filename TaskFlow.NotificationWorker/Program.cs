@@ -40,16 +40,32 @@ try
     var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? "taskflow-clients";
 
     builder.Services.AddDbContext<AppDbContext>(opts => opts.UseNpgsql(postgresConn));
+    
+    var options = new ConfigurationOptions()
+    {
+        AbortOnConnectFail = false,
+        ConnectRetry = 5,
+        ConnectTimeout = 5000,
+        ReconnectRetryPolicy = new ExponentialRetry(1000),
+    };
 
+    builder.Services.AddSingleton<IConnectionMultiplexer>(
+        sp => ConnectionMultiplexer.Connect(options));
+    
     builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConn));
     builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
     builder.Services.AddScoped<INotificationDispatchService, NotificationDispatchService>();
 
-    // SignalR backplane gets its own dedicated connection — do not share mux.
-    // The backplane manages subscriptions on a separate physical connection from
-    // the one used by IConnectionMultiplexer (health checks, future presence, etc.).
-    builder.Services.AddSignalR().AddStackExchangeRedis(redisConn);
-
+    builder.Services.AddSignalR()
+        .AddStackExchangeRedis(redisConn, opts =>
+        {
+            opts.Configuration.AbortOnConnectFail = false;
+            opts.Configuration.ConnectRetry = 5;
+            opts.Configuration.ConnectTimeout = 5000;
+            opts.Configuration.ChannelPrefix =
+                RedisChannel.Literal("signalr:notifications");
+        });
+    
     builder.Services
         .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(opts =>
