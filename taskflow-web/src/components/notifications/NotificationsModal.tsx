@@ -53,7 +53,7 @@ export function NotificationsModal({
       if (n.taskId) params.set('taskId', n.taskId)
       if (n.commentId) params.set('commentId', n.commentId)
       const qs = params.size > 0 ? `?${params}` : ''
-      navigate(`/workspaces/${n.workspaceId}${qs}`)
+      navigate(`/workspaces/${n.workspaceId}${qs}`, { replace: false })
     }
     onClose()
   }

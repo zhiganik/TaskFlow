@@ -521,6 +521,7 @@ export function DashboardPage() {
           {/* detail panel */}
           {selectedTask && (
             <TaskDetailPanel
+              key={`${selectedTask.id}-${initialCommentId ?? ''}`}
               task={selectedTask}
               columns={sorted}
               workspaceId={wsId}
