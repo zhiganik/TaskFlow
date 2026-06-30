@@ -1,6 +1,4 @@
-using System.Net;
-using System.Net.Mail;
-using FluentEmail.Core;
+using FluentEmail.MailKitSmtp;
 using MassTransit;
 using Serilog;
 using Serilog.Formatting.Compact;
@@ -32,16 +30,17 @@ try
     var username  = Environment.GetEnvironmentVariable("SMTP__USERNAME");
     var password  = Environment.GetEnvironmentVariable("SMTP__PASSWORD");
 
-    var smtpClient = new SmtpClient(smtpHost, smtpPort)
-    {
-        EnableSsl = smtpPort == 465 || smtpPort == 587,
-    };
-    if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
-        smtpClient.Credentials = new NetworkCredential(username, password);
-
     builder.Services
         .AddFluentEmail(fromEmail, fromName)
-        .AddSmtpSender(smtpClient);
+        .AddMailKitSender(new SmtpClientOptions
+        {
+            Server                  = smtpHost,
+            Port                    = smtpPort,
+            UseSsl                  = smtpPort == 465,
+            RequiresAuthentication  = !string.IsNullOrWhiteSpace(username),
+            User                    = username ?? string.Empty,
+            Password                = password ?? string.Empty,
+        });
 
     // MassTransit
     builder.Services.AddMassTransit(x =>
