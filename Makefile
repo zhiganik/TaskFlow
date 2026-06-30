@@ -1,3 +1,5 @@
+-include .env
+
 COMPOSE = docker compose --env-file .env -f docker/docker-compose.yml -f docker/docker-compose.override.yml
 
 .PHONY: up down reset build logs api-logs web-logs file-worker-logs avatar-worker-logs migrate shell db-shell redis-cli rabbitmq-cli test web-install fix-uploads
@@ -40,6 +42,12 @@ migrate:
 	dotnet ef database update \
 		--project TaskFlow.Infrastructure \
 		--startup-project TaskFlow.Api
+
+migrate-railway:
+	dotnet ef database update \
+		--project TaskFlow.Infrastructure \
+		--startup-project TaskFlow.Api \
+		--connection "$(POSTGRES_CONNECTION_RAILWAY)"
 
 shell:
 	$(COMPOSE) exec api sh
