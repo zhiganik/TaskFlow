@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query'
-import { apiClient } from '../../api/client'
 import type { AvatarStatus } from '../../types/api.types'
+
+const API_BASE = `${import.meta.env.VITE_API_URL ?? ''}/api/v1`
 
 interface Props {
   displayName: string
@@ -28,26 +28,13 @@ function initials(name: string) {
     .toUpperCase()
 }
 
-function useAvatarBlobUrl(fileName: string | null | undefined, ready: boolean): string | null {
-  const { data } = useQuery({
-    queryKey: ['avatar-img', fileName],
-    queryFn: async () => {
-      const res = await apiClient.get<Blob>(`/me/avatar/${fileName}`, { responseType: 'blob' })
-      return URL.createObjectURL(res.data)
-    },
-    enabled: ready && !!fileName,
-    staleTime: Infinity,   // UUID filenames are immutable — same name = same bytes
-    gcTime: 10 * 60 * 1000,
-    retry: false,
-  })
-  return data ?? null
-}
-
 export function UserAvatar({ displayName, avatarColor, avatarPath, avatarStatus, size = 'sm', className = '' }: Props) {
   const sizeClass = SIZE[size]
   const base = `shrink-0 rounded-full ${sizeClass} ${className}`
 
-  const imgUrl = useAvatarBlobUrl(avatarPath, avatarStatus === 'Ready')
+  const imgUrl = (avatarStatus === 'Ready' && avatarPath)
+    ? `${API_BASE}/me/avatar/${avatarPath}`
+    : null
 
   if (imgUrl) {
     return (

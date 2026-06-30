@@ -74,6 +74,7 @@ public class ProfileController(
     /// Falls back to streaming for local dev.
     /// </summary>
     [HttpGet("avatar/{fileName}")]
+    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status302Found)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
