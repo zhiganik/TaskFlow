@@ -1,4 +1,5 @@
 import { useEffect, type MouseEvent, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 
 interface ModalProps {
   title: string
@@ -17,7 +18,7 @@ export function Modal({ title, onClose, children }: ModalProps) {
 
   const stopPropagation = (e: MouseEvent) => e.stopPropagation()
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 sm:items-center sm:px-4"
       onClick={onClose}
@@ -32,6 +33,7 @@ export function Modal({ title, onClose, children }: ModalProps) {
         <h2 className="mb-4 text-base font-semibold text-gray-900">{title}</h2>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

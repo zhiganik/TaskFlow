@@ -33,13 +33,14 @@ public class WorkspaceColumnsRepository(AppDbContext db) : IWorkspaceColumnsRepo
 
     public async Task UpdateAsync(WorkspaceColumn column, CancellationToken ct = default)
     {
-        db.WorkspaceColumns.Update(column);
+        db.Entry(column).State = EntityState.Modified;
         await db.SaveChangesAsync(ct);
     }
 
     public async Task UpdateRangeAsync(IEnumerable<WorkspaceColumn> columns, CancellationToken ct = default)
     {
-        db.WorkspaceColumns.UpdateRange(columns);
+        foreach (var column in columns)
+            db.Entry(column).State = EntityState.Modified;
         await db.SaveChangesAsync(ct);
     }
 

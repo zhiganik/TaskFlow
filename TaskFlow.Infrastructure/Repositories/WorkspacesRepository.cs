@@ -21,7 +21,7 @@ public class WorkspacesRepository(AppDbContext db) : IWorkspacesRepository
 
     public async Task UpdateAsync(Workspace workspace, CancellationToken ct = default)
     {
-        db.Workspaces.Update(workspace);
+        db.Entry(workspace).State = EntityState.Modified;
         await db.SaveChangesAsync(ct);
     }
 
