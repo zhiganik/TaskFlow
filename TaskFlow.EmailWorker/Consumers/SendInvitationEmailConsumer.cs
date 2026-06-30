@@ -1,4 +1,4 @@
-using FluentEmail.Core;
+using System.Net.Http.Json;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using TaskFlow.Contracts.Messages;
@@ -6,15 +6,17 @@ using TaskFlow.Contracts.Messages;
 namespace TaskFlow.EmailWorker.Consumers;
 
 public class SendInvitationEmailConsumer(
-    IFluentEmail fluentEmail,
+    IHttpClientFactory httpClientFactory,
     ILogger<SendInvitationEmailConsumer> logger) : IConsumer<SendInvitationEmailMessage>
 {
     public async Task Consume(ConsumeContext<SendInvitationEmailMessage> context)
     {
-        var msg = context.Message;
-        var ct  = context.CancellationToken;
+        var msg       = context.Message;
+        var ct        = context.CancellationToken;
+        var fromEmail = Environment.GetEnvironmentVariable("EMAIL_FROM")    ?? "noreply@example.com";
+        var fromName  = Environment.GetEnvironmentVariable("EMAIL_FROM_NAME") ?? "TaskFlow";
 
-        var body = $"""
+        var html = $"""
             <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
               <h2 style="color:#3730a3">You're invited to join a workspace</h2>
               <p>You've been invited to <strong>{msg.WorkspaceName}</strong> as <strong>{msg.Role}</strong>.</p>
@@ -28,17 +30,27 @@ public class SendInvitationEmailConsumer(
             </div>
             """;
 
-        var result = await fluentEmail
-            .To(msg.ToEmail)
-            .Subject($"You're invited to {msg.WorkspaceName} on TaskFlow")
-            .Body(body, isHtml: true)
-            .SendAsync(ct);
+        var payload = new
+        {
+            from    = $"{fromName} <{fromEmail}>",
+            to      = new[] { msg.ToEmail },
+            subject = $"You're invited to {msg.WorkspaceName} on TaskFlow",
+            html,
+        };
 
-        if (!result.Successful)
-            logger.LogWarning("Failed to send invitation email to {Email}: {Errors}",
-                msg.ToEmail, string.Join(", ", result.ErrorMessages));
+        var client   = httpClientFactory.CreateClient("resend");
+        var response = await client.PostAsJsonAsync("emails", payload, ct);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var error = await response.Content.ReadAsStringAsync(ct);
+            logger.LogWarning("Failed to send invitation email to {Email}: {Status} {Error}",
+                msg.ToEmail, response.StatusCode, error);
+        }
         else
+        {
             logger.LogInformation("Invitation email sent to {Email} for workspace {WorkspaceName}",
                 msg.ToEmail, msg.WorkspaceName);
+        }
     }
 }

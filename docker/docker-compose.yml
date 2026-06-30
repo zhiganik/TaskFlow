@@ -191,10 +191,9 @@ services:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_USER: ${RABBITMQ_USER}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
-      SMTP__HOST: mailpit
-      SMTP__PORT: "1025"
-      SMTP__FROMEMAIL: noreply@taskflow.local
-      SMTP__FROMNAME: TaskFlow
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      EMAIL_FROM: ${EMAIL_FROM}
+      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME}
       SEQ_URL: http://seq
     healthcheck:
       test: ["CMD", "curl", "-f", "-s", "http://localhost:8080/health"]
