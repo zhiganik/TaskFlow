@@ -20,9 +20,13 @@ public sealed class S3BlobService : IBlobService, IDisposable
 
         var config = new AmazonS3Config
         {
-            ServiceURL           = o.ServiceUrl,
-            ForcePathStyle       = true,
-            AuthenticationRegion = o.Region,
+            ServiceURL                  = o.ServiceUrl,
+            ForcePathStyle              = true,
+            AuthenticationRegion        = o.Region,
+            // AWSSDK v4 adds CRC32 checksums to PutObject by default.
+            // Cloudflare R2 rejects these — only send checksums when explicitly required.
+            RequestChecksumCalculation  = RequestChecksumCalculation.WHEN_REQUIRED,
+            ResponseChecksumValidation  = ResponseChecksumValidation.WHEN_REQUIRED,
         };
 
         _client = new AmazonS3Client(new BasicAWSCredentials(o.AccessKey, o.SecretKey), config);
