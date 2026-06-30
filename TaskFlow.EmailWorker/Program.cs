@@ -1,4 +1,6 @@
-using FluentEmail.MailKitSmtp;
+using System.Net;
+using System.Net.Mail;
+using FluentEmail.Core;
 using MassTransit;
 using Serilog;
 using Serilog.Formatting.Compact;
@@ -22,7 +24,6 @@ try
            .WriteTo.Console(new CompactJsonFormatter())
            .AddSeqIfConfigured("taskflow-email-worker"));
 
-    // SMTP / email
     var smtpHost  = Environment.GetEnvironmentVariable("SMTP__HOST")      ?? "localhost";
     var smtpPort  = int.TryParse(Environment.GetEnvironmentVariable("SMTP__PORT"), out var p) ? p : 1025;
     var fromEmail = Environment.GetEnvironmentVariable("SMTP__FROMEMAIL") ?? "noreply@taskflow.local";
@@ -30,19 +31,18 @@ try
     var username  = Environment.GetEnvironmentVariable("SMTP__USERNAME");
     var password  = Environment.GetEnvironmentVariable("SMTP__PASSWORD");
 
+    var smtpClient = new SmtpClient(smtpHost, smtpPort)
+    {
+        EnableSsl             = true,
+        DeliveryMethod        = SmtpDeliveryMethod.Network,
+        UseDefaultCredentials = false,
+        Credentials           = new NetworkCredential(username, password),
+    };
+
     builder.Services
         .AddFluentEmail(fromEmail, fromName)
-        .AddMailKitSender(new SmtpClientOptions
-        {
-            Server                  = smtpHost,
-            Port                    = smtpPort,
-            UseSsl                  = smtpPort == 465,
-            RequiresAuthentication  = !string.IsNullOrWhiteSpace(username),
-            User                    = username ?? string.Empty,
-            Password                = password ?? string.Empty,
-        });
+        .AddSmtpSender(smtpClient);
 
-    // MassTransit
     builder.Services.AddMassTransit(x =>
     {
         x.AddConsumer<SendInvitationEmailConsumer>();
