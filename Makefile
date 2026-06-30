@@ -35,6 +35,9 @@ avatar-worker-logs:
 notification-worker-logs:
 	$(COMPOSE) logs -f notification-worker
 
+seq-logs:
+	$(COMPOSE) logs -f seq
+
 rabbitmq-cli:
 	$(COMPOSE) exec rabbitmq rabbitmqctl
 

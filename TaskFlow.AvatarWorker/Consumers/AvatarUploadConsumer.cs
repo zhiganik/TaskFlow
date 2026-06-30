@@ -69,9 +69,19 @@ public class AvatarUploadConsumer(
         catch (Exception ex)
         {
             logger.LogError(ex, "Avatar processing failed for user {UserId}", msg.UserId);
+
             user.AvatarStatus = AvatarStatus.Failed;
             db.Entry(user).State = EntityState.Modified;
-            try { await db.SaveChangesAsync(ct); } catch { /* best effort */ }
+            try
+            {
+                await db.SaveChangesAsync(ct);
+            }
+            catch (Exception dbEx)
+            {
+                logger.LogError(dbEx,
+                    "Failed to persist Failed status for user {UserId} after avatar processing error",
+                    msg.UserId);
+            }
         }
     }
 

@@ -1,6 +1,7 @@
 using Serilog;
 using Serilog.Formatting.Json;
 using TaskFlow.Api.Config;
+using TaskFlow.Infrastructure.Logging;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -19,7 +20,8 @@ try
         cfg.ReadFrom.Configuration(ctx.Configuration)
            .ReadFrom.Services(services)
            .Enrich.FromLogContext()
-           .WriteTo.Console(new JsonFormatter()));
+           .WriteTo.Console(new JsonFormatter())
+           .AddSeqIfConfigured("taskflow-api"));
 
     var app = builder.Build();
 

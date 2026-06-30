@@ -32,6 +32,7 @@ services:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_USER: ${RABBITMQ_USER}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      SEQ_URL: http://seq
     volumes:
       - uploads_data:/app/uploads
     healthcheck:
@@ -66,6 +67,7 @@ services:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_USER: ${RABBITMQ_USER}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      SEQ_URL: http://seq
     volumes:
       - uploads_data:/app/uploads
     healthcheck:
@@ -99,6 +101,7 @@ services:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_USER: ${RABBITMQ_USER}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      SEQ_URL: http://seq
     volumes:
       - uploads_data:/app/uploads
     healthcheck:
@@ -133,6 +136,7 @@ services:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_USER: ${RABBITMQ_USER}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      SEQ_URL: http://seq
     healthcheck:
       test: ["CMD", "curl", "-f", "-s", "http://localhost:8080/health"]
       interval: 30s
@@ -160,6 +164,7 @@ services:
       ASPNETCORE_URLS: http://+:8080
       DOTNET_ENVIRONMENT: Production
       POSTGRES_CONNECTION: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      SEQ_URL: http://seq
     healthcheck:
       test: ["CMD", "curl", "-f", "-s", "http://localhost:8080/health"]
       interval: 30s
@@ -169,6 +174,19 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - taskflow_net
+
+  seq:
+    image: datalust/seq:latest
+    container_name: taskflow_seq
+    ports:
+      - "5341:80"
+    environment:
+      ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_NOAUTHENTICATION: "true"
+    volumes:
+      - seq_data:/data
     networks:
       - taskflow_net
 
@@ -237,3 +255,4 @@ volumes:
   redis_data:
   rabbitmq_data:
   uploads_data:    # api reads processed files; file-worker writes them
+  seq_data:

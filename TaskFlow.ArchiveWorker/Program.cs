@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Formatting.Compact;
+using TaskFlow.Infrastructure.Logging;
 using TaskFlow.Application.Interfaces.Repositories;
 using TaskFlow.ArchiveWorker.Services;
 using TaskFlow.Infrastructure.HealthChecks;
@@ -21,7 +22,8 @@ try
         cfg.ReadFrom.Configuration(ctx.Configuration)
            .ReadFrom.Services(services)
            .Enrich.FromLogContext()
-           .WriteTo.Console(new CompactJsonFormatter()));
+           .WriteTo.Console(new CompactJsonFormatter())
+           .AddSeqIfConfigured("taskflow-archive-worker"));
 
     var postgresConn = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION")
         ?? throw new InvalidOperationException("POSTGRES_CONNECTION env var is required");

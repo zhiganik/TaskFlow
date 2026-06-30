@@ -2,6 +2,7 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Formatting.Compact;
+using TaskFlow.Infrastructure.Logging;
 using StackExchange.Redis;
 using Microsoft.Extensions.Options;
 using TaskFlow.Application.Interfaces.Repositories;
@@ -27,7 +28,8 @@ try
         cfg.ReadFrom.Configuration(ctx.Configuration)
            .ReadFrom.Services(services)
            .Enrich.FromLogContext()
-           .WriteTo.Console(new CompactJsonFormatter()));
+           .WriteTo.Console(new CompactJsonFormatter())
+           .AddSeqIfConfigured("taskflow-file-worker"));
 
     var postgresConn = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION")
         ?? throw new InvalidOperationException("POSTGRES_CONNECTION env var is required");
