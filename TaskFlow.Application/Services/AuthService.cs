@@ -16,6 +16,7 @@ public class AuthService(
     ICacheService cache,
     IOptions<JwtOptions> jwtOptions,
     IMapper mapper,
+    IDemoWorkspaceSeeder demoSeeder,
     ILogger<AuthService> logger) : IAuthService
 {
     private readonly JwtOptions _jwt = jwtOptions.Value;
@@ -35,6 +36,9 @@ public class AuthService(
             throw new ConflictException(string.Join(' ', result.Errors.Select(e => e.Description)));
 
         logger.LogInformation("User {UserId} registered with email {Email}", user.Id, user.Email);
+
+        try   { await demoSeeder.SeedAsync(user.Id, ct); }
+        catch (Exception ex) { logger.LogError(ex, "Demo workspace seeding failed for user {UserId}", user.Id); }
 
         return mapper.Map<UserDto>(user);
     }

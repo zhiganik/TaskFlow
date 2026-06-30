@@ -21,6 +21,7 @@ public class AuthServiceTests
     private Mock<UserManager<AppUser>> _userManagerMock = null!;
     private Mock<IJwtService> _jwtServiceMock = null!;
     private Mock<ICacheService> _cacheMock = null!;
+    private Mock<IDemoWorkspaceSeeder> _demoSeederMock = null!;
     private Mock<ILogger<AuthService>> _loggerMock = null!;
     private IMapper _mapper = null!;
     private JwtOptions _jwtOptions = null!;
@@ -36,6 +37,7 @@ public class AuthServiceTests
 
         _jwtServiceMock = new Mock<IJwtService>();
         _cacheMock = new Mock<ICacheService>();
+        _demoSeederMock = new Mock<IDemoWorkspaceSeeder>();
         _loggerMock = new Mock<ILogger<AuthService>>();
 
         _mapper = new ServiceCollection()
@@ -59,6 +61,7 @@ public class AuthServiceTests
             _cacheMock.Object,
             Options.Create(_jwtOptions),
             _mapper,
+            _demoSeederMock.Object,
             _loggerMock.Object);
     }
 

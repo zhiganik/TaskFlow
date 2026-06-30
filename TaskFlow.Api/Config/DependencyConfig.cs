@@ -219,6 +219,7 @@ public static class DependencyConfig
         services.AddScoped<IArchiveService, ArchiveService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IWorkspaceInvitationService, WorkspaceInvitationService>();
+        services.AddScoped<IDemoWorkspaceSeeder, DemoWorkspaceSeeder>();
         return services;
     }
 
