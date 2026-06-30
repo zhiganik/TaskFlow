@@ -26,7 +26,6 @@
 - [Two-Level Cache](#two-level-cache)
 - [Authentication & RBAC](#authentication--rbac)
 - [Deployment](#deployment-railway--cloudflare)
-- [Screenshots](#screenshots)
 - [Getting Started](#getting-started-local)
 
 ---
@@ -101,7 +100,7 @@
 
 ## Architecture
 
-The system runs as **10 services** in production on Railway, coordinated through RabbitMQ and Redis:
+The system runs as **11 services** in production on Railway, coordinated through RabbitMQ and Redis:
 
 ```
                     ┌─────────────────────────────────────┐
@@ -342,7 +341,9 @@ Role hierarchy: `Owner (0) > Admin (1) > Member (2)` — access granted when `us
 
 ## Deployment (Railway + Cloudflare)
 
-All services run on **Railway** (10 services, same private network):
+All services run on **Railway** (11 services, same private network):
+
+![Railway deployment — all 11 services online](docs/screenshots/Railway.png)
 
 | Railway Service | Replicas | Public Domain |
 |----------------|----------|---------------|
@@ -355,6 +356,7 @@ All services run on **Railway** (10 services, same private network):
 | Archive Worker | 1 | — |
 | PostgreSQL | 1 | — (postgres-volume) |
 | Redis | 1 | — (redis-volume) |
+| RabbitMQ | 1 | — |
 | Seq | 1 | seq.zhiganik-taskflow.com |
 
 Workers with 2 replicas (Notification, File) are safe due to Redis backplane (SignalR) and idempotent message consumers (MassTransit).
@@ -365,18 +367,6 @@ Workers with 2 replicas (Notification, File) are safe due to Redis backplane (Si
 - CDN caching for hashed static assets (Vite content-hash filenames → 1-year `Cache-Control`)
 
 **Secrets** are Railway project variables (`JWT_SECRET`, `RESEND_API_KEY`, `POSTGRES_PASSWORD`, `REDIS_PASSWORD`, `RABBITMQ_USER`, `RABBITMQ_PASSWORD`, `EMAIL_FROM`, `FRONTEND_BASE_URL`, etc.) — never committed to source.
-
----
-
-## Screenshots
-
-<!-- screenshot: kanban-board — full workspace view with columns and task cards -->
-<!-- screenshot: task-detail — task drawer with comments, @mentions, and file attachments -->
-<!-- screenshot: notifications-panel — notification bell with real-time updates -->
-<!-- screenshot: attachment-upload — file upload with Pending → Ready status polling -->
-<!-- screenshot: workspace-settings — priority color config and label management -->
-
-> Screenshots coming soon — images will live in `docs/screenshots/`.
 
 ---
 

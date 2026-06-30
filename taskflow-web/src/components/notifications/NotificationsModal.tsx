@@ -1,5 +1,6 @@
 import { useEffect, type MouseEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { useNotifications, type NotificationsFilter } from '../../hooks/useNotifications'
 import { useNotificationStore } from '../../store/notificationStore'
 import { formatDistanceToNow } from '../../lib/dateUtils'
@@ -35,6 +36,7 @@ export function NotificationsModal({
   onClose,
 }: Props) {
   const navigate = useNavigate()
+  const qc = useQueryClient()
   const setUnreadCount = useNotificationStore((s) => s.setUnreadCount)
 
   const filter: NotificationsFilter = { unreadOnly, type: typeFilter }
@@ -48,9 +50,12 @@ export function NotificationsModal({
     return () => document.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  function handleClick(n: NotificationDto) {
+  async function handleClick(n: NotificationDto) {
     if (!n.isRead) markRead.mutate(n.id)
     if (n.workspaceId) {
+      if (n.type === 'MemberInvited') {
+        await qc.invalidateQueries({ queryKey: ['workspaces'] })
+      }
       const params = new URLSearchParams()
       if (n.taskId) params.set('taskId', n.taskId)
       if (n.commentId) params.set('commentId', n.commentId)
