@@ -6,7 +6,8 @@ import { InviteMemberModal } from '../components/members/InviteMemberModal'
 import { RemoveMemberDialog } from '../components/members/RemoveMemberDialog'
 import { Alert } from '../components/ui/Alert'
 import { Button } from '../components/ui/Button'
-import { TrashIcon } from '../components/ui/Icons'
+import { MenuIcon, TrashIcon } from '../components/ui/Icons'
+import { useMobileSidebar } from '../store/mobileSidebarStore'
 import { Spinner } from '../components/ui/Spinner'
 import { UserAvatar } from '../components/ui/UserAvatar'
 import { useCancelInvitation, useInvitations } from '../hooks/useInvitations'
@@ -30,6 +31,7 @@ export function MembersPage() {
   const [inviteOpen, setInviteOpen] = useState(false)
   const [removeTarget, setRemoveTarget] = useState<MemberDto | null>(null)
   const [roleError, setRoleError] = useState<string | null>(null)
+  const { toggle: toggleSidebar } = useMobileSidebar()
 
   const handleRoleChange = (member: MemberDto, role: 'Admin' | 'Member') => {
     setRoleError(null)
@@ -44,10 +46,20 @@ export function MembersPage() {
       <Sidebar />
 
       <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="flex shrink-0 items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900">Members</h1>
-            {workspace && <p className="mt-0.5 text-sm text-gray-500">{workspace.name}</p>}
+        <header className="flex shrink-0 items-center justify-between border-b border-gray-200 bg-white px-3 py-3 md:px-6 md:py-4">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              className="rounded-md p-2 text-gray-500 hover:bg-gray-100 md:hidden"
+              aria-label="Open menu"
+            >
+              <MenuIcon className="h-5 w-5" />
+            </button>
+            <div>
+              <h1 className="text-lg font-semibold text-gray-900 md:text-xl">Members</h1>
+              {workspace && <p className="mt-0.5 text-sm text-gray-500">{workspace.name}</p>}
+            </div>
           </div>
           {canManage && (
             <Button type="button" onClick={() => setInviteOpen(true)}>
@@ -56,7 +68,7 @@ export function MembersPage() {
           )}
         </header>
 
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6 md:px-6 md:py-5">
           {!isLoadingWorkspace && !workspace ? (
             <div className="flex justify-center py-10 text-center">
               <div>

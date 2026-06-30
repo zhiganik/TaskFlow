@@ -11,10 +11,12 @@ import {
   CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  MenuIcon,
   PencilIcon,
   PlusIcon,
   TrashIcon,
 } from '../components/ui/Icons'
+import { useMobileSidebar } from '../store/mobileSidebarStore'
 import { Spinner } from '../components/ui/Spinner'
 import { useColumns, useReorderColumns, useUpdateColumn } from '../hooks/useColumns'
 import { useWorkspaces } from '../hooks/useWorkspaces'
@@ -38,6 +40,7 @@ export function ColumnsPage() {
   const [renameTarget, setRenameTarget] = useState<WorkspaceColumnDto | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<WorkspaceColumnDto | null>(null)
   const [reorderError, setReorderError] = useState<string | null>(null)
+  const { toggle: toggleSidebar } = useMobileSidebar()
 
   const sorted = columns ? [...columns].sort((a, b) => a.order - b.order) : []
   const atLimit = sorted.length >= MAX_COLUMNS
@@ -58,14 +61,24 @@ export function ColumnsPage() {
       <Sidebar />
 
       <main className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-3">
-          <span className="text-sm font-medium text-gray-900">
-            {isLoadingWorkspace
-              ? 'Loading…'
-              : workspace
-                ? `${workspace.name} — Columns`
-                : 'Workspace not found'}
-          </span>
+        <header className="flex items-center justify-between border-b border-gray-200 bg-white px-3 py-3 md:px-6">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              className="rounded-md p-2 text-gray-500 hover:bg-gray-100 md:hidden"
+              aria-label="Open menu"
+            >
+              <MenuIcon className="h-5 w-5" />
+            </button>
+            <span className="text-sm font-medium text-gray-900">
+              {isLoadingWorkspace
+                ? 'Loading…'
+                : workspace
+                  ? `${workspace.name} — Columns`
+                  : 'Workspace not found'}
+            </span>
+          </div>
 
           {canManage && (
             <Button
@@ -106,13 +119,13 @@ export function ColumnsPage() {
                 </div>
               ) : (
                 <>
-                  {/* horizontal scroll track */}
-                  <div className="overflow-x-auto pb-2">
-                    <div className="flex min-w-max items-start gap-3">
+                  {/* mobile: vertical stack; desktop: horizontal scroll */}
+                  <div className="md:overflow-x-auto md:pb-2">
+                    <div className="flex flex-col gap-3 md:flex-row md:min-w-max md:items-start">
                       {sorted.map((column, index) => (
                         <div
                           key={column.id}
-                          className="flex w-60 shrink-0 flex-col rounded-lg border border-gray-200 bg-white shadow-sm"
+                          className="flex w-full flex-col rounded-lg border border-gray-200 bg-white shadow-sm md:w-60 md:shrink-0"
                         >
                           {/* card header */}
                           <div className="flex items-center justify-between gap-2 border-b border-gray-100 px-4 py-3">
@@ -211,7 +224,7 @@ export function ColumnsPage() {
                         <button
                           type="button"
                           onClick={() => setAddOpen(true)}
-                          className="flex h-24 w-60 shrink-0 items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-200 text-sm text-gray-400 transition-colors hover:border-brand-400 hover:text-brand-600"
+                          className="flex h-16 w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-200 text-sm text-gray-400 transition-colors hover:border-brand-400 hover:text-brand-600 md:h-24 md:w-60 md:shrink-0"
                         >
                           <PlusIcon className="h-4 w-4" />
                           Add column

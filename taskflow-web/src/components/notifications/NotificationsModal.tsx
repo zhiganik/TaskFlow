@@ -66,15 +66,14 @@ export function NotificationsModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4"
+      className="fixed inset-0 z-50 flex flex-col bg-white sm:items-center sm:justify-center sm:bg-black/30 sm:p-4"
       onClick={onClose}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Notifications"
-        className="flex w-full max-w-lg flex-col rounded-xl border border-gray-200 bg-white shadow-xl"
-        style={{ maxHeight: '80vh' }}
+        className="flex h-full w-full flex-col bg-white sm:h-auto sm:max-h-[80vh] sm:w-full sm:max-w-lg sm:rounded-xl sm:border sm:border-gray-200 sm:shadow-xl"
         onClick={stopPropagation}
       >
         {/* Header */}
@@ -93,7 +92,8 @@ export function NotificationsModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex h-6 w-6 items-center justify-center rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              aria-label="Close notifications"
             >
               ✕
             </button>

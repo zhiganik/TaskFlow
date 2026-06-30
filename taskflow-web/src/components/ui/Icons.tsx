@@ -294,6 +294,23 @@ export function BellIcon({ className = 'h-4 w-4' }: IconProps) {
   )
 }
 
+export function MenuIcon({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      className={className}
+    >
+      <line x1="3" y1="5" x2="17" y2="5" />
+      <line x1="3" y1="10" x2="17" y2="10" />
+      <line x1="3" y1="15" x2="17" y2="15" />
+    </svg>
+  )
+}
+
 export function TrashIcon({ className = 'h-4 w-4' }: IconProps) {
   return (
     <svg

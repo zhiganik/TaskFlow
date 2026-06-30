@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import { getErrorMessage } from '../../api/errors'
 import { useSetTaskLabels } from '../../hooks/useLabels'
 import { useCloseTask, useDeleteTask, useMoveTask, useReopenTask, useUpdateTask } from '../../hooks/useTasks'
@@ -46,6 +47,7 @@ function formatRelative(iso: string) {
 }
 
 export function TaskDetailPanel({ task, columns, workspaceId, width, initialCommentId, onResizeStart, onClose, onTaskUpdated }: TaskDetailPanelProps) {
+  const isMobile = useIsMobile()
   const updateMutation = useUpdateTask(workspaceId)
   const moveMutation = useMoveTask(workspaceId)
   const deleteMutation = useDeleteTask(workspaceId)
@@ -154,15 +156,26 @@ export function TaskDetailPanel({ task, columns, workspaceId, width, initialComm
 
   return (
     <div
-      className="relative flex shrink-0 flex-col overflow-hidden border-l-4 bg-white"
-      style={{ width, borderLeftColor: getPriorityColor(task.priority) }}
+      className={[
+        'flex shrink-0 flex-col overflow-hidden bg-white',
+        isMobile
+          ? 'fixed inset-0 z-20 border-t-4 w-full'
+          : 'relative border-l-4',
+      ].join(' ')}
+      style={
+        isMobile
+          ? { borderTopColor: getPriorityColor(task.priority) }
+          : { width, borderLeftColor: getPriorityColor(task.priority) }
+      }
     >
-      {/* resize handle */}
-      <div
-        onMouseDown={onResizeStart}
-        className="absolute left-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-brand-400/30 transition-colors z-10"
-        title="Drag to resize"
-      />
+      {/* resize handle — desktop only */}
+      {!isMobile && (
+        <div
+          onMouseDown={onResizeStart}
+          className="absolute left-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-brand-400/30 transition-colors z-10"
+          title="Drag to resize"
+        />
+      )}
       {/* header */}
       <div className="shrink-0 border-b border-gray-100 px-4 py-3">
         <div className="mb-2 flex items-start gap-2">

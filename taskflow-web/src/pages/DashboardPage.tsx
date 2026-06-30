@@ -10,9 +10,10 @@ import { TaskDetailPanel } from '../components/tasks/TaskDetailPanel'
 import { TaskFilterBar } from '../components/tasks/TaskFilterBar'
 import { Alert } from '../components/ui/Alert'
 import { Button } from '../components/ui/Button'
-import { CheckIcon, PencilIcon, PlusIcon, TrashIcon } from '../components/ui/Icons'
+import { CheckIcon, MenuIcon, PencilIcon, PlusIcon, TrashIcon } from '../components/ui/Icons'
 import { Sidebar } from '../components/layout/Sidebar'
 import { Spinner } from '../components/ui/Spinner'
+import { useMobileSidebar } from '../store/mobileSidebarStore'
 import { useColumns, useReorderColumns } from '../hooks/useColumns'
 import { useLabels } from '../hooks/useLabels'
 import { useMembers } from '../hooks/useMembers'
@@ -243,16 +244,25 @@ export function DashboardPage() {
 
   const canManage = workspace?.myRole === 'Owner' || workspace?.myRole === 'Admin'
   const isLoading = isLoadingWorkspace || isLoadingColumns
+  const { toggle: toggleSidebar } = useMobileSidebar()
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
       <Sidebar />
 
       <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="flex shrink-0 items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
+        <header className="flex shrink-0 items-center justify-between border-b border-gray-200 bg-white px-3 py-3 md:px-6 md:py-4">
           <div className="flex min-w-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              className="rounded-md p-2 text-gray-500 hover:bg-gray-100 md:hidden"
+              aria-label="Open menu"
+            >
+              <MenuIcon className="h-5 w-5" />
+            </button>
             {isLoadingWorkspace ? (
-              <span className="text-xl font-semibold text-gray-400">Loading…</span>
+              <span className="text-lg font-semibold text-gray-400 md:text-xl">Loading…</span>
             ) : workspace ? (
               editingWsName ? (
                 <div className="flex items-center gap-2">
@@ -285,7 +295,7 @@ export function DashboardPage() {
                 </div>
               ) : (
                 <div className="group flex min-w-0 items-center gap-2">
-                  <h1 className="truncate text-xl font-semibold text-gray-900">{workspace.name}</h1>
+                  <h1 className="truncate text-lg font-semibold text-gray-900 md:text-xl">{workspace.name}</h1>
                   {canManage && (
                     <button
                       type="button"
