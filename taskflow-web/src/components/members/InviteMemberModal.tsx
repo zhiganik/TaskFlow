@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { getErrorMessage, getFieldErrors } from '../../api/errors'
-import { useAddMember } from '../../hooks/useMembers'
+import { useCreateInvitation } from '../../hooks/useInvitations'
 import { inviteMemberSchema, type InviteMemberFormValues } from '../../validation/member.schema'
 import { Alert } from '../ui/Alert'
 import { Button } from '../ui/Button'
@@ -16,7 +16,7 @@ interface InviteMemberModalProps {
 }
 
 export function InviteMemberModal({ workspaceId, onClose }: InviteMemberModalProps) {
-  const addMemberMutation = useAddMember(workspaceId)
+  const createInvitationMutation = useCreateInvitation(workspaceId)
   const [serverError, setServerError] = useState<string | null>(null)
 
   const {
@@ -31,7 +31,7 @@ export function InviteMemberModal({ workspaceId, onClose }: InviteMemberModalPro
 
   const onSubmit = (values: InviteMemberFormValues) => {
     setServerError(null)
-    addMemberMutation.mutate(values, {
+    createInvitationMutation.mutate(values, {
       onSuccess: onClose,
       onError: (error) => {
         const fieldErrors = getFieldErrors(error)
@@ -47,7 +47,7 @@ export function InviteMemberModal({ workspaceId, onClose }: InviteMemberModalPro
   }
 
   return (
-    <Modal title="Add member" onClose={onClose}>
+    <Modal title="Invite member" onClose={onClose}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         {serverError && <Alert variant="error">{serverError}</Alert>}
 
@@ -60,7 +60,9 @@ export function InviteMemberModal({ workspaceId, onClose }: InviteMemberModalPro
             error={errors.email?.message}
             {...register('email')}
           />
-          <p className="text-xs text-gray-400">They need an existing TaskFlow account.</p>
+          <p className="text-xs text-gray-400">
+            We&apos;ll send them an email with a link to join.
+          </p>
         </div>
 
         <Select label="Role" error={errors.role?.message} {...register('role')}>
@@ -72,8 +74,8 @@ export function InviteMemberModal({ workspaceId, onClose }: InviteMemberModalPro
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" loading={addMemberMutation.isPending}>
-            {addMemberMutation.isPending ? 'Adding…' : 'Add member'}
+          <Button type="submit" loading={createInvitationMutation.isPending}>
+            {createInvitationMutation.isPending ? 'Sending…' : 'Send invite'}
           </Button>
         </div>
       </form>

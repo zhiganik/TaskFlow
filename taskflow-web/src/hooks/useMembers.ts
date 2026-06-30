@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { membersApi } from '../api/members.api'
-import type { InviteMemberRequest, UpdateMemberRoleRequest } from '../types/api.types'
+import type { UpdateMemberRoleRequest } from '../types/api.types'
 
 export const membersKey = (workspaceId: string) => ['members', workspaceId]
 
@@ -9,14 +9,6 @@ export const useMembers = (workspaceId: string) =>
     queryKey: membersKey(workspaceId),
     queryFn: () => membersApi.list(workspaceId),
   })
-
-export const useAddMember = (workspaceId: string) => {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (data: InviteMemberRequest) => membersApi.add(workspaceId, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: membersKey(workspaceId) }),
-  })
-}
 
 export const useUpdateMemberRole = (workspaceId: string) => {
   const qc = useQueryClient()

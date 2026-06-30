@@ -90,13 +90,39 @@ export interface MemberDto {
   joinedAt: string
 }
 
-export interface InviteMemberRequest {
+export interface UpdateMemberRoleRequest {
+  role: WorkspaceRole
+}
+
+export interface CreateInvitationRequest {
   email: string
   role: WorkspaceRole
 }
 
-export interface UpdateMemberRoleRequest {
+export interface InvitationDto {
+  id: string
+  email: string
   role: WorkspaceRole
+  workspaceName: string
+  invitedByName: string
+  expiresAt: string
+}
+
+export interface InvitationInfoDto {
+  email: string
+  workspaceName: string
+  role: WorkspaceRole
+  userExists: boolean
+}
+
+export interface AcceptInvitationRequest {
+  displayName?: string
+  password?: string
+}
+
+export interface AcceptInvitationResultDto {
+  workspaceId: string
+  auth: AuthResponseDto | null
 }
 
 export interface WorkspaceColumnDto {
@@ -266,7 +292,6 @@ export type NotificationType =
   | 'MentionedInComment'
   | 'TaskAssigned'
   | 'TaskStatusChanged'
-  | 'MemberInvited'
 
 export interface NotificationDto {
   id: string

@@ -9,10 +9,10 @@ import { Button } from '../components/ui/Button'
 import { TrashIcon } from '../components/ui/Icons'
 import { Spinner } from '../components/ui/Spinner'
 import { UserAvatar } from '../components/ui/UserAvatar'
+import { useCancelInvitation, useInvitations } from '../hooks/useInvitations'
 import { useMembers, useUpdateMemberRole } from '../hooks/useMembers'
 import { useWorkspaces } from '../hooks/useWorkspaces'
 import type { MemberDto } from '../types/api.types'
-
 
 export function MembersPage() {
   const { workspaceId: param } = useParams<{ workspaceId: string }>()
@@ -23,7 +23,9 @@ export function MembersPage() {
   const canManage = workspace?.myRole === 'Owner' || workspace?.myRole === 'Admin'
 
   const { data: members, isLoading: isLoadingMembers } = useMembers(workspaceId)
+  const { data: invitations, isLoading: isLoadingInvitations } = useInvitations(workspaceId)
   const updateRoleMutation = useUpdateMemberRole(workspaceId)
+  const cancelInvitationMutation = useCancelInvitation(workspaceId)
 
   const [inviteOpen, setInviteOpen] = useState(false)
   const [removeTarget, setRemoveTarget] = useState<MemberDto | null>(null)
@@ -49,12 +51,12 @@ export function MembersPage() {
           </div>
           {canManage && (
             <Button type="button" onClick={() => setInviteOpen(true)}>
-              Add member
+              Invite member
             </Button>
           )}
         </header>
 
-        <div className="flex-1 overflow-y-auto px-6 py-5">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
           {!isLoadingWorkspace && !workspace ? (
             <div className="flex justify-center py-10 text-center">
               <div>
@@ -68,11 +70,7 @@ export function MembersPage() {
             </div>
           ) : (
             <>
-              {roleError && (
-                <div className="mb-4">
-                  <Alert variant="error">{roleError}</Alert>
-                </div>
-              )}
+              {roleError && <Alert variant="error">{roleError}</Alert>}
 
               {isLoadingMembers ? (
                 <div className="flex justify-center py-10">
@@ -144,6 +142,57 @@ export function MembersPage() {
 
                   {members?.length === 0 && (
                     <p className="px-4 py-6 text-center text-sm text-gray-400">No members yet.</p>
+                  )}
+                </div>
+              )}
+
+              {canManage && (
+                <div>
+                  <h2 className="mb-2 text-sm font-medium text-gray-700">Pending invitations</h2>
+                  {isLoadingInvitations ? (
+                    <div className="flex justify-center py-6">
+                      <Spinner className="h-4 w-4 border-gray-300 border-t-brand-500" />
+                    </div>
+                  ) : invitations && invitations.length > 0 ? (
+                    <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                      {invitations.map((inv) => (
+                        <div
+                          key={inv.id}
+                          className="flex items-center gap-3 border-b border-gray-100 px-4 py-3 last:border-b-0"
+                        >
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-medium text-gray-500">
+                            {inv.email[0]?.toUpperCase() ?? '?'}
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-sm text-gray-900">{inv.email}</div>
+                            <div className="text-xs text-gray-400">
+                              Invited as {inv.role} · expires{' '}
+                              {new Date(inv.expiresAt).toLocaleDateString()}
+                            </div>
+                          </div>
+
+                          <span className="rounded-full bg-yellow-50 px-2 py-0.5 text-xs font-medium text-yellow-700">
+                            Pending
+                          </span>
+
+                          <button
+                            type="button"
+                            aria-label={`Cancel invitation for ${inv.email}`}
+                            disabled={
+                              cancelInvitationMutation.isPending &&
+                              cancelInvitationMutation.variables === inv.id
+                            }
+                            onClick={() => cancelInvitationMutation.mutate(inv.id)}
+                            className="rounded p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-400">No pending invitations.</p>
                   )}
                 </div>
               )}

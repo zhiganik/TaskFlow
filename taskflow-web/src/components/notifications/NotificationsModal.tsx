@@ -9,14 +9,12 @@ const TYPE_LABELS: Record<NotificationType, string> = {
   MentionedInComment: 'Mention',
   TaskAssigned:       'Assigned',
   TaskStatusChanged:  'Status',
-  MemberInvited:      'Invite',
 }
 
 const ALL_TYPES: NotificationType[] = [
   'MentionedInComment',
   'TaskAssigned',
   'TaskStatusChanged',
-  'MemberInvited',
 ]
 
 interface Props {

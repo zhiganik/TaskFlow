@@ -27,3 +27,18 @@ export const registerSchema = z.object({
 })
 
 export type RegisterFormValues = z.infer<typeof registerSchema>
+
+export const inviteRegisterSchema = z.object({
+  displayName: z
+    .string()
+    .min(1, 'Display name is required.')
+    .max(100, 'Display name must be 100 characters or fewer.'),
+  password: z
+    .string()
+    .min(1, 'Password is required.')
+    .min(8, 'Password must be at least 8 characters.')
+    .regex(/\d/, 'Password must contain at least one number.')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter.'),
+})
+
+export type InviteRegisterFormValues = z.infer<typeof inviteRegisterSchema>

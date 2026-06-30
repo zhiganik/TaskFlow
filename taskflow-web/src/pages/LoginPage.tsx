@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { getErrorMessage, getFieldErrors } from '../api/errors'
 import { AuthLayout } from '../components/layout/AuthLayout'
 import { Alert } from '../components/ui/Alert'
@@ -13,6 +13,8 @@ import { loginSchema, type LoginFormValues } from '../validation/auth.schema'
 export function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams] = useSearchParams()
+  const returnUrl = searchParams.get('returnUrl')
   const loginMutation = useLogin()
   const [serverError, setServerError] = useState<string | null>(null)
 
@@ -28,7 +30,7 @@ export function LoginPage() {
   const onSubmit = (values: LoginFormValues) => {
     setServerError(null)
     loginMutation.mutate(values, {
-      onSuccess: () => navigate('/', { replace: true }),
+      onSuccess: () => navigate(returnUrl ?? '/', { replace: true }),
       onError: (error) => {
         const fieldErrors = getFieldErrors(error)
         if (fieldErrors) {

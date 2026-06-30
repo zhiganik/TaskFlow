@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ArchivePage } from './pages/ArchivePage'
 import { DashboardPage } from './pages/DashboardPage'
 import { HealthCheckPage } from './pages/HealthCheckPage'
+import { InvitePage } from './pages/InvitePage'
 import { LoginPage } from './pages/LoginPage'
 import { MembersPage } from './pages/MembersPage'
 import { RegisterPage } from './pages/RegisterPage'
@@ -41,6 +42,7 @@ export function AppRouter() {
           }
         />
         <Route path="/health" element={<HealthCheckPage />} />
+        <Route path="/invite/:token" element={<InvitePage />} />
         <Route
           path="/"
           element={
