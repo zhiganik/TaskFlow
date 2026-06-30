@@ -7,7 +7,9 @@ RUN npm ci
 
 COPY taskflow-web/ .
 ARG VITE_API_URL=""
+ARG VITE_HUB_URL=""
 ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_HUB_URL=${VITE_HUB_URL}
 RUN npm run build
 
 # Stage 2 — serve with Nginx (no Node, no source, no node_modules in final image)

@@ -7,6 +7,7 @@ services:
       dockerfile: docker/Dockerfile.web
       args:
         VITE_API_URL: ""
+        VITE_HUB_URL: ""
     container_name: taskflow_web
     ports:
       - "3000:80"
