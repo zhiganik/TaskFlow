@@ -3,7 +3,6 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Moq;
 using TaskFlow.Application.Domain.Entities;
 using TaskFlow.Application.DTOs;
@@ -11,7 +10,6 @@ using TaskFlow.Application.Exceptions;
 using TaskFlow.Application.Interfaces.Repositories;
 using TaskFlow.Application.Interfaces.Services;
 using TaskFlow.Application.Mappings;
-using TaskFlow.Application.Options;
 using TaskFlow.Application.Services;
 
 namespace TaskFlow.Tests.Services;
@@ -58,8 +56,6 @@ public class ProfileServiceTests
             .BuildServiceProvider()
             .GetRequiredService<IMapper>();
 
-        var storageOpts = Options.Create(new StorageOptions { BasePath = "/app/uploads" });
-
         _sut = new ProfileService(
             _userManagerMock.Object,
             new Mock<IBlobService>().Object,
@@ -67,7 +63,6 @@ public class ProfileServiceTests
             new Mock<IMessagePublisher>().Object,
             _membersRepoMock.Object,
             _cacheMock.Object,
-            storageOpts,
             _mapper,
             _loggerMock.Object);
     }

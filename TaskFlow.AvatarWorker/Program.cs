@@ -3,8 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Formatting.Compact;
 using StackExchange.Redis;
+using Microsoft.Extensions.Options;
 using TaskFlow.AvatarWorker.Consumers;
 using TaskFlow.Application.Interfaces.Services;
+using TaskFlow.Application.Options;
 using TaskFlow.Infrastructure.HealthChecks; // AddInfrastructureChecks
 using TaskFlow.Infrastructure.Persistence;
 using TaskFlow.Infrastructure.Storage;
@@ -36,7 +38,22 @@ try
     builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
         ConnectionMultiplexer.Connect(redisConn));
     builder.Services.AddSingleton<ITemporaryFileStore, RedisTemporaryFileStore>();
-    builder.Services.AddSingleton<IBlobService, LocalFileBlobService>();
+
+    builder.Services.Configure<StorageOptions>(builder.Configuration.GetSection("Storage"));
+    builder.Services.Configure<S3Options>(opts =>
+    {
+        opts.BucketName = Environment.GetEnvironmentVariable("S3_BUCKET_NAME") ?? string.Empty;
+        opts.ServiceUrl = Environment.GetEnvironmentVariable("S3_SERVICE_URL") ?? string.Empty;
+        opts.AccessKey  = Environment.GetEnvironmentVariable("S3_ACCESS_KEY")  ?? string.Empty;
+        opts.SecretKey  = Environment.GetEnvironmentVariable("S3_SECRET_KEY")  ?? string.Empty;
+        opts.Region     = Environment.GetEnvironmentVariable("S3_REGION")      ?? "auto";
+    });
+
+    var storageType = Environment.GetEnvironmentVariable("STORAGE_TYPE") ?? "local";
+    if (storageType == "s3")
+        builder.Services.AddSingleton<IBlobService, S3BlobService>();
+    else
+        builder.Services.AddSingleton<IBlobService, LocalFileBlobService>();
 
     builder.Services.AddMassTransit(x =>
     {

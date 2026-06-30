@@ -76,7 +76,7 @@ public class TaskAttachmentService(
         await attachmentRepo.AddAsync(attachment, ct);
 
         var redisKey      = CacheKeys.TempFile(attachment.Id);
-        var permanentPath = Path.Combine(_storage.BasePath, "processed", storedFileName);
+        var permanentPath = $"processed/{storedFileName}";
 
         await tempStore.StoreAsync(redisKey, file.Stream, CacheKeys.Ttl.TempFile, ct);
 
@@ -114,6 +114,18 @@ public class TaskAttachmentService(
 
         var stream = await blobService.ReadAsync(attachment.StoragePath, ct);
         return (stream, attachment.OriginalFileName, attachment.ContentType);
+    }
+
+    public async Task<string?> GetDownloadUrlAsync(
+        Guid workspaceId, Guid taskId, Guid id, CancellationToken ct = default)
+    {
+        var attachment = await GetAttachmentAsync(workspaceId, taskId, id, ct);
+
+        if (attachment.Status != AttachmentStatus.Ready)
+            throw new ConflictException(
+                $"Attachment is not ready for download. Current status: {attachment.Status}.");
+
+        return await blobService.GetDownloadUrlAsync(attachment.StoragePath, TimeSpan.FromMinutes(15), ct);
     }
 
     public async Task DeleteAsync(

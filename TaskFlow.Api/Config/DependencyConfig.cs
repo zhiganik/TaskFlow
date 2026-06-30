@@ -81,6 +81,14 @@ public static class DependencyConfig
 
         services.Configure<CacheOptions>(config.GetSection("Cache"));
         services.Configure<StorageOptions>(config.GetSection("Storage"));
+        services.Configure<S3Options>(opts =>
+        {
+            opts.BucketName = Environment.GetEnvironmentVariable("S3_BUCKET_NAME") ?? string.Empty;
+            opts.ServiceUrl = Environment.GetEnvironmentVariable("S3_SERVICE_URL") ?? string.Empty;
+            opts.AccessKey  = Environment.GetEnvironmentVariable("S3_ACCESS_KEY")  ?? string.Empty;
+            opts.SecretKey  = Environment.GetEnvironmentVariable("S3_SECRET_KEY")  ?? string.Empty;
+            opts.Region     = Environment.GetEnvironmentVariable("S3_REGION")      ?? "auto";
+        });
 
         return services;
     }
@@ -223,7 +231,11 @@ public static class DependencyConfig
 
     private static IServiceCollection AddMessageBus(this IServiceCollection services)
     {
-        services.AddSingleton<IBlobService, LocalFileBlobService>();
+        var storageType = Environment.GetEnvironmentVariable("STORAGE_TYPE") ?? "local";
+        if (storageType == "s3")
+            services.AddSingleton<IBlobService, S3BlobService>();
+        else
+            services.AddSingleton<IBlobService, LocalFileBlobService>();
         services.AddSingleton<ITemporaryFileStore, RedisTemporaryFileStore>();
         services.AddScoped<IMessagePublisher, MassTransitPublisher>();
 

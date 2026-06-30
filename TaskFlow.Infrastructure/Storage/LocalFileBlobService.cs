@@ -1,37 +1,52 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using TaskFlow.Application.Exceptions;
 using TaskFlow.Application.Interfaces.Services;
+using TaskFlow.Application.Options;
 
 namespace TaskFlow.Infrastructure.Storage;
 
-public class LocalFileBlobService(ILogger<LocalFileBlobService> logger) : IBlobService
+public class LocalFileBlobService(
+    IOptions<StorageOptions> opts,
+    ILogger<LocalFileBlobService> logger) : IBlobService
 {
-    public async Task SaveAsync(Stream content, string storagePath, CancellationToken ct = default)
+    private readonly string _basePath = opts.Value.BasePath;
+
+    public async Task SaveAsync(Stream content, string key, CancellationToken ct = default)
     {
-        var dir = Path.GetDirectoryName(storagePath);
+        var fullPath = ToFullPath(key);
+        var dir = Path.GetDirectoryName(fullPath);
         if (dir is not null)
             Directory.CreateDirectory(dir);
 
-        await using var fs = File.Create(storagePath);
+        await using var fs = File.Create(fullPath);
         await content.CopyToAsync(fs, ct);
     }
 
-    public Task<Stream> ReadAsync(string storagePath, CancellationToken ct = default)
+    public Task<Stream> ReadAsync(string key, CancellationToken ct = default)
     {
-        logger.LogInformation($"Reading file {storagePath}");
-        
-        if (!File.Exists(storagePath))
-            throw new NotFoundException($"File not found: {storagePath}");
+        var fullPath = ToFullPath(key);
+        logger.LogInformation("Reading file {StoragePath}", fullPath);
 
-        Stream stream = File.OpenRead(storagePath);
+        if (!File.Exists(fullPath))
+            throw new NotFoundException($"File not found: {key}");
+
+        Stream stream = File.OpenRead(fullPath);
         return Task.FromResult(stream);
     }
 
-    public Task DeleteAsync(string storagePath, CancellationToken ct = default)
+    public Task DeleteAsync(string key, CancellationToken ct = default)
     {
-        if (File.Exists(storagePath))
-            File.Delete(storagePath);
+        var fullPath = ToFullPath(key);
+        if (File.Exists(fullPath))
+            File.Delete(fullPath);
 
         return Task.CompletedTask;
     }
+
+    public Task<string?> GetDownloadUrlAsync(string key, TimeSpan expiry, CancellationToken ct = default)
+        => Task.FromResult<string?>(null);
+
+    private string ToFullPath(string key) =>
+        Path.Combine(_basePath, key.Replace('/', Path.DirectorySeparatorChar));
 }

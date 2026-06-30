@@ -16,5 +16,8 @@ public interface ITaskAttachmentService
     Task<(Stream Stream, string FileName, string ContentType)> DownloadAsync(
         Guid workspaceId, Guid taskId, Guid id, CancellationToken ct = default);
 
+    // Returns a presigned URL when blob storage supports it (S3/R2); null means use DownloadAsync.
+    Task<string?> GetDownloadUrlAsync(Guid workspaceId, Guid taskId, Guid id, CancellationToken ct = default);
+
     Task DeleteAsync(Guid workspaceId, Guid taskId, Guid id, CancellationToken ct = default);
 }

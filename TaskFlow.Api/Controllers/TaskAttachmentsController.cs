@@ -64,18 +64,24 @@ public class TaskAttachmentsController(ITaskAttachmentService attachmentService)
     }
 
     /// <summary>
-    /// Download a file. Forces Content-Disposition: attachment — browser always downloads,
-    /// never renders inline. Only available when Status is Ready.
+    /// Download a file. Redirects to a presigned R2 URL when using cloud storage so the client
+    /// downloads directly from R2, bypassing the API. Falls back to streaming for local dev.
+    /// Only available when Status is Ready.
     /// </summary>
     [HttpGet("{id:guid}/download")]
     [Authorize(Policy = WorkspacePolicies.Member)]
     [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status302Found)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Download(Guid workspaceId, Guid taskId, Guid id, CancellationToken ct)
     {
+        var url = await attachmentService.GetDownloadUrlAsync(workspaceId, taskId, id, ct);
+        if (url is not null)
+            return Redirect(url);
+
         var (stream, fileName, contentType) =
             await attachmentService.DownloadAsync(workspaceId, taskId, id, ct);
 

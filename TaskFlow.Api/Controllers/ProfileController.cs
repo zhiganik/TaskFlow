@@ -1,10 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using TaskFlow.Api.Extensions;
 using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Interfaces.Services;
-using TaskFlow.Application.Options;
 
 namespace TaskFlow.Api.Controllers;
 
@@ -13,11 +11,8 @@ namespace TaskFlow.Api.Controllers;
 [Authorize]
 public class ProfileController(
     IProfileService profileService,
-    IBlobService blobService,
-    IOptions<StorageOptions> storageOpts, ILogger<ProfileController> logger) : ControllerBase
+    IBlobService blobService) : ControllerBase
 {
-    private readonly StorageOptions _storage = storageOpts.Value;
-
     /// <summary>Get the authenticated user's profile.</summary>
     [HttpGet]
     [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
@@ -73,17 +68,26 @@ public class ProfileController(
         return Ok(result);
     }
 
-    /// <summary>Serve a processed avatar image. Requires authentication — the filename is a GUID, not guessable, but access is still restricted to signed-in users.</summary>
+    /// <summary>
+    /// Serve a processed avatar image. Redirects to a presigned R2 URL when using cloud storage
+    /// so the client loads the image directly from R2, bypassing the API.
+    /// Falls back to streaming for local dev.
+    /// </summary>
     [HttpGet("avatar/{fileName}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status302Found)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetAvatar(string fileName, CancellationToken ct)
     {
-        var fullPath = Path.Combine(_storage.BasePath, "avatars", fileName);
-        
         try
         {
-            var stream = await blobService.ReadAsync(fullPath, ct);
+            var key = $"avatars/{fileName}";
+
+            var url = await blobService.GetDownloadUrlAsync(key, TimeSpan.FromHours(1), ct);
+            if (url is not null)
+                return Redirect(url);
+
+            var stream = await blobService.ReadAsync(key, ct);
             return File(stream, "image/jpeg", enableRangeProcessing: false);
         }
         catch (Exception)

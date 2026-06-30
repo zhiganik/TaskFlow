@@ -1,7 +1,6 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using TaskFlow.Application.Caching;
 using TaskFlow.Application.Domain.Entities;
 using TaskFlow.Application.Domain.Enums;
@@ -9,7 +8,6 @@ using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Exceptions;
 using TaskFlow.Application.Interfaces.Repositories;
 using TaskFlow.Application.Interfaces.Services;
-using TaskFlow.Application.Options;
 using TaskFlow.Contracts.Messages;
 
 namespace TaskFlow.Application.Services;
@@ -21,12 +19,9 @@ public class ProfileService(
     IMessagePublisher publisher,
     IWorkspaceMembersRepository membersRepository,
     ICacheService cache,
-    IOptions<StorageOptions> storageOpts,
     IMapper mapper,
     ILogger<ProfileService> logger) : IProfileService
 {
-    private readonly StorageOptions _storage = storageOpts.Value;
-
     public async Task<UserDto> GetAsync(string userId, CancellationToken ct = default)
     {
         var user = await userManager.FindByIdAsync(userId)
@@ -86,17 +81,14 @@ public class ProfileService(
         var user = await userManager.FindByIdAsync(userId)
             ?? throw new NotFoundException($"User {userId} not found.");
 
-        // Delete the old file before replacing — reconstruct full path from filename
         if (user.AvatarPath is not null && user.AvatarStatus == AvatarStatus.Ready)
-            await blobService.DeleteAsync(Path.Combine(_storage.BasePath, "avatars", user.AvatarPath), ct);
+            await blobService.DeleteAsync($"avatars/{user.AvatarPath}", ct);
 
         var storedFileName = $"{Guid.NewGuid()}.jpg";
-        var permanentPath  = Path.Combine(_storage.BasePath, "avatars", storedFileName);
         var redisKey       = CacheKeys.TempAvatar(userId);
 
         await tempStore.StoreAsync(redisKey, file.Stream, CacheKeys.Ttl.TempAvatar, ct);
 
-        // Store only the filename — callers reconstruct the full path using their own BasePath
         user.AvatarPath   = storedFileName;
         user.AvatarStatus = AvatarStatus.Pending;
 
@@ -108,7 +100,7 @@ public class ProfileService(
         {
             UserId        = userId,
             RedisKey      = redisKey,
-            PermanentPath = permanentPath,
+            PermanentPath = $"avatars/{storedFileName}",
         }, ct);
 
         await BustMemberCachesAsync(userId, ct);
@@ -123,7 +115,7 @@ public class ProfileService(
             ?? throw new NotFoundException($"User {userId} not found.");
 
         if (user.AvatarPath is not null && user.AvatarStatus == AvatarStatus.Ready)
-            await blobService.DeleteAsync(Path.Combine(_storage.BasePath, "avatars", user.AvatarPath), ct);
+            await blobService.DeleteAsync($"avatars/{user.AvatarPath}", ct);
 
         user.AvatarPath   = null;
         user.AvatarStatus = AvatarStatus.None;
