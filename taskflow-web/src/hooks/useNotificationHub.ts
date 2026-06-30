@@ -6,7 +6,8 @@ import { useNotificationStore } from '../store/notificationStore'
 import { NOTIFICATIONS_KEY } from './useNotifications'
 import type { NotificationDto } from '../types/api.types'
 
-const HUB_URL = '/hubs/notifications'
+const HUB_BASE = import.meta.env.VITE_HUB_URL ?? ''
+const HUB_URL  = `${HUB_BASE}/hubs/notifications`
 
 export function useNotificationHub() {
   const queryClient = useQueryClient()

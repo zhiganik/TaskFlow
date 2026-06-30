@@ -58,6 +58,14 @@ try
     builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
     builder.Services.AddScoped<INotificationDispatchService, NotificationDispatchService>();
 
+    var corsOrigins = Environment.GetEnvironmentVariable("CORS_ORIGINS") ?? "http://localhost:3000";
+    builder.Services.AddCors(opts =>
+        opts.AddPolicy("AllowFrontend", policy =>
+            policy.WithOrigins(corsOrigins.Split(','))
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials()));
+
     builder.Services.AddSignalR()
         .AddStackExchangeRedis(redisConn, opts =>
         {
@@ -129,6 +137,7 @@ try
 
     var app = builder.Build();
 
+    app.UseCors("AllowFrontend");
     app.UseAuthentication();
     app.UseAuthorization();
 
