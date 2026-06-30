@@ -21,7 +21,7 @@ export function useNotificationHub() {
         skipNegotiation: true,
       })
       .withAutomaticReconnect()
-      .configureLogging(signalR.LogLevel.Warning)
+      .configureLogging(signalR.LogLevel.Information)
       .build()
 
     connection.on('ReceiveNotification', (dto: NotificationDto) => {
@@ -38,7 +38,9 @@ export function useNotificationHub() {
       incrementUnread()
     })
 
-    connection.start().catch(() => {})
+    connection.start()
+      .then(() => console.log('[Hub] Connected:', HUB_URL))
+      .catch((e) => console.error('[Hub] Connection failed:', e))
 
     return () => {
       connection.stop().catch(() => {})
