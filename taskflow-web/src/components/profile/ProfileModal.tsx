@@ -186,14 +186,14 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
                     >
                       {avatarIsPending ? 'Processing…' : hasPhoto ? 'Change photo' : 'Upload photo'}
                     </button>
-                    {hasPhoto && !avatarIsPending && (
+                    {hasPhoto && (
                       <button
                         type="button"
                         disabled={removeAvatarMutation.isPending}
                         onClick={handleRemoveAvatar}
                         className="rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
                       >
-                        Remove
+                        {avatarIsPending ? 'Cancel' : 'Remove'}
                       </button>
                     )}
                   </div>
