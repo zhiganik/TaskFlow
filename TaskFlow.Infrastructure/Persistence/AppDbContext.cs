@@ -17,6 +17,7 @@ public sealed class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<TaskLabel>               TaskLabels               => Set<TaskLabel>();
     public DbSet<TaskAttachment>          TaskAttachments          => Set<TaskAttachment>();
     public DbSet<Notification>            Notifications            => Set<Notification>();
+    public DbSet<WorkspaceInvitation>     WorkspaceInvitations     => Set<WorkspaceInvitation>();
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {

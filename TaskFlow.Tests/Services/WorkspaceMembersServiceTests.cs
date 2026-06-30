@@ -18,12 +18,10 @@ namespace TaskFlow.Tests.Services;
 [TestFixture]
 public class WorkspaceMembersServiceTests
 {
-    private Mock<IWorkspaceMembersRepository>      _membersRepositoryMock    = null!;
-    private Mock<IWorkspacesRepository>            _workspacesRepositoryMock = null!;
-    private Mock<ICacheService>                    _cacheMock                = null!;
-    private Mock<UserManager<AppUser>>             _userManagerMock          = null!;
-    private Mock<IMessagePublisher>                _publisherMock            = null!;
-    private Mock<ILogger<WorkspaceMembersService>> _loggerMock               = null!;
+    private Mock<IWorkspaceMembersRepository>      _membersRepositoryMock = null!;
+    private Mock<ICacheService>                    _cacheMock             = null!;
+    private Mock<UserManager<AppUser>>             _userManagerMock       = null!;
+    private Mock<ILogger<WorkspaceMembersService>> _loggerMock            = null!;
     private IMapper _mapper = null!;
 
     private WorkspaceMembersService _sut = null!;
@@ -33,19 +31,14 @@ public class WorkspaceMembersServiceTests
     [SetUp]
     public void SetUp()
     {
-        _membersRepositoryMock    = new Mock<IWorkspaceMembersRepository>();
-        _workspacesRepositoryMock = new Mock<IWorkspacesRepository>();
-        _cacheMock                = new Mock<ICacheService>();
-        _publisherMock            = new Mock<IMessagePublisher>();
+        _membersRepositoryMock = new Mock<IWorkspaceMembersRepository>();
+        _cacheMock             = new Mock<ICacheService>();
 
         var userStoreMock = new Mock<IUserStore<AppUser>>();
         _userManagerMock = new Mock<UserManager<AppUser>>(
             userStoreMock.Object, null!, null!, null!, null!, null!, null!, null!, null!);
         _userManagerMock.Setup(m => m.FindByIdAsync(It.IsAny<string>()))
                         .ReturnsAsync((AppUser?)null);
-
-        _publisherMock.Setup(p => p.PublishAsync(It.IsAny<object>(), It.IsAny<CancellationToken>()))
-                      .Returns(Task.CompletedTask);
 
         _loggerMock = new Mock<ILogger<WorkspaceMembersService>>();
         _mapper = new ServiceCollection()
@@ -56,16 +49,10 @@ public class WorkspaceMembersServiceTests
 
         _sut = new WorkspaceMembersService(
             _membersRepositoryMock.Object,
-            _workspacesRepositoryMock.Object,
             _cacheMock.Object,
             _userManagerMock.Object,
-            _publisherMock.Object,
             _mapper,
             _loggerMock.Object);
-
-        _workspacesRepositoryMock
-            .Setup(r => r.GetByIdAsync(WorkspaceId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Workspace { Id = WorkspaceId, Name = "Engineering", OwnerId = "owner-1" });
     }
 
     private static AppUser CreateUser(string id = "user-2") => new()
@@ -92,71 +79,6 @@ public class WorkspaceMembersServiceTests
         var result = await _sut.GetMembersAsync(WorkspaceId, CancellationToken.None);
 
         result.Should().ContainSingle(m => m.UserId == user.Id && m.DisplayName == "Jane Member" && m.Role == WorkspaceRole.Member);
-    }
-
-    [Test]
-    public async Task AddAsync_WorkspaceNotFound_ThrowsNotFoundException()
-    {
-        var missingWorkspaceId = Guid.NewGuid();
-        var request = new InviteMemberRequest("member@example.com", WorkspaceRole.Member);
-
-        var act = async () => await _sut.AddAsync(missingWorkspaceId, request, "inviter-1", CancellationToken.None);
-
-        await act.Should().ThrowAsync<NotFoundException>();
-    }
-
-    [Test]
-    public async Task AddAsync_EmailNotFound_ThrowsNotFoundException()
-    {
-        var request = new InviteMemberRequest("nobody@example.com", WorkspaceRole.Member);
-
-        _userManagerMock.Setup(m => m.FindByEmailAsync(request.Email)).ReturnsAsync((AppUser?)null);
-
-        var act = async () => await _sut.AddAsync(WorkspaceId, request, "inviter-1", CancellationToken.None);
-
-        await act.Should().ThrowAsync<NotFoundException>()
-            .WithMessage("*nobody@example.com*");
-    }
-
-    [Test]
-    public async Task AddAsync_AlreadyMember_ThrowsConflictException()
-    {
-        var user = CreateUser();
-        var request = new InviteMemberRequest(user.Email!, WorkspaceRole.Member);
-
-        _userManagerMock.Setup(m => m.FindByEmailAsync(request.Email)).ReturnsAsync(user);
-        _membersRepositoryMock
-            .Setup(r => r.GetMemberAsync(WorkspaceId, user.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new WorkspaceMember { WorkspaceId = WorkspaceId, UserId = user.Id, Role = WorkspaceRole.Member });
-
-        var act = async () => await _sut.AddAsync(WorkspaceId, request, "inviter-1", CancellationToken.None);
-
-        await act.Should().ThrowAsync<ConflictException>();
-        _membersRepositoryMock.Verify(r => r.AddAsync(It.IsAny<WorkspaceMember>(), default), Times.Never);
-    }
-
-    [Test]
-    public async Task AddAsync_ValidRequest_AddsMemberAndReturnsDto()
-    {
-        var user = CreateUser();
-        var request = new InviteMemberRequest(user.Email!, WorkspaceRole.Admin);
-
-        _userManagerMock.Setup(m => m.FindByEmailAsync(request.Email)).ReturnsAsync(user);
-        _membersRepositoryMock
-            .Setup(r => r.GetMemberAsync(WorkspaceId, user.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((WorkspaceMember?)null);
-        _membersRepositoryMock
-            .Setup(r => r.AddAsync(It.IsAny<WorkspaceMember>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((WorkspaceMember m, CancellationToken _) => m);
-
-        var result = await _sut.AddAsync(WorkspaceId, request, "inviter-1", CancellationToken.None);
-
-        result.UserId.Should().Be(user.Id);
-        result.Role.Should().Be(WorkspaceRole.Admin);
-
-        _membersRepositoryMock.Verify(
-            r => r.AddAsync(It.Is<WorkspaceMember>(m => m.UserId == user.Id && m.Role == WorkspaceRole.Admin), default),
-            Times.Once);
     }
 
     [Test]

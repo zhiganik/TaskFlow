@@ -8,16 +8,13 @@ using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Exceptions;
 using TaskFlow.Application.Interfaces.Repositories;
 using TaskFlow.Application.Interfaces.Services;
-using TaskFlow.Contracts.Messages;
 
 namespace TaskFlow.Application.Services;
 
 public class WorkspaceMembersService(
     IWorkspaceMembersRepository membersRepository,
-    IWorkspacesRepository workspacesRepository,
     ICacheService cache,
     UserManager<AppUser> userManager,
-    IMessagePublisher publisher,
     IMapper mapper,
     ILogger<WorkspaceMembersService> logger) : IWorkspaceMembersService
 {
@@ -32,49 +29,6 @@ public class WorkspaceMembersService(
 
         await cache.SetAsync(key, dtos, CacheKeys.Ttl.Members, ct);
         return dtos;
-    }
-
-    public async Task<MemberDto> AddAsync(Guid workspaceId, InviteMemberRequest request, string invitedById, CancellationToken ct)
-    {
-        var workspace = await workspacesRepository.GetByIdAsync(workspaceId, ct)
-            ?? throw new NotFoundException($"Workspace {workspaceId} was not found.");
-
-        var user = await userManager.FindByEmailAsync(request.Email)
-            ?? throw new NotFoundException($"No user with email {request.Email} exists.");
-
-        if (await membersRepository.GetMemberAsync(workspaceId, user.Id, ct) is not null)
-            throw new ConflictException("User is already a member of this workspace.");
-
-        var member = new WorkspaceMember
-        {
-            WorkspaceId = workspaceId,
-            UserId      = user.Id,
-            Role        = request.Role,
-            JoinedAt    = DateTime.UtcNow,
-        };
-
-        await membersRepository.AddAsync(member, ct);
-        member.User = user;
-
-        await cache.InvalidateManyAsync(
-        [
-            CacheKeys.WorkspaceMembers(workspaceId),
-            CacheKeys.UserWorkspaces(user.Id),
-        ], ct);
-
-        logger.LogInformation("User {UserId} added to workspace {WorkspaceId} with role {Role}",
-            user.Id, workspaceId, request.Role);
-
-        var invitedBy = await userManager.FindByIdAsync(invitedById);
-        await publisher.PublishAsync(new MemberInvitedEvent(
-            workspaceId,
-            workspace.Name,
-            user.Id,
-            invitedBy?.DisplayName ?? string.Empty,
-            request.Role.ToString(),
-            DateTime.UtcNow), ct);
-
-        return mapper.Map<MemberDto>(member);
     }
 
     public async Task<MemberDto> UpdateRoleAsync(Guid workspaceId, string userId, UpdateMemberRoleRequest request, CancellationToken ct)

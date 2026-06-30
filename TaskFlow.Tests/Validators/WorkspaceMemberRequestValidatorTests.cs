@@ -6,17 +6,17 @@ using TaskFlow.Application.Validators;
 namespace TaskFlow.Tests.Validators;
 
 [TestFixture]
-public class InviteMemberRequestValidatorTests
+public class CreateInvitationRequestValidatorTests
 {
-    private InviteMemberRequestValidator _validator = null!;
+    private CreateInvitationRequestValidator _validator = null!;
 
     [SetUp]
-    public void SetUp() => _validator = new InviteMemberRequestValidator();
+    public void SetUp() => _validator = new CreateInvitationRequestValidator();
 
     [Test]
     public async Task Validate_EmptyEmail_ReturnsError()
     {
-        var result = await _validator.ValidateAsync(new InviteMemberRequest("", WorkspaceRole.Member));
+        var result = await _validator.ValidateAsync(new CreateInvitationRequest("", WorkspaceRole.Member));
 
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "Email");
@@ -25,7 +25,7 @@ public class InviteMemberRequestValidatorTests
     [Test]
     public async Task Validate_InvalidEmail_ReturnsError()
     {
-        var result = await _validator.ValidateAsync(new InviteMemberRequest("not-an-email", WorkspaceRole.Member));
+        var result = await _validator.ValidateAsync(new CreateInvitationRequest("not-an-email", WorkspaceRole.Member));
 
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "Email");
@@ -34,7 +34,7 @@ public class InviteMemberRequestValidatorTests
     [Test]
     public async Task Validate_RoleOwner_ReturnsError()
     {
-        var result = await _validator.ValidateAsync(new InviteMemberRequest("user@example.com", WorkspaceRole.Owner));
+        var result = await _validator.ValidateAsync(new CreateInvitationRequest("user@example.com", WorkspaceRole.Owner));
 
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "Role");
@@ -43,7 +43,7 @@ public class InviteMemberRequestValidatorTests
     [Test]
     public async Task Validate_ValidRequest_Passes()
     {
-        var result = await _validator.ValidateAsync(new InviteMemberRequest("user@example.com", WorkspaceRole.Member));
+        var result = await _validator.ValidateAsync(new CreateInvitationRequest("user@example.com", WorkspaceRole.Member));
 
         result.IsValid.Should().BeTrue();
     }

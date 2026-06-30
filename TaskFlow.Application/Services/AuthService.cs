@@ -78,6 +78,9 @@ public class AuthService(
     public async Task LogoutAsync(RefreshTokenRequest request, CancellationToken ct = default)
         => await cache.InvalidateAsync(RefreshKey(request.RefreshToken), ct);
 
+    public Task<AuthResponseDto> IssueTokensForUserAsync(AppUser user, CancellationToken ct = default)
+        => IssueTokensAsync(user, ct);
+
     private async Task<AuthResponseDto> IssueTokensAsync(AppUser user, CancellationToken ct)
     {
         var accessToken = jwtService.GenerateAccessToken(user);

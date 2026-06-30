@@ -105,7 +105,6 @@ try
         x.AddConsumer<CommentPostedConsumer>();
         x.AddConsumer<TaskAssignedConsumer>();
         x.AddConsumer<TaskStatusChangedConsumer>();
-        x.AddConsumer<MemberInvitedConsumer>();
 
         x.UsingRabbitMq((ctx, cfg) =>
         {

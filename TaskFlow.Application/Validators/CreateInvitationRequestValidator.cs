@@ -4,9 +4,9 @@ using TaskFlow.Application.DTOs;
 
 namespace TaskFlow.Application.Validators;
 
-public class InviteMemberRequestValidator : AbstractValidator<InviteMemberRequest>
+public class CreateInvitationRequestValidator : AbstractValidator<CreateInvitationRequest>
 {
-    public InviteMemberRequestValidator()
+    public CreateInvitationRequestValidator()
     {
         RuleFor(x => x.Email)
             .NotEmpty().WithMessage("Email is required.")
@@ -14,6 +14,6 @@ public class InviteMemberRequestValidator : AbstractValidator<InviteMemberReques
 
         RuleFor(x => x.Role)
             .IsInEnum()
-            .NotEqual(WorkspaceRole.Owner).WithMessage("Cannot add a member as Owner.");
+            .NotEqual(WorkspaceRole.Owner).WithMessage("Cannot invite a member as Owner.");
     }
 }

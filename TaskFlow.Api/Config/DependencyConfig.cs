@@ -90,6 +90,11 @@ public static class DependencyConfig
             opts.Region     = Environment.GetEnvironmentVariable("S3_REGION")      ?? "auto";
         });
 
+        services.Configure<AppOptions>(opts =>
+        {
+            opts.FrontendBaseUrl = Environment.GetEnvironmentVariable("FRONTEND_BASE_URL") ?? "http://localhost:3000";
+        });
+
         return services;
     }
 
@@ -186,6 +191,7 @@ public static class DependencyConfig
     {
         services.AddScoped<IWorkspacesRepository, WorkspacesRepository>();
         services.AddScoped<IWorkspaceMembersRepository, WorkspaceMembersRepository>();
+        services.AddScoped<IWorkspaceInvitationRepository, WorkspaceInvitationRepository>();
         services.AddScoped<IWorkspaceColumnsRepository, WorkspaceColumnsRepository>();
         services.AddScoped<IWorkspaceTasksRepository, WorkspaceTasksRepository>();
         services.AddScoped<ITaskCommentsRepository, TaskCommentsRepository>();
@@ -212,6 +218,7 @@ public static class DependencyConfig
         services.AddScoped<ITaskAttachmentService, TaskAttachmentService>();
         services.AddScoped<IArchiveService, ArchiveService>();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IWorkspaceInvitationService, WorkspaceInvitationService>();
         return services;
     }
 

@@ -33,6 +33,7 @@ services:
       RABBITMQ_USER: ${RABBITMQ_USER}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
       SEQ_URL: http://seq
+      FRONTEND_BASE_URL: http://localhost:3000
     volumes:
       - uploads_data:/app/uploads
     healthcheck:
@@ -174,6 +175,47 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - taskflow_net
+
+  email-worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.email-worker
+    container_name: taskflow_email_worker
+    env_file:
+      - ../.env
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      DOTNET_ENVIRONMENT: Production
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      SMTP__HOST: mailpit
+      SMTP__PORT: "1025"
+      SMTP__FROMEMAIL: noreply@taskflow.local
+      SMTP__FROMNAME: TaskFlow
+      SEQ_URL: http://seq
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-s", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    networks:
+      - taskflow_net
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: taskflow_mailpit
+    ports:
+      - "8025:8025"   # web UI — http://localhost:8025
+      - "1025:1025"   # SMTP
     networks:
       - taskflow_net
 
