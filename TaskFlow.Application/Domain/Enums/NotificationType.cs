@@ -6,4 +6,6 @@ public enum NotificationType
     TaskAssigned       = 1,
     TaskStatusChanged  = 2,
     MemberInvited      = 3,
+    MemberRemoved      = 4,
+    MemberRoleChanged  = 5,
 }

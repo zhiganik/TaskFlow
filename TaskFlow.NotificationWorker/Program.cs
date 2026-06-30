@@ -114,6 +114,8 @@ try
         x.AddConsumer<TaskAssignedConsumer>();
         x.AddConsumer<TaskStatusChangedConsumer>();
         x.AddConsumer<MemberInvitedConsumer>();
+        x.AddConsumer<MemberRemovedConsumer>();
+        x.AddConsumer<MemberRoleChangedConsumer>();
 
         x.UsingRabbitMq((ctx, cfg) =>
         {

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TaskFlow.Api.Extensions;
 using TaskFlow.Application.Domain.Constants;
 using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Interfaces.Services;
@@ -34,7 +35,7 @@ public class WorkspaceMembersController(IWorkspaceMembersService membersService)
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> UpdateRole(Guid workspaceId, string userId, UpdateMemberRoleRequest request, CancellationToken ct)
     {
-        var result = await membersService.UpdateRoleAsync(workspaceId, userId, request, ct);
+        var result = await membersService.UpdateRoleAsync(workspaceId, userId, request, User.GetUserId(), ct);
         return Ok(result);
     }
 
@@ -48,7 +49,7 @@ public class WorkspaceMembersController(IWorkspaceMembersService membersService)
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Remove(Guid workspaceId, string userId, CancellationToken ct)
     {
-        await membersService.RemoveAsync(workspaceId, userId, ct);
+        await membersService.RemoveAsync(workspaceId, userId, User.GetUserId(), ct);
         return NoContent();
     }
 }

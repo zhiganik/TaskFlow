@@ -11,6 +11,8 @@ const TYPE_LABELS: Record<NotificationType, string> = {
   TaskAssigned:       'Assigned',
   TaskStatusChanged:  'Status',
   MemberInvited:      'Invited',
+  MemberRemoved:      'Removed',
+  MemberRoleChanged:  'Role',
 }
 
 const ALL_TYPES: NotificationType[] = [
@@ -18,6 +20,8 @@ const ALL_TYPES: NotificationType[] = [
   'TaskAssigned',
   'TaskStatusChanged',
   'MemberInvited',
+  'MemberRemoved',
+  'MemberRoleChanged',
 ]
 
 interface Props {
@@ -52,9 +56,19 @@ export function NotificationsModal({
 
   async function handleClick(n: NotificationDto) {
     if (!n.isRead) markRead.mutate(n.id)
+
+    if (n.type === 'MemberRemoved') {
+      // User no longer has access — refresh the workspace list then go home
+      await qc.refetchQueries({ queryKey: ['workspaces'] })
+      onClose()
+      navigate('/', { replace: false })
+      return
+    }
+
     if (n.workspaceId) {
-      if (n.type === 'MemberInvited') {
-        await qc.invalidateQueries({ queryKey: ['workspaces'] })
+      if (n.type === 'MemberInvited' || n.type === 'MemberRoleChanged') {
+        // Refetch (not just invalidate) so data is ready before the route renders
+        await qc.refetchQueries({ queryKey: ['workspaces'] })
       }
       const params = new URLSearchParams()
       if (n.taskId) params.set('taskId', n.taskId)

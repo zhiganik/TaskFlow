@@ -300,6 +300,8 @@ export type NotificationType =
   | 'TaskAssigned'
   | 'TaskStatusChanged'
   | 'MemberInvited'
+  | 'MemberRemoved'
+  | 'MemberRoleChanged'
 
 export interface NotificationDto {
   id: string

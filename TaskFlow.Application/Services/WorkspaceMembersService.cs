@@ -8,13 +8,16 @@ using TaskFlow.Application.DTOs;
 using TaskFlow.Application.Exceptions;
 using TaskFlow.Application.Interfaces.Repositories;
 using TaskFlow.Application.Interfaces.Services;
+using TaskFlow.Contracts.Messages;
 
 namespace TaskFlow.Application.Services;
 
 public class WorkspaceMembersService(
     IWorkspaceMembersRepository membersRepository,
+    IWorkspacesRepository workspacesRepository,
     ICacheService cache,
     UserManager<AppUser> userManager,
+    IMessagePublisher publisher,
     IMapper mapper,
     ILogger<WorkspaceMembersService> logger) : IWorkspaceMembersService
 {
@@ -31,7 +34,7 @@ public class WorkspaceMembersService(
         return dtos;
     }
 
-    public async Task<MemberDto> UpdateRoleAsync(Guid workspaceId, string userId, UpdateMemberRoleRequest request, CancellationToken ct)
+    public async Task<MemberDto> UpdateRoleAsync(Guid workspaceId, string userId, UpdateMemberRoleRequest request, string changedById, CancellationToken ct)
     {
         var member = await membersRepository.GetMemberAsync(workspaceId, userId, ct)
             ?? throw new NotFoundException($"User {userId} is not a member of workspace {workspaceId}.");
@@ -49,19 +52,36 @@ public class WorkspaceMembersService(
 
         await cache.InvalidateAsync(CacheKeys.WorkspaceMembers(workspaceId), ct);
 
-        logger.LogInformation("Role for user {UserId} in workspace {WorkspaceId} changed to {Role}",
-            userId, workspaceId, request.Role);
+        var workspace = await workspacesRepository.GetByIdAsync(workspaceId, ct)
+            ?? throw new NotFoundException($"Workspace {workspaceId} was not found.");
+
+        var changedBy = await userManager.FindByIdAsync(changedById);
+
+        await publisher.PublishAsync(new MemberRoleChangedEvent(
+            userId,
+            changedBy?.DisplayName ?? "An admin",
+            workspaceId.ToString(),
+            workspace.Name,
+            request.Role.ToString()), ct);
+
+        logger.LogInformation("Role for user {UserId} in workspace {WorkspaceId} changed to {Role} by {ChangedById}",
+            userId, workspaceId, request.Role, changedById);
 
         return mapper.Map<MemberDto>(member);
     }
 
-    public async Task RemoveAsync(Guid workspaceId, string userId, CancellationToken ct)
+    public async Task RemoveAsync(Guid workspaceId, string userId, string removedById, CancellationToken ct)
     {
         var member = await membersRepository.GetMemberAsync(workspaceId, userId, ct)
             ?? throw new NotFoundException($"User {userId} is not a member of workspace {workspaceId}.");
 
         if (member.Role == WorkspaceRole.Owner)
             throw new ConflictException("The workspace owner cannot be removed from the workspace.");
+
+        var workspace = await workspacesRepository.GetByIdAsync(workspaceId, ct)
+            ?? throw new NotFoundException($"Workspace {workspaceId} was not found.");
+
+        var removedBy = await userManager.FindByIdAsync(removedById);
 
         await membersRepository.DeleteAsync(workspaceId, userId, ct);
 
@@ -71,6 +91,13 @@ public class WorkspaceMembersService(
             CacheKeys.UserWorkspaces(userId),
         ], ct);
 
-        logger.LogInformation("User {UserId} removed from workspace {WorkspaceId}", userId, workspaceId);
+        await publisher.PublishAsync(new MemberRemovedEvent(
+            userId,
+            removedBy?.DisplayName ?? "An admin",
+            workspaceId.ToString(),
+            workspace.Name), ct);
+
+        logger.LogInformation("User {UserId} removed from workspace {WorkspaceId} by {RemovedById}",
+            userId, workspaceId, removedById);
     }
 }
