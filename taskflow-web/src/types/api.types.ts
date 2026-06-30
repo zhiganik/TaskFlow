@@ -108,6 +108,13 @@ export interface InvitationDto {
   expiresAt: string
 }
 
+export interface CreateInvitationResponseDto {
+  directlyAdded: boolean
+  invitation: InvitationDto | null
+  addedUserId: string | null
+  addedDisplayName: string | null
+}
+
 export interface InvitationInfoDto {
   email: string
   workspaceName: string
@@ -292,6 +299,7 @@ export type NotificationType =
   | 'MentionedInComment'
   | 'TaskAssigned'
   | 'TaskStatusChanged'
+  | 'MemberInvited'
 
 export interface NotificationDto {
   id: string

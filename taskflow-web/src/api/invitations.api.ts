@@ -3,6 +3,7 @@ import type {
   AcceptInvitationRequest,
   AcceptInvitationResultDto,
   CreateInvitationRequest,
+  CreateInvitationResponseDto,
   InvitationDto,
   InvitationInfoDto,
 } from '../types/api.types'
@@ -10,7 +11,7 @@ import type {
 export const invitationsApi = {
   create: (workspaceId: string, data: CreateInvitationRequest) =>
     apiClient
-      .post<InvitationDto>(`/workspaces/${workspaceId}/invitations`, data)
+      .post<CreateInvitationResponseDto>(`/workspaces/${workspaceId}/invitations`, data)
       .then((r) => r.data),
 
   list: (workspaceId: string) =>

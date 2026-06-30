@@ -12,10 +12,10 @@ namespace TaskFlow.Api.Controllers;
 [Route("api/v1/workspaces/{workspaceId:guid}/invitations")]
 public class WorkspaceInvitationsController(IWorkspaceInvitationService invitationService) : ControllerBase
 {
-    /// <summary>Send an invitation email to join a workspace.</summary>
+    /// <summary>Invite a user to a workspace. If the user already has an account they are added directly; otherwise an invitation email is sent.</summary>
     [HttpPost]
     [Authorize(Policy = WorkspacePolicies.Admin)]
-    [ProducesResponseType(typeof(InvitationDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(CreateInvitationResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

@@ -14,7 +14,12 @@ export const useCreateInvitation = (workspaceId: string) => {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (data: CreateInvitationRequest) => invitationsApi.create(workspaceId, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: invitationsKey(workspaceId) }),
+    onSuccess: (result) => {
+      qc.invalidateQueries({ queryKey: invitationsKey(workspaceId) })
+      if (result.directlyAdded) {
+        qc.invalidateQueries({ queryKey: ['members', workspaceId] })
+      }
+    },
   })
 }
 

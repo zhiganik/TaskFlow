@@ -9,12 +9,14 @@ const TYPE_LABELS: Record<NotificationType, string> = {
   MentionedInComment: 'Mention',
   TaskAssigned:       'Assigned',
   TaskStatusChanged:  'Status',
+  MemberInvited:      'Invited',
 }
 
 const ALL_TYPES: NotificationType[] = [
   'MentionedInComment',
   'TaskAssigned',
   'TaskStatusChanged',
+  'MemberInvited',
 ]
 
 interface Props {
@@ -101,7 +103,7 @@ export function NotificationsModal({
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-2 border-b border-gray-100 px-5 py-3">
+        <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-3">
           {/* All / Unread tabs */}
           <div className="flex gap-1 rounded-lg border border-gray-200 bg-gray-50 p-0.5">
             {(['all', 'unread'] as const).map((tab) => (
@@ -120,32 +122,21 @@ export function NotificationsModal({
             ))}
           </div>
 
-          {/* Type chips */}
-          <button
-            type="button"
-            onClick={() => onTypeFilterChange(undefined)}
-            className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
-              !typeFilter
-                ? 'border-gray-900 bg-gray-900 text-white'
-                : 'border-gray-200 bg-white text-gray-500 hover:border-gray-400'
-            }`}
+          {/* Type dropdown */}
+          <select
+            value={typeFilter ?? ''}
+            onChange={(e) =>
+              onTypeFilterChange(e.target.value ? (e.target.value as NotificationType) : undefined)
+            }
+            className="h-7 rounded-md border border-gray-200 bg-white px-2 text-xs text-gray-700 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           >
-            All
-          </button>
-          {ALL_TYPES.map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => onTypeFilterChange(typeFilter === t ? undefined : t)}
-              className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
-                typeFilter === t
-                  ? 'border-gray-900 bg-gray-900 text-white'
-                  : 'border-gray-200 bg-white text-gray-500 hover:border-gray-400'
-              }`}
-            >
-              {TYPE_LABELS[t]}
-            </button>
-          ))}
+            <option value="">All types</option>
+            {ALL_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {TYPE_LABELS[t]}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* List */}

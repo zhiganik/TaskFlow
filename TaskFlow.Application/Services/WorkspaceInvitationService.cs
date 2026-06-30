@@ -26,23 +26,61 @@ public class WorkspaceInvitationService(
 {
     private readonly AppOptions _app = appOptions.Value;
 
-    public async Task<InvitationDto> CreateAsync(Guid workspaceId, CreateInvitationRequest request, string invitedById, CancellationToken ct = default)
+    public async Task<CreateInvitationResponseDto> CreateAsync(Guid workspaceId, CreateInvitationRequest request, string invitedById, CancellationToken ct = default)
     {
         var email = request.Email.ToLowerInvariant();
 
         var workspace = await workspacesRepository.GetByIdAsync(workspaceId, ct)
             ?? throw new NotFoundException($"Workspace {workspaceId} was not found.");
 
-        var existing = await invitationRepository.GetByWorkspaceAndEmailAsync(workspaceId, email, ct);
-        if (existing is not null)
-            throw new ConflictException("An invitation for this email address is already pending.");
-
-        var existingUser = await userManager.FindByEmailAsync(email);
-        if (existingUser is not null && await membersRepository.GetMemberAsync(workspaceId, existingUser.Id, ct) is not null)
-            throw new ConflictException("This user is already a member of the workspace.");
-
         var invitedBy = await userManager.FindByIdAsync(invitedById)
             ?? throw new NotFoundException($"User {invitedById} was not found.");
+
+        var existingUser = await userManager.FindByEmailAsync(email);
+
+        // ── Path A: user already has an account → add directly, no email ────────
+        if (existingUser is not null)
+        {
+            if (await membersRepository.GetMemberAsync(workspaceId, existingUser.Id, ct) is not null)
+                throw new ConflictException("This user is already a member of the workspace.");
+
+            var member = new WorkspaceMember
+            {
+                WorkspaceId = workspaceId,
+                UserId      = existingUser.Id,
+                Role        = request.Role,
+                JoinedAt    = DateTime.UtcNow,
+            };
+
+            await membersRepository.AddAsync(member, ct);
+
+            await cache.InvalidateManyAsync(
+            [
+                CacheKeys.WorkspaceMembers(workspaceId),
+                CacheKeys.UserWorkspaces(existingUser.Id),
+            ], ct);
+
+            await publisher.PublishAsync(new MemberInvitedEvent(
+                existingUser.Id,
+                invitedBy.DisplayName,
+                workspaceId.ToString(),
+                workspace.Name), ct);
+
+            logger.LogInformation(
+                "Existing user {UserId} directly added to workspace {WorkspaceId} by {InvitedById}",
+                existingUser.Id, workspaceId, invitedById);
+
+            return new CreateInvitationResponseDto(
+                DirectlyAdded:    true,
+                Invitation:       null,
+                AddedUserId:      existingUser.Id,
+                AddedDisplayName: existingUser.DisplayName);
+        }
+
+        // ── Path B: no account yet → email invitation ────────────────────────────
+        var pending = await invitationRepository.GetByWorkspaceAndEmailAsync(workspaceId, email, ct);
+        if (pending is not null)
+            throw new ConflictException("An invitation for this email address is already pending.");
 
         var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(48))
             .Replace('+', '-').Replace('/', '_').TrimEnd('=');
@@ -65,10 +103,14 @@ public class WorkspaceInvitationService(
         await publisher.PublishAsync(new SendInvitationEmailMessage(
             email, workspace.Name, request.Role.ToString(), link), ct);
 
-        logger.LogInformation("Invitation created for {Email} in workspace {WorkspaceId} by {InvitedById}",
+        logger.LogInformation("Invitation email queued for {Email} in workspace {WorkspaceId} by {InvitedById}",
             email, workspaceId, invitedById);
 
-        return new InvitationDto(invitation.Id, email, request.Role, workspace.Name, invitedBy.DisplayName, invitation.ExpiresAt);
+        return new CreateInvitationResponseDto(
+            DirectlyAdded:    false,
+            Invitation:       new InvitationDto(invitation.Id, email, request.Role, workspace.Name, invitedBy.DisplayName, invitation.ExpiresAt),
+            AddedUserId:      null,
+            AddedDisplayName: null);
     }
 
     public async Task<IReadOnlyList<InvitationDto>> ListAsync(Guid workspaceId, CancellationToken ct = default)
