@@ -247,7 +247,7 @@ export function DashboardPage() {
   const { toggle: toggleSidebar } = useMobileSidebar()
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex h-dvh overflow-hidden bg-gray-50">
       <Sidebar />
 
       <main className="flex min-w-0 flex-1 flex-col overflow-hidden">

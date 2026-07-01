@@ -9,7 +9,7 @@ interface AuthLayoutProps {
 
 export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProps) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
+    <div className="flex min-h-dvh items-center justify-center bg-gray-50 px-4 py-12">
       <div className="w-full max-w-sm">
         <div className="mb-6 flex items-center justify-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-md bg-brand-500">
