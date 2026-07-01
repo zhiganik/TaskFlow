@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@layer base {
+  input, textarea, select {
+    font-size: 1rem; /* Prevents iOS Safari from auto-zooming on input focus */
+  }
+}
+
 @theme {
   --color-brand-50: #eeedfe;
   --color-brand-100: #dcdafd;

@@ -40,7 +40,14 @@ public class WorkspaceColumnsRepository(AppDbContext db) : IWorkspaceColumnsRepo
     public async Task UpdateRangeAsync(IEnumerable<WorkspaceColumn> columns, CancellationToken ct = default)
     {
         foreach (var column in columns)
-            db.Entry(column).State = EntityState.Modified;
+        {
+            var tracked = db.ChangeTracker.Entries<WorkspaceColumn>()
+                .FirstOrDefault(e => e.Entity.Id == column.Id);
+            if (tracked is not null)
+                tracked.CurrentValues.SetValues(column);
+            else
+                db.Entry(column).State = EntityState.Modified;
+        }
         await db.SaveChangesAsync(ct);
     }
 
