@@ -124,26 +124,23 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Mobile backdrop — fades in/out with the sidebar */}
-      <div
-        className={[
-          'fixed inset-0 z-30 bg-black/40 transition-opacity duration-300 md:hidden',
-          isOpen ? 'opacity-100' : 'pointer-events-none opacity-0',
-        ].join(' ')}
-        onClick={close}
-        aria-hidden="true"
-      />
+      {/* Mobile backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          onClick={close}
+          aria-hidden="true"
+        />
+      )}
 
-      {/* Sidebar — desktop: always-visible; mobile: slides in from left */}
+      {/* Sidebar — desktop: always-visible flex column; mobile: fixed overlay when open */}
       <aside
         className={[
-          'flex flex-col border-r border-gray-200 bg-white py-4',
-          // Mobile: fixed overlay that slides in/out
-          'fixed inset-y-0 left-0 z-40 w-72 shadow-xl',
-          'transition-transform duration-300 ease-in-out',
-          isOpen ? 'translate-x-0' : '-translate-x-full',
-          // Desktop: in-flow, always visible, no transition needed
-          'md:relative md:w-56 md:shrink-0 md:translate-x-0 md:shadow-none md:transition-none',
+          'flex flex-col border-r border-gray-200 bg-white py-4 transition-transform duration-200',
+          isOpen
+            ? 'fixed inset-y-0 left-0 z-40 w-72 shadow-xl'
+            : 'hidden',
+          'md:relative md:flex md:w-56 md:shrink-0 md:shadow-none md:translate-x-0',
         ].join(' ')}
       >
         {sidebarContent}
